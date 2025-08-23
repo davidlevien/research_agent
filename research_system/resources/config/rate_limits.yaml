@@ -1,0 +1,49 @@
+# Rate Limiting Configuration
+
+providers:
+  openai:
+    requests_per_minute: 60
+    tokens_per_minute: 90000
+    concurrent_requests: 10
+    retry_after_seconds: 60
+    
+  anthropic:
+    requests_per_minute: 50
+    tokens_per_minute: 100000
+    concurrent_requests: 5
+    retry_after_seconds: 60
+    
+  tavily:
+    requests_per_minute: 60
+    requests_per_day: 1000
+    concurrent_requests: 5
+    retry_after_seconds: 30
+    
+  serper:
+    requests_per_minute: 100
+    requests_per_day: 2500
+    concurrent_requests: 10
+    retry_after_seconds: 30
+
+global:
+  max_concurrent_operations: 20
+  max_queue_size: 100
+  timeout_seconds: 30
+  
+cost_limits:
+  per_request:
+    soft_limit_usd: 0.5
+    hard_limit_usd: 1.0
+    
+  daily:
+    soft_limit_usd: 50.0
+    hard_limit_usd: 100.0
+    
+  monthly:
+    soft_limit_usd: 1000.0
+    hard_limit_usd: 2000.0
+
+alerts:
+  cost_threshold_percent: 80
+  rate_limit_threshold_percent: 90
+  error_rate_threshold_percent: 10
