@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 
 from .models import ResearchRequest, ResearchPlan, EvidenceCard
-from .config import Config
+from .config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class AgentConfig:
 class ResearchAgents:
     """Factory for creating research agents"""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: Settings):
         self.config = config
     
     def create_planner_agent(self) -> Agent:
@@ -219,7 +219,7 @@ class ResearchTasks:
 class ResearchCrew:
     """Orchestrates the research crew"""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: Settings):
         self.config = config
         self.agent_factory = ResearchAgents(config)
         self.task_factory = ResearchTasks()

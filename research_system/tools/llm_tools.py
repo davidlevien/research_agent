@@ -9,7 +9,7 @@ import anthropic
 from tenacity import retry, stop_after_attempt, wait_exponential
 import logging
 
-from ..config import Config
+from ..config import Settings
 from ..exceptions import APIError
 from .registry import tool_registry
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class LLMTools:
     """Collection of LLM tools"""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: Settings):
         self.config = config
         self._init_clients()
         self._register_tools()

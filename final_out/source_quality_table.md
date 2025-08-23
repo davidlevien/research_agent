@@ -1,0 +1,2 @@
+| Domain | Avg Quality | Count |
+|---|---|---|

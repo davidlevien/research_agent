@@ -46,6 +46,7 @@ dependencies = [
     "tenacity>=8.2.0",
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
+    "slowapi>=0.1.9",
     "pyyaml>=6.0.0",
     "click>=8.1.0",
     "rich>=13.7.0",
@@ -77,6 +78,7 @@ monitoring = [
 
 [project.scripts]
 research-system = "research_system.main:main"
+research-system-api = "research_system.api_main:main"
 
 [project.urls]
 Homepage = "https://github.com/research-system/research-system"

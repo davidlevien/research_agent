@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import logging
 
-from ..config import Config
+from ..config import Settings
 from ..exceptions import APIError, RateLimitError
 from .registry import tool_registry
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SearchTools:
     """Collection of search tools"""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: Settings):
         self.config = config
         self._register_tools()
     

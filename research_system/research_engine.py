@@ -18,7 +18,7 @@ from .models import (
 from .orchestrator import ResearchOrchestrator
 from .core.quality_assurance import QualityAssurance
 from .tools.storage_tools import StorageTools
-from .config import Config
+from .config import Settings
 
 logger = structlog.get_logger()
 
@@ -35,8 +35,8 @@ class ResearchEngine:
     7. citation_checklist.md - Citation verification checklist
     """
     
-    def __init__(self, config: Optional[Config] = None, output_dir: str = "outputs"):
-        self.config = config or Config()
+    def __init__(self, config: Optional[Settings] = None, output_dir: str = "outputs"):
+        self.config = config or Settings()
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         

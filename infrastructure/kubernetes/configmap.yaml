@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: research-system-config
+data:
+  LLM_PROVIDER: "openai"
+  SEARCH_PROVIDERS: "tavily,brave,serper"
+  MAX_COST_USD: "2.50"
+  OUTPUT_DIR: "outputs"
+  CHECKPOINT_DIR: "outputs/checkpoints"
+  FRESHNESS_WINDOW: "24 months"
+  REGIONS: "US,EU"
+  SOURCE_WHITELIST: '[".gov",".edu",".ac.uk",".who.int",".un.org"]'
+  HTTP_TIMEOUT_SECONDS: "30"
+  RETRY_MAX_TRIES: "5"
+  RETRY_BACKOFF_BASE_SECONDS: "0.5"
+  CONCURRENCY: "8"
+  LOG_LEVEL: "INFO"
+  ENABLE_PROMETHEUS: "false"
+  PROMETHEUS_PORT: "9100"
+  ENABLE_REDIS: "false"
+  ENABLE_DATABASE: "false"
