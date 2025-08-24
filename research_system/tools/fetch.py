@@ -1,6 +1,8 @@
 from __future__ import annotations
-import httpx, datetime as dt, os
+import httpx, datetime as dt, os, logging
 from typing import Optional, Dict, Any, Tuple
+
+logger = logging.getLogger(__name__)
 
 # Make optional dependencies robust
 try:
@@ -70,41 +72,86 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
     return None, None
 
 def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
+    from urllib.parse import urlparse
+    from research_system.net.circuit import CIRCUIT
+    from research_system.net.cache import get as cache_get, set as cache_set, parse_cache_control
+    from research_system.net.robots import is_allowed as robots_allowed
+    from research_system.time_budget import get_timeout
+    
     html_ct = None
     status = 200  # Default status for when html is provided
     
+    # Check robots.txt compliance
+    if not robots_allowed(url):
+        logger.info(f"Robots.txt disallows {url}, trying DOI/mirror fallback")
+        from .paywall_resolver import resolve as resolve_paywall
+        alt = resolve_paywall(url, None, None)
+        if alt:
+            return alt
+        return {}
+    
+    # Check circuit breaker
+    host = urlparse(url).netloc.lower()
+    if not CIRCUIT.allow(host):
+        logger.warning(f"Circuit open for {host}, skipping")
+        return {}
+    
     if html is None:
-        # Fetch with GET request (not HEAD) for better content
-        try:
-            r = httpx.get(url, timeout=30, headers=UA, follow_redirects=True)
+        # Check cache first
+        cache_key = ("GET", url)
+        cached = cache_get(cache_key)
+        if cached:
+            body, headers, status, ct = cached
+            if status == 200:
+                html = body if isinstance(body, str) else body.decode('utf-8', errors='ignore')
+                html_ct = ct
+                logger.debug(f"Cache hit for {url}")
             
-            # Check for Cloudflare challenge
-            from research_system.net.cloudflare import is_cf_challenge, get_unwto_mirror_url
-            if is_cf_challenge(r):
-                # Jump straight to resolver (DOI/Unpaywall or mirror)
-                from .paywall_resolver import resolve as resolve_paywall
-                alt = resolve_paywall(url, r.text, r.headers.get("content-type", ""))
-                if alt:
-                    return alt
-                # Final UNWTO mirror fallback
-                mu = get_unwto_mirror_url(url)
-                if mu:
-                    try:
-                        mr = httpx.get(mu, headers=UA, timeout=30)
-                        if mr.status_code == 200 and len((mr.text or "")) > 500:
-                            return {"title": None, "text": mr.text, "quotes": None, "source": "mirror", "mirror_url": mu}
-                    except Exception:
-                        pass
-                raise PermissionError("Cloudflare challenge")
-            
-            html = r.text
-            html_ct = r.headers.get("content-type", "").lower()
-            status = r.status_code
-        except PermissionError:
-            return {}  # Cloudflare block
-        except Exception:
-            html, html_ct = None, None
-            status = 0
+        if html is None:
+            # Fetch with GET request (not HEAD) for better content
+            try:
+                timeout = get_timeout(30)
+                r = httpx.get(url, timeout=timeout, headers=UA, follow_redirects=True)
+                
+                # Cache successful responses
+                if 200 <= r.status_code < 300:
+                    ttl = parse_cache_control(dict(r.headers))
+                    if ttl > 0:
+                        cache_set(cache_key, ttl, (r.text, dict(r.headers), r.status_code, r.headers.get("content-type", "")))
+                    CIRCUIT.ok(host)
+                else:
+                    CIRCUIT.fail(host)
+                
+                # Check for Cloudflare challenge
+                from research_system.net.cloudflare import is_cf_challenge, get_unwto_mirror_url
+                if is_cf_challenge(r):
+                    # Jump straight to resolver (DOI/Unpaywall or mirror)
+                    from .paywall_resolver import resolve as resolve_paywall
+                    alt = resolve_paywall(url, r.text, r.headers.get("content-type", ""))
+                    if alt:
+                        return alt
+                    # Final UNWTO mirror fallback
+                    mu = get_unwto_mirror_url(url)
+                    if mu:
+                        try:
+                            mr = httpx.get(mu, headers=UA, timeout=30)
+                            if mr.status_code == 200 and len((mr.text or "")) > 500:
+                                return {"title": None, "text": mr.text, "quotes": None, "source": "mirror", "mirror_url": mu}
+                        except Exception:
+                            pass
+                    raise PermissionError("Cloudflare challenge")
+                
+                html = r.text
+                html_ct = r.headers.get("content-type", "").lower()
+                status = r.status_code
+            except PermissionError:
+                CIRCUIT.fail(host)
+                return {}  # Cloudflare block
+            except Exception as e:
+                CIRCUIT.fail(host)
+                logger.debug(f"Fetch failed for {url}: {e}")
+                html, html_ct = None, None
+                status = 0
     
     # Generic paywall fallback for ANY domain (DOI / meta-PDF / mirrors)
     from .paywall_resolver import looks_gated, resolve as resolve_paywall

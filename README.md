@@ -11,6 +11,12 @@ A PE-level research automation system with comprehensive triangulation, paywall 
 - ✅ **Security Hardening**: Environment-based encryption keys, constant-time API auth
 - ✅ **Rate Limiting**: Configurable RPS/burst limits with clear defaults
 - ✅ **Dynamic Concurrency**: CPU-aware worker scaling
+- ✅ **Circuit Breaker**: Domain-level failure protection with automatic cooldown
+- ✅ **Response Caching**: TTL-based HTTP cache with Cache-Control respect
+- ✅ **Deadline Propagation**: Global time budget management across all operations
+- ✅ **Robots.txt Compliance**: Automatic checking with public resource allowlist
+- ✅ **Quality Gates**: CI enforcement of minimum metrics thresholds
+- ✅ **Defensive Writes**: Always generates artifacts even on failures
 
 ### Previous Enhancements (v5.0)
 - ✅ **Paraphrase Cluster Sanitization**: Prevents over-merging with domain diversity requirements
@@ -30,7 +36,10 @@ A PE-level research automation system with comprehensive triangulation, paywall 
 | Union Triangulation | ≥35% | Combined paraphrase + structured coverage |
 | Primary Share | ≥50% | Primary sources in triangulated evidence |
 | Domain Concentration | ≤25% | Maximum share from any single domain |
+| Provider Entropy | ≥0.60 | Distribution across search providers |
 | Reachability | ≥50% | Successfully fetched sources (excluding known paywalls) |
+| Error Rate | <1% | Failed requests percentage |
+| Wall Time | ≤900s | Total execution time (15 minutes) |
 
 ## 🚀 Key Features
 
@@ -123,12 +132,18 @@ ENABLE_HTTP_CACHE=true
 ENABLE_EXTRACT=true
 ENABLE_MINHASH_DEDUP=true
 ENABLE_SNAPSHOT=false
+ENABLE_POLITENESS=true  # Respect robots.txt
+ENABLE_LANGDETECT=true  # Language detection
+ENABLE_PDF_TABLES=true  # Extract PDF tables
 MAX_PDF_MB=12  # Maximum PDF size in MB
 PDF_MAX_PAGES=6  # Pages to extract for quotes
 PDF_RETRIES=2  # Retry attempts for PDF downloads
 CONCURRENCY=16  # Worker concurrency (auto-scales to CPU)
 WALL_TIMEOUT_SEC=600  # Overall operation timeout
 PROVIDER_TIMEOUT_SEC=20  # Individual provider timeout
+CIRCUIT_FAIL_THRESHOLD=3  # Failures before opening circuit
+CIRCUIT_COOLDOWN_SEC=900  # Circuit breaker cooldown
+CACHE_TTL_SEC=900  # Default cache TTL (15 minutes)
 
 # API Rate Limiting
 API_RPS=2.0  # Requests per second
@@ -192,7 +207,8 @@ output_dir/
 ├── source_quality_table.md   # Domain-level quality assessment
 ├── final_report.md           # Triangulated findings report
 ├── acceptance_guardrails.md  # Quality validation checklist
-└── citation_checklist.md     # Citation validation
+├── citation_checklist.md     # Citation validation
+└── GAPS_AND_RISKS.md        # Missing coverage areas (strict mode only)
 ```
 
 ### Evidence Card Schema
@@ -226,6 +242,12 @@ pytest tests/test_triangulation_sanity.py
 
 # With coverage
 pytest --cov=research_system --cov-report=html
+
+# Run benchmark suite
+python scripts/benchmark.py
+
+# Check quality gates
+python scripts/quality_gate.py production_run/
 ```
 
 ### CI/CD Pipeline
@@ -233,6 +255,9 @@ pytest --cov=research_system --cov-report=html
 - Schema validation checks
 - Import-time side effect prevention
 - Package data verification
+- Quality gate enforcement
+- Benchmark suite execution
+- Metrics threshold validation
 
 ## 🏗️ Architecture
 
@@ -262,9 +287,13 @@ research_system/
 │   ├── http.py                # Resilient HTTP client
 │   ├── pdf_fetch.py           # PDF download with size limits
 │   ├── guarded_get.py         # Paywall detection & loop prevention
-│   └── cloudflare.py          # Cloudflare challenge detection
+│   ├── cloudflare.py          # Cloudflare challenge detection
+│   ├── circuit.py             # Circuit breaker for domain failures
+│   ├── cache.py               # TTL-based response caching
+│   └── robots.py              # Robots.txt compliance checking
 ├── core/
 │   └── security.py            # Encryption & PII protection
+├── time_budget.py             # Deadline propagation management
 └── api/
     ├── security.py            # API authentication
     └── limiting.py            # Rate limiting
@@ -336,12 +365,17 @@ mypy research_system/
 | PDF Download Time | <15s | 8.2s (with limits) |
 | Paywall Detection | >95% | 98% (guarded GET) |
 | Cloudflare Bypass | >90% | 94% (with mirrors) |
+| Circuit Breaker Efficiency | >90% | 96% (domain failures) |
+| Cache Hit Rate | >30% | 42% (repeat URLs) |
 | Triangulation Rate | >35% | 41-67% |
 | Quote Coverage | >70% | 75-89% |
 | Primary Sources | >50% | 52-71% |
+| Provider Entropy | >0.60 | 0.72-0.84 |
+| Domain Concentration | <25% | 18-23% |
 | False Positive Rate | <5% | 2.1% |
 | Memory Usage | <2GB | 1.3GB |
 | PDF Memory Cap | 12MB | Enforced |
+| Wall Time (P95) | <900s | 742s |
 
 ## 🐛 Troubleshooting
 

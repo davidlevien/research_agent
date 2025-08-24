@@ -32,6 +32,7 @@ from research_system.tools.canonical_key import canonical_claim_key
 from research_system.tools.contradictions import find_numeric_conflicts
 from research_system.tools.arex import build_arex_batch, select_uncorroborated_keys
 from research_system.tools.observability import generate_triangulation_breakdown, generate_strict_failure_details
+from research_system.time_budget import set_global_budget
 import json
 
 logger = logging.getLogger(__name__)
@@ -699,6 +700,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
     def run(self):
         settings = Settings()  # validated at CLI
+        
+        # Set global time budget (default 900 seconds / 15 minutes)
+        total_seconds = getattr(self.s, 'timeout', 900)
+        budget = set_global_budget(total_seconds)
+        logger.info(f"Set global time budget: {total_seconds}s")
+        
         # PLAN
         self._write("plan.md", self._generate_plan())
         self._write("source_strategy.md", self._generate_source_strategy())
@@ -930,12 +937,23 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         }
         self._write("triangulation.json", json.dumps(artifact, indent=2))
         
-        # Write metrics.json as single source of truth
+        # Calculate comprehensive metrics with domain and provider entropy
+        from collections import Counter
+        import math
+        N = len(cards)
+        dom_ct = Counter(c.source_domain for c in cards)
+        top_share = (dom_ct.most_common(1)[0][1]/N) if N and dom_ct else 0.0
+        prov_ct = Counter(getattr(c, "provider", None) for c in cards if getattr(c, "provider", None))
+        H = -sum((n/N)*math.log((n/N)+1e-12) for n in prov_ct.values()) if N and prov_ct else 0.0
+        H_norm = H / math.log(max(1, len(prov_ct))) if prov_ct else 0.0
+        
         metrics = {
-            "cards": len(cards),
-            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, len(cards)),
+            "cards": N,
+            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, N),
             "union_triangulation": tri_union,
-            "primary_share_in_union": primary_share_in_union(artifact)
+            "primary_share_in_union": primary_share_in_union(artifact),
+            "top_domain_share": top_share,
+            "provider_entropy": H_norm
         }
         self._write("metrics.json", json.dumps(metrics, indent=2))
         
@@ -1097,6 +1115,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             if hasattr(c, 'date') and c.date:
                 if not isinstance(c.date, str):
                     c.date = c.date.isoformat() if hasattr(c.date, 'isoformat') else str(c.date)
+        
+        # Always write evidence cards, even if there might be failures later
         write_jsonl(str(self.s.output_dir / "evidence_cards.jsonl"), cards)
 
         # CONSOLIDATE / QUALITY - derive from written JSONL
@@ -1104,16 +1124,25 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         quality_table = self._generate_quality_table_from_jsonl(evidence_path)
         self._write("source_quality_table.md", quality_table)
 
-        # SYNTHESIZE
-        self._write("final_report.md", self._generate_final_report(cards, detector))
+        # SYNTHESIZE - write defensively to ensure output even on failures
+        try:
+            report = self._generate_final_report(cards, detector)
+            self._write("final_report.md", report)
+        except Exception as e:
+            self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
+            logger.error(f"Report generation failed: {e}")
+        
         self._write("citation_checklist.md", self._generate_citation_checklist(cards))
         
-        # Check strict mode early with new guard
+        # Check strict mode early with new guard - but ensure metrics/triangulation already written
         if self.s.strict:
             from research_system.strict.guard import strict_check
             errs = strict_check(self.s.output_dir)
             if errs:
-                self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n" + "\n".join(f"- {e}" for e in errs))
+                # Re-write metrics and triangulation to ensure they exist
+                self._write("metrics.json", json.dumps(metrics, indent=2))
+                self._write("triangulation.json", json.dumps(artifact, indent=2))
+                self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
                 raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         
         # EVALUATE acceptance guardrails after report is generated
