@@ -67,9 +67,9 @@ class Settings(BaseSettings):
     STRICT: bool = False
     
     # ==== Open Access & Fallback Features ====
-    ENABLE_UNPAYWALL: bool = Field(default=False, description="Enable Unpaywall OA resolver")
-    ENABLE_S2: bool = Field(default=False, description="Enable Semantic Scholar fallback")
-    ENABLE_CORE: bool = Field(default=False, description="Enable CORE Academic fallback")
+    ENABLE_UNPAYWALL: bool = Field(default=True, description="Enable Unpaywall OA resolver")
+    ENABLE_S2: bool = Field(default=True, description="Enable Semantic Scholar fallback")
+    ENABLE_CORE: bool = Field(default=True, description="Enable CORE Academic fallback")
     
     # ==== Content Processing Features ====
     ENABLE_PDF_TABLES: bool = Field(default=False, description="Enable PDF table extraction")

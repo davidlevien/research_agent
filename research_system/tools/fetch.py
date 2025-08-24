@@ -54,58 +54,28 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
 
 def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     html_ct = None
+    status = 200  # Default status for when html is provided
+    
     if html is None:
-        html, html_ct = fetch_html(url)
+        # Fetch with GET request (not HEAD) for better content
+        try:
+            r = httpx.get(url, timeout=30, headers=UA, follow_redirects=True)
+            html = r.text
+            html_ct = r.headers.get("content-type", "").lower()
+            status = r.status_code
+        except Exception:
+            html, html_ct = None, None
+            status = 0
+    
+    # Generic paywall fallback for ANY domain (DOI / meta-PDF / mirrors)
+    from .paywall_resolver import looks_gated, resolve as resolve_paywall
+    if looks_gated(status, url, html) or (not html and "pdf" not in (html_ct or "")) or len((html or "")) < 500:
+        alt = resolve_paywall(url=url, html=html, content_type=html_ct)
+        if alt:
+            return alt
+    
+    # If still no content and looks like it should be a PDF
     if not html and not (html_ct and "pdf" in html_ct) and not (url or "").lower().endswith(".pdf"):
-        # Multiple fallback strategies for gated content
-        doi = extract_doi(url or "")
-        if doi:
-            # Try Unpaywall for OA version
-            if settings.ENABLE_UNPAYWALL:
-                oa_url = doi_to_oa_url(doi)
-                if oa_url:
-                    # Recursively try to fetch the OA version
-                    return extract_article(oa_url)
-            
-            # Try Crossref metadata
-            meta = crossref_meta(doi)
-            if meta and meta.get("abstract"):
-                quotes = select_claim_sentences((meta.get("abstract") or "")[:2000], max_sentences=2)
-                return {
-                    "title": meta.get("title"),
-                    "text": meta.get("abstract") or "",
-                    "date": meta.get("date"),
-                    "publisher": None,
-                    "quotes": quotes
-                }
-            
-            # Try Semantic Scholar as secondary fallback
-            if settings.ENABLE_S2:
-                from ..connectors.semantics import s2_by_doi, get_oa_pdf_from_s2
-                s2_meta = s2_by_doi(doi)
-                if s2_meta:
-                    # Check for OA PDF
-                    oa_pdf = get_oa_pdf_from_s2(doi)
-                    if oa_pdf:
-                        return extract_article(oa_pdf)
-                    # Use abstract if available
-                    if s2_meta.get("abstract"):
-                        quotes = select_claim_sentences(s2_meta["abstract"][:2000], max_sentences=2)
-                        return {
-                            "title": s2_meta.get("title"),
-                            "text": s2_meta.get("abstract") or "",
-                            "date": None,
-                            "publisher": s2_meta.get("venue"),
-                            "quotes": quotes
-                        }
-            
-            # Try CORE as final fallback
-            if settings.ENABLE_CORE:
-                from ..connectors.core import core_by_doi, get_oa_pdf_from_core
-                oa_pdf = get_oa_pdf_from_core(doi)
-                if oa_pdf:
-                    return extract_article(oa_pdf)
-        
         return {}
     # PDF path with enhanced extraction
     if (html_ct and "pdf" in html_ct) or (url or "").lower().endswith(".pdf"):

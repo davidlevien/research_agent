@@ -58,8 +58,8 @@ def parse_number_with_unit(text: str) -> Tuple[Optional[float], Optional[str]]:
         num_str = m.group(1).replace(",", "")
         return float(num_str), None
     
-    # Plain number
-    m = re.search(r"\b(\d+(?:\.\d+)?)\b", t)
+    # Plain number (exclude 4-digit years like 2024/2025)
+    m = re.search(r"\b(?!20\d{2}\b)(\d+(?:\.\d+)?)\b", t)
     if m:
         return float(m.group(1)), None
     

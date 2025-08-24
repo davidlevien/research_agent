@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from research_system.config import Settings
 from research_system.orchestrator import Orchestrator, OrchestratorSettings
-import logging, os
+import logging, os, sys, time, asyncio
 import structlog
 
 def _init_logging():
@@ -41,4 +41,26 @@ def main():
         resume=args.resume,
         verbose=args.verbose,
     )
-    Orchestrator(s).run()
+    
+    # Global timeout handler
+    async def arun():
+        orchestrator = Orchestrator(s)
+        if hasattr(orchestrator, 'arun'):
+            await orchestrator.arun()
+        else:
+            # Fallback for sync orchestrator
+            import asyncio
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, orchestrator.run)
+    
+    wall_timeout = int(os.getenv("WALL_TIMEOUT_SEC", "600"))
+    t0 = time.time()
+    try:
+        asyncio.run(asyncio.wait_for(arun(), timeout=wall_timeout))
+    except asyncio.TimeoutError:
+        dur = time.time() - t0
+        sys.stderr.write(f"\nGLOBAL TIMEOUT after {dur:.1f}s — wrote partial artifacts. Increase WALL_TIMEOUT_SEC.\n")
+        sys.exit(2)
+    except KeyboardInterrupt:
+        sys.stderr.write("\nInterrupted by user.\n")
+        sys.exit(1)

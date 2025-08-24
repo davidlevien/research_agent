@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from collections import defaultdict
 from urllib.parse import urlparse
+from .models import Discipline
 
 from research_system.models import EvidenceCard, RelatedTopic
 from research_system.tools.evidence_io import write_jsonl
@@ -69,28 +70,19 @@ class Orchestrator:
         return [c for c in cards if c.relevance_score >= threshold]
     
     def _dedup(self, cards: List[EvidenceCard]) -> List[EvidenceCard]:
-        """Remove duplicate evidence cards by URL"""
-        seen = set()
-        out = []
-        for c in cards:
-            key = (c.url or c.source_url).strip().lower()
-            if key not in seen:
-                seen.add(key)
-                out.append(c)
-        return out
+        """Remove duplicate evidence cards using enhanced deduplication"""
+        from research_system.collect.dedup import dedup_cards
+        return dedup_cards(cards, title_threshold=0.9)
     
     def _extract_related_topics(self, cards: List[EvidenceCard], k: int = 5) -> List[Dict]:
-        """Extract related topics from evidence (opt-in feature)"""
+        """Extract related topics from evidence using phrase-level extraction"""
         try:
-            processor = ContentProcessor()
-            related = processor.extract_related_topics(
-                cards=cards,
-                seed_topic=self.s.topic,
-                k=k
-            )
-            return related
+            from .tools.related_topics import extract_related_topics
+            topics = extract_related_topics(cards, max_topics=k)
+            # Convert to expected format
+            return [{"name": t["phrase"], "score": t["relevance_score"], "reason": f"{t['supporting_sources']} sources"} 
+                    for t in topics]
         except Exception as e:
-            # Fallback: return empty list if extraction fails
             logger.warning(f"Related topics extraction failed: {e}")
             return []
     
@@ -382,10 +374,38 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         return guardrails
 
     def _generate_final_report(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
-        """Generate final report with cluster-first ordering"""
+        """Generate final report using enhanced composition module"""
         if not cards:
             return "# Final Report\n\nNo evidence collected for this topic."
         
+        # Use the enhanced report module if triangulation data exists
+        try:
+            import json
+            tri_path = self.s.output_dir / "triangulation.json"
+            if tri_path.exists():
+                tri_data = json.loads(tri_path.read_text())
+                para_clusters = tri_data.get("paraphrase_clusters", [])
+                struct_tris = tri_data.get("structured_triangles", [])
+                
+                from research_system.report.final_report import generate_final_report
+                from research_system.config import Settings
+                
+                return generate_final_report(
+                    cards=cards,
+                    para_clusters=para_clusters,
+                    struct_tris=struct_tris,
+                    topic=self.s.topic,
+                    providers=Settings().enabled_providers()
+                )
+        except Exception as e:
+            logger.warning(f"Enhanced report generation failed, using fallback: {e}")
+        
+        # Fallback to existing implementation
+        return self._generate_final_report_fallback(cards, detector)
+    
+    def _generate_final_report_fallback(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
+        """Fallback report generation if enhanced module fails"""
+        # Original implementation continues here
         from research_system.tools.embed_cluster import hybrid_clusters
         rel_idx = [i for i, c in enumerate(cards) if getattr(c, "relevance_score", 0) >= 0.5]
         claim_texts = [(getattr(c, "quote_span", None) or getattr(c, "claim", "") or getattr(c, "snippet", "") or getattr(c, "source_title", "")) for c in cards]
@@ -434,25 +454,68 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         
         lines.append("")
         lines.append("## Key Findings (triangulated first)")
-        for g in ordered[:12]:
+        
+        # Helper functions for density testing
+        import re
+        def has_numeric_and_period(text: str) -> bool:
+            return bool(re.search(r"\d", text)) and bool(re.search(r"\b(20\d{2}|Q[1-4]\s*20\d{2}|H[12]\s*20\d{2}|FY\s*20\d{2})\b", text))
+        
+        def is_primary_domain(domain: str) -> bool:
+            primary_domains = {'unwto.org', 'iata.org', 'wttc.org', 'oecd.org', 'worldbank.org', 'imf.org', 
+                             'who.int', 'cdc.gov', 'europa.eu', 'sec.gov', 'fred.stlouisfed.org', 
+                             'arxiv.org', 'pubmed.ncbi.nlm.nih.gov', 'doi.org'}
+            return domain in primary_domains or '.gov' in domain or '.org' in domain
+        
+        def render_finding(claim: str, domains: list, sources: list, label: str) -> list:
+            def md_link(text: str, url: str, maxlen: int = 80) -> str:
+                t = (text or url or "").strip().replace("]", "").replace("[", "")
+                if len(t) > maxlen:
+                    t = t[:maxlen-1] + "…"
+                return f"[{t}]({url})"
+            
+            out = [f"- **{claim.strip()}** _[{label}]_",
+                   f"  - Domains: {', '.join(sorted(set(domains)))}"]
+            for s in sources:
+                title = getattr(s, 'source_title', None) or getattr(s, 'title', None) or s.url
+                out.append(f"    - {md_link(title, s.url)} — {s.source_domain}")
+            return out
+        
+        # 1) Add triangulated claims first that pass density test
+        top_findings = []
+        for g in ordered[:15]:  # Check more candidates
+            if len(top_findings) >= 10:
+                break
             domains = sorted({x.source_domain for x in g})
             sample = g[0]
             claim_text = getattr(sample, 'quote_span', None) or sample.claim or sample.snippet or sample.source_title
-            # Handle date field which is now a string
-            date_val = getattr(sample, "date", None)
-            if date_val:
-                if isinstance(date_val, str):
-                    # Already a string, just use first 10 chars for date part
-                    date = date_val[:10] if len(date_val) >= 10 else date_val
-                else:
-                    # If it's a datetime object, format it
-                    date = date_val.date().isoformat() if hasattr(date_val, 'date') else str(date_val)
-            else:
-                date = "n/a"
-            lines.append(f"- **{claim_text.strip()}**")
-            lines.append(f"  - Date: {date} | Domains: {', '.join(domains)}")
-            for x in g[:3]:
-                lines.append(f"    - [{x.source_title}]({x.url}) — {x.source_domain}")
+            
+            if not has_numeric_and_period(claim_text):
+                continue
+            
+            label = "Triangulated" if len(g) > 1 else "Single-source"
+            finding_lines = render_finding(claim_text, domains, g[:3], label)
+            top_findings.extend(finding_lines)
+        
+        # 2) If <6 findings, backfill from single-source primary domains
+        if len([line for line in top_findings if line.startswith("- **")]) < 6:
+            for g in ordered[15:]:  # Check remaining groups
+                if len([line for line in top_findings if line.startswith("- **")]) >= 6:
+                    break
+                if len(g) > 1:  # Skip, already checked triangulated
+                    continue
+                    
+                sample = g[0]
+                if not is_primary_domain(sample.source_domain):
+                    continue
+                    
+                claim_text = getattr(sample, 'quote_span', None) or sample.claim or sample.snippet or sample.source_title
+                if not has_numeric_and_period(claim_text):
+                    continue
+                    
+                finding_lines = render_finding(claim_text, [sample.source_domain], [sample], "Single-source")
+                top_findings.extend(finding_lines)
+        
+        lines.extend(top_findings)
         
         return "\n".join(lines)
     
@@ -649,6 +712,13 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             for h in hits:
                 # Calculate scoring based on source attributes and discipline
                 domain = domain_of(h.url)
+                
+                # Filter out banned domains
+                from research_system.collect.filter import allowed_domain
+                if not allowed_domain(domain):
+                    logger.debug(f"Skipping banned domain: {domain}")
+                    continue
+                
                 pol = getattr(self, "policy", POLICIES[route_topic(self.s.topic)])
                 is_primary = domain in pol.domain_priors
                 
@@ -740,30 +810,49 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 drop.update(group[1:])
             cards = [c for i, c in enumerate(cards) if i not in drop]
         
-        # Basic dedup and relevance filter
-        cards = self._dedup(cards)  # Remove exact URL duplicates
-        if len(cards) > 10:  # Only filter if we have enough cards
-            filtered = self._filter_relevance(cards, threshold=0.3)  # Use low threshold to preserve most cards
-            if len(filtered) >= 10:  # Only apply filter if we keep enough cards
-                cards = filtered
+        # Enhanced dedup and ranking
+        cards = self._dedup(cards)  # Uses enhanced title-aware deduplication
+        
+        # Apply quality-based ranking
+        from research_system.collect.ranker import rerank_cards
+        cards = rerank_cards(cards)
+        
+        # Keep top cards based on depth (but keep all for triangulation)
+        max_cards = self.depth_to_count.get(self.s.depth, 20) * 3  # 3x for triangulation
+        if len(cards) > max_cards:
+            cards = cards[:max_cards]
 
-        # BUILD TRIANGULATION (clusters) on deterministic input
+        # BUILD TRIANGULATION using enhanced paraphrase clustering
+        from research_system.triangulation.paraphrase_cluster import cluster_paraphrases
+        from research_system.triangulation.compute import compute_structured_triangles, union_rate
+        
+        # Paraphrase clustering with SBERT
+        para_clusters = cluster_paraphrases(cards)
+        
+        # Structured triangulation
+        structured_matches = compute_structured_triangles(cards)
+        
+        # Calculate union rate for strict mode
+        tri_union = union_rate(para_clusters, structured_matches, len(cards))
+        
+        (self.s.output_dir / "triangulation.json").write_text(json.dumps({
+            "paraphrase_clusters": para_clusters,
+            "structured_triangles": structured_matches
+        }, indent=2), encoding="utf-8")
+        
+        # CONTRADICTION DETECTION
         claim_texts = [
-            (getattr(c, "quote_span", None) or getattr(c, "claim", "") or getattr(c, "snippet", "") or getattr(c, "source_title", ""))
+            (getattr(c, "quote_span", None) or getattr(c, "claim", "") or 
+             getattr(c, "snippet", "") or getattr(c, "source_title", ""))
             for c in cards
         ]
-        clusters = hybrid_clusters(claim_texts)
-        tri_list = []
-        for cluster in clusters:
-            idxs = sorted(cluster)
-            domains = sorted({cards[i].source_domain for i in idxs})
-            tri_list.append({
-                "indices": idxs, "domains": domains, "size": len(idxs),
-                "sample_claim": claim_texts[idxs[0]][:240]
-            })
-        (self.s.output_dir / "triangulation.json").write_text(json.dumps(tri_list, indent=2), encoding="utf-8")
+        contradictions = find_numeric_conflicts(claim_texts, tol=0.10)
         
-        # STRUCTURED CLAIM EXTRACTION with normalizations
+        # AREX: Refined targeted expansion for uncorroborated structured claims
+        triangulated_keys = {m["key"] for m in structured_matches}
+        
+        # Extract structured claims for AREX
+        from research_system.tools.claim_struct import extract_struct_claim, struct_key
         structured_claims = []
         for i, text in enumerate(claim_texts):
             sc = extract_struct_claim(text)
@@ -780,29 +869,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     "text": text[:200]
                 })
         
-        # STRUCTURED TRIANGULATION
-        structured_matches = []
-        by_key = {}
-        for claim in structured_claims:
-            key = claim["key"]
-            by_key.setdefault(key, []).append(claim)
-        
-        for key, group in by_key.items():
-            if len(group) >= 2:
-                indices = [c["index"] for c in group]
-                domains = list({cards[i].source_domain for i in indices})
-                structured_matches.append({
-                    "key": key,
-                    "indices": indices,
-                    "domains": domains,
-                    "count": len(group)
-                })
-        
-        # CONTRADICTION DETECTION
-        contradictions = find_numeric_conflicts(claim_texts, tol=0.10)
-        
-        # AREX: Refined targeted expansion for uncorroborated structured claims
-        triangulated_keys = {m["key"] for m in structured_matches}
         uncorroborated = select_uncorroborated_keys(structured_claims, triangulated_keys, max_keys=3)
         
         if uncorroborated and len(cards) < 50:  # Only expand if under budget
@@ -901,9 +967,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # RECOMPUTE per-card confidence with priors, triangulation, recency
         from research_system.scoring import recompute_confidence_with_discipline
         tri_card_index = set()
-        for cl in tri_list:
+        for cl in para_clusters:
             if len(cl["domains"]) >= 2:
                 tri_card_index.update(cl["indices"])
+        for m in structured_matches:
+            if len(m["domains"]) >= 2:
+                tri_card_index.update(m["indices"])
         now = datetime.utcnow()
         for i, c in enumerate(cards):
             # Calculate recency days
@@ -942,24 +1011,25 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         self._write("acceptance_guardrails.md", guardrails_md)
         
         # OBSERVABILITY: Generate triangulation breakdown
-        paraphrase_clusters = [set(cl["indices"]) for cl in tri_list if len(cl["domains"]) >= 2]
-        dedup_count = len(texts) - len(cards) if 'texts' in locals() else 0
+        paraphrase_cluster_sets = [set(cl["indices"]) for cl in para_clusters if len(cl["domains"]) >= 2]
+        dedup_count = 0  # Will be calculated if dedup is performed
         breakdown = generate_triangulation_breakdown(
-            cards, paraphrase_clusters, structured_matches, contradictions, dedup_count
+            cards, paraphrase_cluster_sets, structured_matches, contradictions, dedup_count
         )
         self._write("triangulation_breakdown.md", breakdown)
         
         # STRICT GUARDRAILS (fail fast in --strict using discipline policy)
         if getattr(settings, "STRICT", False) or self.s.strict:
             # Calculate rates with both paraphrase and structured triangulation
-            paraphrase_triangulated = sum(len(c) for c in paraphrase_clusters)
-            structured_triangulated = sum(m["count"] for m in structured_matches)
-            total_triangulated = len(set().union(*paraphrase_clusters) if paraphrase_clusters else set()) + \
-                                len(set(i for m in structured_matches for i in m["indices"]))
+            # Use the already calculated union rate
+            triangulation_rate = tri_union
             
-            paraphrase_rate = paraphrase_triangulated / max(1, len(claim_texts))
-            structured_rate = structured_triangulated / max(1, len(claim_texts))
-            triangulation_rate = total_triangulated / max(1, len(claim_texts))
+            # Calculate individual rates for reporting
+            paraphrase_triangulated = sum(len(cl["indices"]) for cl in para_clusters if len(cl["domains"]) >= 2)
+            structured_triangulated = sum(len(m["indices"]) for m in structured_matches if len(m["domains"]) >= 2)
+            
+            paraphrase_rate = paraphrase_triangulated / max(1, len(cards))
+            structured_rate = structured_triangulated / max(1, len(cards))
             
             dom_counts = {}
             for c in cards:

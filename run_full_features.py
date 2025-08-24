@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.11
 import asyncio
-import json
+import json, os, sys, time
 from pathlib import Path
 from research_system.orchestrator import Orchestrator, OrchestratorSettings
 from research_system.tools.aggregates import source_quality, triangulate_claims, calculate_provider_diversity
@@ -28,15 +28,34 @@ settings = OrchestratorSettings(
 # Add explore_related flag
 settings.explore_related = True  # Enable related topics extraction
 
-# Run orchestrator
+# Global timeout handler
+async def arun():
+    orchestrator = Orchestrator(settings)
+    if hasattr(orchestrator, 'arun'):
+        await orchestrator.arun()
+    else:
+        # Fallback for sync orchestrator
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, orchestrator.run)
+
+# Run orchestrator with timeout protection
 print(f"🔍 Starting research: {args.topic}")
 depth_map = {'rapid': 5, 'standard': 8, 'deep': 20}
 print(f"📊 Depth: {args.depth} ({depth_map[args.depth]} results per provider)")
 print(f"✨ Features: All enhancements active (including related topics)")
 print("-" * 60)
 
-orchestrator = Orchestrator(settings)
-orchestrator.run()
+wall_timeout = int(os.getenv("WALL_TIMEOUT_SEC", "600"))
+t0 = time.time()
+try:
+    asyncio.run(asyncio.wait_for(arun(), timeout=wall_timeout))
+except asyncio.TimeoutError:
+    dur = time.time() - t0
+    sys.stderr.write(f"\nGLOBAL TIMEOUT after {dur:.1f}s — wrote partial artifacts. Increase WALL_TIMEOUT_SEC.\n")
+    # Don't exit, continue with post-processing of partial results
+except KeyboardInterrupt:
+    sys.stderr.write("\nInterrupted by user.\n")
+    sys.exit(1)
 
 # Post-process with additional aggregates
 evidence_path = settings.output_dir / "evidence_cards.jsonl"

@@ -92,26 +92,52 @@ def _extract_entity(text: str) -> Optional[str]:
     return None
 
 
+def _normalize_metric(terms: list) -> Optional[str]:
+    """Normalize a list of terms into a metric"""
+    if not terms:
+        return None
+    text = " ".join(terms).lower()
+    
+    # Common metric patterns
+    if any(x in text for x in ["arrival", "arrivals"]):
+        return "international_tourist_arrivals"
+    elif any(x in text for x in ["occupancy", "rate"]):
+        return "occupancy_rate"
+    elif any(x in text for x in ["spending", "receipts"]):
+        return "tourism_receipts"
+    elif any(x in text for x in ["gdp", "contribution"]):
+        return "tourism_gdp_contribution"
+    elif any(x in text for x in ["passenger", "traffic"]):
+        return "passenger_traffic"
+    elif any(x in text for x in ["employment", "jobs"]):
+        return "tourism_employment"
+    
+    return None
+
+
 def _extract_metric(text: str) -> Optional[str]:
     """Extract metric type from text"""
-    t = text.lower()
-    
-    # Look for common metric patterns
-    patterns = [
-        r"(tourist arrivals?|visitor arrivals?|arrivals?)",
-        r"(tourism gdp|gdp contribution|contribution to gdp)",
-        r"(occupancy rate?|hotel occupancy)",
-        r"(visitor spending|tourist spending|tourism receipts?)",
-        r"(tourism jobs?|employment|jobs? supported)",
-        r"(air passengers?|passenger traffic|rpk)",
-        r"(growth rate?|increased?|grew|rose|declined?|fell)",
-    ]
-    
-    for pattern in patterns:
-        m = re.search(pattern, t)
-        if m:
-            return m.group(1)
-    
+    import re
+    # Prefer known metric lexicon if present anywhere in the sentence
+    try:
+        from .metrics_lexicon import REVERSE as METRIC_ALIASES
+        low = text.lower()
+        matches = [canon for alias, canon in METRIC_ALIASES.items() if alias in low]
+        if matches:
+            # choose most specific (longest alias hit)
+            return max(matches, key=len)
+    except ImportError:
+        pass
+        
+    # fallback: window near number, but drop common verbs like "grew", "rose"
+    VERBS = {"grow","grew","grown","increase","increased","rise","rose","surge","surged","decline","declined","fall","fell","drop","dropped","down","up"}
+    w = re.findall(r"[A-Za-z\-]+", text)
+    for i, tok in enumerate(w):
+        if re.match(r"\d", tok):  # near a number
+            left = [t for t in w[max(0, i-5):i] if t.lower() not in VERBS]
+            right = [t for t in w[i+1:i+4] if t.lower() not in VERBS]
+            m = _normalize_metric(left + right)
+            return m or None
     return None
 
 

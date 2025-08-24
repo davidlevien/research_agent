@@ -6,7 +6,7 @@
 - [x] Multiple domains represented
 
 ## Quality
-- [x] High credibility sources (>23 found)
+- [x] High credibility sources (>4 found)
 - [x] All evidence attributed to search provider
 - [x] Recent sources included
 
@@ -14,10 +14,10 @@
 - [x] JSON schema validation passed
 - [x] All URLs properly formatted
 - [x] Unique evidence IDs assigned
-- [x] Minimum evidence threshold met (56/3)
+- [x] Minimum evidence threshold met (12/3)
 
 ## Statistics
-- Total evidence cards: 56
-- Unique domains: 32
-- Average credibility: 70%
-- Average relevance: 73%
+- Total evidence cards: 12
+- Unique domains: 7
+- Average credibility: 66%
+- Average relevance: 90%

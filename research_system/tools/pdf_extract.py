@@ -13,118 +13,58 @@ logger = logging.getLogger(__name__)
 
 def extract_pdf_text(path_or_bytes: Union[str, Path, bytes, io.BytesIO]) -> Dict[str, Any]:
     """
-    Extract text and metadata from PDF using PyMuPDF (fast) or pdfplumber (fallback).
-    
-    Args:
-        path_or_bytes: File path, Path object, bytes, or BytesIO object
-    
-    Returns:
-        Dict with 'text', 'title', 'pages', 'metadata', and optional 'tables'
+    Returns: {"text": str, "pages": int, "title": Optional[str], "tables": List[...]}
+    Strategy: PyMuPDF (fitz) if available; else pdfplumber. Tables via pdfplumber if present.
     """
-    result = {
-        "text": "",
-        "title": None,
-        "pages": 0,
-        "metadata": {},
-        "tables": [],
-        "error": None
-    }
-    
-    # Try PyMuPDF first (faster and more reliable)
+    result: Dict[str, Any] = {"text": "", "pages": 0, "title": None, "tables": []}
+
+    # Normalize to bytes
+    if isinstance(path_or_bytes, (str, Path)):
+        with open(path_or_bytes, "rb") as f:
+            data = f.read()
+    elif isinstance(path_or_bytes, io.BytesIO):
+        data = path_or_bytes.getvalue()
+    else:
+        data = path_or_bytes
+
+    # Try PyMuPDF first
     try:
         import fitz  # PyMuPDF
-        
-        # Open document based on input type
-        if isinstance(path_or_bytes, (bytes, bytearray)):
-            doc = fitz.open(stream=path_or_bytes, filetype="pdf")
-        elif isinstance(path_or_bytes, io.BytesIO):
-            doc = fitz.open(stream=path_or_bytes.getvalue(), filetype="pdf")
-        else:
-            doc = fitz.open(str(path_or_bytes))
-        
-        # Extract text from all pages
-        text_parts = []
-        for page_num, page in enumerate(doc, 1):
-            page_text = page.get_text()
-            if page_text:
-                text_parts.append(f"[Page {page_num}]\n{page_text}")
-        
-        result["text"] = "\n\n".join(text_parts)
-        result["pages"] = len(doc)
-        
-        # Extract metadata
-        metadata = doc.metadata
-        if metadata:
-            result["title"] = metadata.get("title")
-            result["metadata"] = {
-                "author": metadata.get("author"),
-                "subject": metadata.get("subject"),
-                "keywords": metadata.get("keywords"),
-                "creator": metadata.get("creator"),
-                "producer": metadata.get("producer"),
-                "creationDate": str(metadata.get("creationDate")) if metadata.get("creationDate") else None,
-                "modDate": str(metadata.get("modDate")) if metadata.get("modDate") else None
-            }
-        
+        doc = fitz.open(stream=data, filetype="pdf")
+        parts = []
+        for page in doc:
+            parts.append(page.get_text("text"))
+        result["text"] = "\n".join(parts)
+        result["pages"] = doc.page_count
+        meta = doc.metadata or {}
+        result["title"] = meta.get("title") or None
         doc.close()
-        logger.debug(f"Successfully extracted {result['pages']} pages using PyMuPDF")
+        # Light table pass (optional): PyMuPDF doesn't do tables natively
         return result
-        
-    except ImportError:
-        logger.debug("PyMuPDF not available, trying pdfplumber")
-    except Exception as e:
-        logger.warning(f"PyMuPDF extraction failed: {e}")
-        result["error"] = str(e)
-    
-    # Fallback to pdfplumber (better for tables)
+    except Exception:
+        pass
+
+    # Fallback: pdfplumber (includes simple table extraction)
     try:
         import pdfplumber
-        
-        # Open PDF based on input type
-        if isinstance(path_or_bytes, (bytes, bytearray)):
-            pdf_file = io.BytesIO(path_or_bytes)
-        elif isinstance(path_or_bytes, io.BytesIO):
-            pdf_file = path_or_bytes
-        else:
-            pdf_file = str(path_or_bytes)
-        
-        with pdfplumber.open(pdf_file) as pdf:
-            # Extract text from all pages
+        with pdfplumber.open(io.BytesIO(data)) as pdf:
             text_parts = []
-            for page_num, page in enumerate(pdf.pages, 1):
-                page_text = page.extract_text()
-                if page_text:
-                    text_parts.append(f"[Page {page_num}]\n{page_text}")
-                
-                # Extract tables if present
-                tables = page.extract_tables()
-                for table_idx, table in enumerate(tables):
+            for page in pdf.pages:
+                text_parts.append(page.extract_text() or "")
+                for table_idx, table in enumerate(page.extract_tables() or []):
                     if table:
                         result["tables"].append({
-                            "page": page_num,
-                            "index": table_idx,
-                            "data": table
+                            "page": page.page_number, "index": table_idx, "data": table
                         })
-            
             result["text"] = "\n\n".join(text_parts)
             result["pages"] = len(pdf.pages)
-            
-            # Extract metadata
             if pdf.metadata:
-                result["metadata"] = dict(pdf.metadata)
-                result["title"] = pdf.metadata.get("Title")
-        
-        logger.debug(f"Successfully extracted {result['pages']} pages using pdfplumber")
+                title = pdf.metadata.get("Title")
+                result["title"] = title if title and isinstance(title, str) else None
         return result
-        
-    except ImportError:
-        logger.warning("pdfplumber not available")
-        result["error"] = "No PDF extraction library available (install pymupdf or pdfplumber)"
     except Exception as e:
-        logger.error(f"pdfplumber extraction failed: {e}")
-        result["error"] = str(e)
-    
-    return result
+        result["error"] = f"pdf extraction failed: {e}"
+        return result
 
 
 def extract_pdf_with_layout(path_or_bytes: Union[str, Path, bytes]) -> Dict[str, Any]:

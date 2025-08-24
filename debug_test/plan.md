@@ -1,10 +1,10 @@
 # Research Plan
 
 ## Topic
-global tourism recovery 2025
+international tourist arrivals Q1 2025
 
 ## Depth
-Standard - Balanced research with quality sources (15-30 minutes)
+Rapid - Quick scan of top sources (5-10 minutes)
 
 ## Objectives
 1. Gather evidence from multiple search providers
