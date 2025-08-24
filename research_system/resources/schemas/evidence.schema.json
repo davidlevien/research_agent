@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EvidenceCard",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "url",
+    "snippet",
+    "provider",
+    "credibility_score",
+    "relevance_score",
+    "confidence",
+    "subtopic_name",
+    "claim",
+    "supporting_text",
+    "source_domain",
+    "is_primary_source",
+    "collected_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "snippet": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "provider": {
+      "type": "string",
+      "enum": ["tavily", "brave", "serper", "serpapi", "nps"]
+    },
+    "date": {
+      "type": ["string", "null"],
+      "format": "date"
+    },
+    "credibility_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "relevance_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "subtopic_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "claim": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "supporting_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "source_domain": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "is_primary_source": {
+      "type": "boolean"
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "author": {
+      "type": ["string", "null"],
+      "maxLength": 200
+    },
+    "stance": {
+      "type": "string",
+      "enum": ["supports", "disputes", "neutral"],
+      "default": "neutral"
+    },
+    "claim_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-zA-Z0-9_-]*$",
+      "maxLength": 100
+    },
+    "disputed_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "controversy_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0
+    }
+  },
+  "if": {
+    "properties": {
+      "stance": {
+        "not": {
+          "const": "neutral"
+        }
+      }
+    }
+  },
+  "then": {
+    "required": ["claim_id"]
+  }
+}

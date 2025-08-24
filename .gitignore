@@ -63,6 +63,8 @@ reports/
 *.pdf
 *.html
 *.json
+# But keep schema files
+!research_system/resources/**/*.json
 
 # Database
 *.db
