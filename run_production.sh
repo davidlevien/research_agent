@@ -28,9 +28,14 @@ echo ""
 echo "Starting research run..."
 echo "========================================="
 
+# Load .env file if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
 # Check for required security keys
 if [ -z "$RESEARCH_ENCRYPTION_KEY" ]; then
-    echo "⚠️  Warning: RESEARCH_ENCRYPTION_KEY not set. Generating temporary key..."
+    echo "⚠️  Warning: RESEARCH_ENCRYPTION_KEY not set in environment or .env. Generating temporary key..."
     export RESEARCH_ENCRYPTION_KEY=$(python3.11 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
 fi
 
