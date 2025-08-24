@@ -11,11 +11,17 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def extract_pdf_text(path_or_bytes: Union[str, Path, bytes, io.BytesIO]) -> Dict[str, Any]:
+def extract_pdf_text(path_or_bytes: Union[str, Path, bytes, io.BytesIO], max_pages: Optional[int] = None) -> Dict[str, Any]:
     """
     Returns: {"text": str, "pages": int, "title": Optional[str], "tables": List[...]}
     Strategy: PyMuPDF (fitz) if available; else pdfplumber. Tables via pdfplumber if present.
+    
+    Args:
+        path_or_bytes: PDF path or bytes
+        max_pages: Maximum pages to extract (for quote extraction efficiency)
     """
+    import os
+    max_pages = max_pages or int(os.getenv("PDF_MAX_PAGES", "6"))
     result: Dict[str, Any] = {"text": "", "pages": 0, "title": None, "tables": []}
 
     # Normalize to bytes
@@ -32,10 +38,13 @@ def extract_pdf_text(path_or_bytes: Union[str, Path, bytes, io.BytesIO]) -> Dict
         import fitz  # PyMuPDF
         doc = fitz.open(stream=data, filetype="pdf")
         parts = []
-        for page in doc:
-            parts.append(page.get_text("text"))
+        # Only process first max_pages for quote extraction
+        pages_to_process = min(doc.page_count, max_pages) if max_pages else doc.page_count
+        for i in range(pages_to_process):
+            parts.append(doc[i].get_text("text"))
         result["text"] = "\n".join(parts)
         result["pages"] = doc.page_count
+        result["extracted_pages"] = pages_to_process
         meta = doc.metadata or {}
         result["title"] = meta.get("title") or None
         doc.close()
@@ -49,7 +58,10 @@ def extract_pdf_text(path_or_bytes: Union[str, Path, bytes, io.BytesIO]) -> Dict
         import pdfplumber
         with pdfplumber.open(io.BytesIO(data)) as pdf:
             text_parts = []
-            for page in pdf.pages:
+            # Only process first max_pages for quote extraction
+            pages_to_process = min(len(pdf.pages), max_pages) if max_pages else len(pdf.pages)
+            for i in range(pages_to_process):
+                page = pdf.pages[i]
                 text_parts.append(page.extract_text() or "")
                 for table_idx, table in enumerate(page.extract_tables() or []):
                     if table:
@@ -58,6 +70,7 @@ def extract_pdf_text(path_or_bytes: Union[str, Path, bytes, io.BytesIO]) -> Dict
                         })
             result["text"] = "\n\n".join(text_parts)
             result["pages"] = len(pdf.pages)
+            result["extracted_pages"] = pages_to_process
             if pdf.metadata:
                 title = pdf.metadata.get("Title")
                 result["title"] = title if title and isinstance(title, str) else None

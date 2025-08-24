@@ -179,6 +179,24 @@ class ResearchReport(BaseModel):
         return md
 
 
+class BiasIndicators(BaseModel):
+    """Indicators of potential bias in content"""
+    political_lean: Optional[float] = Field(None, ge=-1, le=1)  # -1 left, 0 neutral, 1 right
+    commercial_bias: Optional[float] = Field(None, ge=0, le=1)
+    emotional_tone: Optional[float] = Field(None, ge=-1, le=1)  # -1 negative, 0 neutral, 1 positive
+    promotional_content: bool = False
+    disclaimer_present: bool = False
+
+
+class QualityIndicators(BaseModel):
+    """Quality indicators for content assessment"""
+    source_reputation: Optional[float] = Field(None, ge=0, le=1)
+    citation_density: Optional[float] = Field(None, ge=0, le=1)
+    fact_checkable: bool = True
+    peer_reviewed: bool = False
+    methodology_transparent: bool = False
+
+
 class RelatedTopic(BaseModel):
     """Represents a related topic discovered during research"""
     name: str

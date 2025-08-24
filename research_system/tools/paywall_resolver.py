@@ -87,13 +87,19 @@ def resolve(url: str, html: Optional[str], content_type: Optional[str]) -> Optio
     if doi:
         oa = unpaywall_best_oa(doi)
         if oa:
-            pr = httpx.get(oa, headers=UA, timeout=45, follow_redirects=True)
-            if pr.status_code == 200 and "pdf" in pr.headers.get("content-type","").lower():
-                from .pdf_extract import extract_pdf_text
-                from .claim_select import select_claim_sentences
-                pdf = extract_pdf_text(pr.content)
-                quotes = select_claim_sentences(pdf.get("text",""), 2)
-                return {"title": pdf.get("title"), "text": pdf.get("text",""), "date": None, "quotes": quotes, "oa_url": oa, "doi": doi, "source": "unpaywall"}
+            # Use guarded_get to avoid paywall loops
+            from research_system.net.guarded_get import guarded_get
+            try:
+                with httpx.Client(headers=UA, timeout=httpx.Timeout(45), follow_redirects=False) as cl:
+                    pr = guarded_get(oa, cl)
+                if pr.status_code == 200 and "pdf" in pr.headers.get("content-type","").lower():
+                    from .pdf_extract import extract_pdf_text
+                    from .claim_select import select_claim_sentences
+                    pdf = extract_pdf_text(pr.content, max_pages=6)
+                    quotes = select_claim_sentences(pdf.get("text",""), 2)
+                    return {"title": pdf.get("title"), "text": pdf.get("text",""), "date": None, "quotes": quotes, "oa_url": oa, "doi": doi, "source": "unpaywall"}
+            except (PermissionError, httpx.TooManyRedirects):
+                pass  # Paywall or redirect loop detected
         meta = crossref_meta(doi)
         if meta and (meta.get("abstract") or meta.get("title")):
             from .claim_select import select_claim_sentences
@@ -103,13 +109,19 @@ def resolve(url: str, html: Optional[str], content_type: Optional[str]) -> Optio
     # 2) HTML meta/link pointing to a PDF
     pdf_url = find_pdf_in_html(html or "")
     if pdf_url:
-        pr = httpx.get(pdf_url, headers=UA, timeout=45, follow_redirects=True)
-        if pr.status_code == 200 and "pdf" in pr.headers.get("content-type","").lower():
-            from .pdf_extract import extract_pdf_text
-            from .claim_select import select_claim_sentences
-            pdf = extract_pdf_text(pr.content)
-            quotes = select_claim_sentences(pdf.get("text",""), 2)
-            return {"title": pdf.get("title"), "text": pdf.get("text",""), "quotes": quotes, "source": "meta-pdf"}
+        # Use guarded_get to avoid paywall loops
+        from research_system.net.guarded_get import guarded_get
+        try:
+            with httpx.Client(headers=UA, timeout=httpx.Timeout(45), follow_redirects=False) as cl:
+                pr = guarded_get(pdf_url, cl)
+            if pr.status_code == 200 and "pdf" in pr.headers.get("content-type","").lower():
+                from .pdf_extract import extract_pdf_text
+                from .claim_select import select_claim_sentences
+                pdf = extract_pdf_text(pr.content, max_pages=6)
+                quotes = select_claim_sentences(pdf.get("text",""), 2)
+                return {"title": pdf.get("title"), "text": pdf.get("text",""), "quotes": quotes, "source": "meta-pdf"}
+        except (PermissionError, httpx.TooManyRedirects):
+            pass  # Paywall or redirect loop detected
 
     # 3) Domain mirrors (org-specific but optional)
     for pred, transform in MIRRORS:

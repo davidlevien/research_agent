@@ -157,18 +157,18 @@ class DataEncryptor:
         self.cipher_suite = Fernet(self.key)
     
     def _get_or_create_key(self) -> bytes:
-        """Get or create encryption key."""
-        # In production, use proper key management (AWS KMS, HashiCorp Vault, etc.)
-        key_file = ".encryption_key"
+        """Get or create encryption key from environment."""
+        import os
+        import base64
         
+        k = os.getenv("RESEARCH_ENCRYPTION_KEY", "").strip()
+        if not k:
+            raise RuntimeError("RESEARCH_ENCRYPTION_KEY not set (must be a Fernet key)")
         try:
-            with open(key_file, 'rb') as f:
-                return f.read()
-        except FileNotFoundError:
-            key = Fernet.generate_key()
-            with open(key_file, 'wb') as f:
-                f.write(key)
-            return key
+            # Accept raw or base64
+            return k.encode() if k.startswith("gAAAA") else base64.urlsafe_b64decode(k)
+        except Exception as e:
+            raise RuntimeError("Invalid RESEARCH_ENCRYPTION_KEY") from e
     
     def encrypt(self, data: str) -> str:
         """Encrypt string data."""

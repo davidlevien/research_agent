@@ -970,7 +970,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         uncorroborated = select_uncorroborated_keys(structured_claims, triangulated_keys, max_keys=3)
         
-        if uncorroborated and len(cards) < 50:  # Only expand if under budget
+        # Check if AREX is enabled via environment or settings
+        enable_arex = os.getenv("ENABLE_AREX", "false").lower() == "true" or getattr(settings, "ENABLE_AREX", False)
+        
+        if enable_arex and uncorroborated and len(cards) < 50:  # Only expand if under budget
             # Get primary domains from policy
             pol = getattr(self, "policy", POLICIES[route_topic(self.s.topic)])
             discipline = getattr(self, "discipline", Discipline.GENERAL)

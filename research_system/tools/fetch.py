@@ -1,5 +1,5 @@
 from __future__ import annotations
-import httpx, datetime as dt
+import httpx, datetime as dt, os
 from typing import Optional, Dict, Any, Tuple
 
 # Make optional dependencies robust
@@ -77,9 +77,31 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
         # Fetch with GET request (not HEAD) for better content
         try:
             r = httpx.get(url, timeout=30, headers=UA, follow_redirects=True)
+            
+            # Check for Cloudflare challenge
+            from research_system.net.cloudflare import is_cf_challenge, get_unwto_mirror_url
+            if is_cf_challenge(r):
+                # Jump straight to resolver (DOI/Unpaywall or mirror)
+                from .paywall_resolver import resolve as resolve_paywall
+                alt = resolve_paywall(url, r.text, r.headers.get("content-type", ""))
+                if alt:
+                    return alt
+                # Final UNWTO mirror fallback
+                mu = get_unwto_mirror_url(url)
+                if mu:
+                    try:
+                        mr = httpx.get(mu, headers=UA, timeout=30)
+                        if mr.status_code == 200 and len((mr.text or "")) > 500:
+                            return {"title": None, "text": mr.text, "quotes": None, "source": "mirror", "mirror_url": mu}
+                    except Exception:
+                        pass
+                raise PermissionError("Cloudflare challenge")
+            
             html = r.text
             html_ct = r.headers.get("content-type", "").lower()
             status = r.status_code
+        except PermissionError:
+            return {}  # Cloudflare block
         except Exception:
             html, html_ct = None, None
             status = 0
@@ -97,23 +119,18 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     # PDF path with enhanced extraction
     if (html_ct and "pdf" in html_ct) or (url or "").lower().endswith(".pdf"):
         try:
-            # Use cached binary fetch if enabled
-            if settings.ENABLE_HTTP_CACHE:
-                status, headers, content = cached_get_binary(url, headers=UA, timeout=45)
-                if status < 200 or status >= 400:
-                    return {}
-            else:
-                r = httpx.get(url, headers=UA, timeout=45)
-                if r.status_code < 200 or r.status_code >= 400:
-                    return {}
-                content = r.content
+            # Use new PDF fetch with size limits and timeouts
+            from research_system.net.pdf_fetch import download_pdf
+            with httpx.Client() as cl:
+                content = download_pdf(cl, url)
             
             # WARC capture if enabled
             if settings.ENABLE_WARC:
                 warc_capture(url, headers=UA)
             
-            # Extract PDF text
-            pdf = extract_pdf_text(content)
+            # Extract PDF text with page limit
+            max_pages = int(os.getenv("PDF_MAX_PAGES", "6"))
+            pdf = extract_pdf_text(content, max_pages=max_pages)
             text = pdf.get("text", "") or ""
             
             # Try table extraction if text is sparse

@@ -38,7 +38,15 @@ class Settings(BaseSettings):
     HTTP_TIMEOUT_SECONDS: int = 30
     RETRY_MAX_TRIES: int = 5
     RETRY_BACKOFF_BASE_SECONDS: float = 0.5
-    CONCURRENCY: int = 8
+    WALL_TIMEOUT_SEC: int = Field(600, description="Wall clock timeout for entire operation")
+    PROVIDER_TIMEOUT_SEC: int = Field(20, description="Timeout for search/extract provider calls")
+    
+    @property
+    def CONCURRENCY(self) -> int:
+        """Dynamic concurrency based on CPU cores."""
+        import os
+        import multiprocessing
+        return int(os.getenv("CONCURRENCY", str(min(16, max(8, (multiprocessing.cpu_count() or 4) * 2)))))
 
     # ==== Observability toggles ====
     LOG_LEVEL: Literal["DEBUG","INFO","WARNING","ERROR"] = "INFO"
@@ -59,6 +67,8 @@ class Settings(BaseSettings):
     ENABLE_MINHASH_DEDUP: bool = True
     ENABLE_DUCKDB_AGG: bool = True
     ENABLE_SBERT_CLUSTERING: bool = True
+    ENABLE_AREX: bool = Field(default=False, description="Enable AREX expansion for uncorroborated metrics")
+    ENABLE_CONTROVERSY: bool = Field(default=False, description="Enable controversy detection in reports")
     
     # ==== Quality Thresholds ====
     MIN_TRIANGULATION_RATE: float = 0.35
