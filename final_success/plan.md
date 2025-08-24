@@ -1,7 +1,7 @@
 # Research Plan
 
 ## Topic
-global tourism recovery trends 2025
+global tourism recovery 2025
 
 ## Depth
 Standard - Balanced research with quality sources (15-30 minutes)

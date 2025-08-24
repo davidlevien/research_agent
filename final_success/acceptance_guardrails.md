@@ -1,7 +1,7 @@
 # Acceptance Guardrails
 
-**Topic**: global tourism recovery trends 2025
-**Execution Time**: 2025-08-24T21:54:00.556216Z
+**Topic**: global tourism recovery 2025
+**Execution Time**: 2025-08-24T22:25:01.624724Z
 
 ## Evidence Requirements (To Be Validated)
 - [ ] Minimum 3 independent sources per major claim

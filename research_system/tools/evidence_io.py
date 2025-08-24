@@ -48,7 +48,7 @@ def validate_evidence_dict(data: dict) -> None:
         raise ValueError(f"Evidence schema validation failed: {e.message}")
     
     # Additional hard checks (strong guardrail)
-    missing = [k for k in REQUIRED_FIELDS if not data.get(k)]
+    missing = [k for k in REQUIRED_FIELDS if k not in data]
     if missing:
         raise ValueError(f"Evidence missing required fields: {missing}")
     
@@ -67,10 +67,22 @@ def validate_evidence_dict(data: dict) -> None:
 def write_jsonl(path: str, items: List[EvidenceCard]) -> None:
     p = Path(path); p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("w", encoding="utf-8") as f:
-        for item in items:
+        for i, item in enumerate(items):
             # Use canonical output format with blueprint fields
             doc = item.to_jsonl_dict() if hasattr(item, 'to_jsonl_dict') else item.model_dump()
-            validate_evidence_dict(doc)
+            try:
+                validate_evidence_dict(doc)
+            except ValueError as e:
+                # Add debugging info
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Validation failed for card {i+1}/{len(items)}: {e}")
+                logger.error(f"Card ID: {doc.get('id', 'unknown')}")
+                logger.error(f"Card URL: {doc.get('url', 'unknown')}")
+                logger.error(f"Has relevance_score: {'relevance_score' in doc}")
+                if 'relevance_score' in doc:
+                    logger.error(f"relevance_score value: {doc.get('relevance_score')}")
+                raise
             f.write(json.dumps(doc, default=str) + "\n")
 
 def read_jsonl(path: str) -> List[EvidenceCard]:

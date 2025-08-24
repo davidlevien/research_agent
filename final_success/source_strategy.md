@@ -12,7 +12,7 @@
 
 ### Evaluation Criteria
 - **Credibility**: Author expertise, institutional affiliation
-- **Relevance**: Direct relation to global tourism recovery trends 2025
+- **Relevance**: Direct relation to global tourism recovery 2025
 - **Recency**: Preference for recent publications
 - **Objectivity**: Minimal bias, multiple viewpoints
 
