@@ -83,9 +83,9 @@ class ResearchEngine:
             evidence = await self._execute_collection_phase(plan)
             deliverables["evidence_cards"] = self._save_evidence_cards(evidence)
             
-            # Phase 4: Quality Assessment - produces source_quality_table.md
-            quality_assessment = self._assess_evidence_quality(evidence)
-            deliverables["source_quality_table"] = self._save_quality_table(quality_assessment)
+            # Phase 4: Quality Assessment - produces source_quality_table.md (derived from evidence JSONL)
+            evidence_path = self.output_dir / "evidence_cards.jsonl"
+            deliverables["source_quality_table"] = self._save_quality_table_from_evidence(evidence_path)
             
             # Phase 5: Synthesis - produces final_report.md
             report = await self._execute_synthesis_phase(request, plan, evidence)
@@ -443,63 +443,35 @@ If core requirements fail:
         
         return assessments
     
-    def _save_quality_table(self, assessments: List[Dict[str, Any]]) -> str:
-        """Save source quality table as source_quality_table.md"""
-        filepath = self.output_dir / "source_quality_table.md"
+    def _save_quality_table_from_evidence(self, evidence_path: Path) -> str:
+        """Generate source quality table from evidence JSONL file"""
+        from urllib.parse import urlparse
+        from collections import defaultdict
+        import json
         
-        content = """# Source Quality Assessment Table
+        rows = [json.loads(l) for l in evidence_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        by_domain = defaultdict(list)
+        for r in rows:
+            dom = urlparse(r["url"]).netloc.lower()
+            by_domain[dom].append(r)
 
-| Source | Credibility | Accuracy | Completeness | Bias | Overall | Issues |
-|--------|------------|----------|--------------|------|---------|--------|
-"""
-        
-        for assessment in assessments:
-            source = assessment['source'][:30]  # Truncate long domains
-            issues = '; '.join(assessment['issues'][:2]) if assessment['issues'] else 'None'
-            
-            content += f"| {source} | {assessment['credibility']:.2f} | {assessment['accuracy']:.2f} | "
-            content += f"{assessment['completeness']:.2f} | {assessment['bias']:.2f} | "
-            content += f"{assessment['overall']:.2f} | {issues} |\n"
-        
-        content += f"""
-## Summary Statistics
+        lines = [
+            "# Source Quality Assessment Table",
+            "",
+            "| Domain | Items | Avg Cred | Avg Rel | Avg Conf | Most Recent |",
+            "|---|---:|---:|---:|---:|---|",
+        ]
+        for dom, items in sorted(by_domain.items(), key=lambda kv: -len(kv[1])):
+            cred = sum(i.get("credibility_score",0) for i in items)/len(items)
+            rel  = sum(i.get("relevance_score",0)  for i in items)/len(items)
+            conf = sum(i.get("confidence",0)       for i in items)/len(items)
+            recent = max((i.get("date") or i.get("collected_at") or "") for i in items)
+            lines.append(f"| {dom} | {len(items)} | {cred:.2f} | {rel:.2f} | {conf:.2f} | {recent} |")
 
-- **Total Sources**: {len(assessments)}
-- **Average Credibility**: {sum(a['credibility'] for a in assessments) / len(assessments):.2f}
-- **Average Accuracy**: {sum(a['accuracy'] for a in assessments) / len(assessments):.2f}
-- **Average Bias**: {sum(a['bias'] for a in assessments) / len(assessments):.2f}
-- **Average Overall Quality**: {sum(a['overall'] for a in assessments) / len(assessments):.2f}
-
-## Quality Distribution
-
-### High Quality (>0.7)
-{len([a for a in assessments if a['overall'] > 0.7])} sources
-
-### Medium Quality (0.5-0.7)
-{len([a for a in assessments if 0.5 <= a['overall'] <= 0.7])} sources
-
-### Low Quality (<0.5)
-{len([a for a in assessments if a['overall'] < 0.5])} sources
-
-## Common Issues
-"""
-        
-        # Aggregate common issues
-        all_issues = []
-        for assessment in assessments:
-            all_issues.extend(assessment['issues'])
-        
-        issue_counts = {}
-        for issue in all_issues:
-            issue_counts[issue] = issue_counts.get(issue, 0) + 1
-        
-        for issue, count in sorted(issue_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
-            content += f"- {issue} ({count} occurrences)\n"
-        
-        filepath.write_text(content)
-        self.deliverables_produced.add("source_quality_table.md")
-        logger.info(f"Saved source_quality_table.md to {filepath}")
-        return str(filepath)
+        out = self.output_dir/"source_quality_table.md"
+        out.write_text("\n".join(lines), encoding="utf-8")
+        return str(out)
+    
     
     def _save_final_report(self, report: ResearchReport) -> str:
         """Save final report as final_report.md"""

@@ -1,28 +1,130 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
+from enum import Enum
+import uuid
+
+
+class Discipline(str, Enum):
+    """Domain disciplines for routing and policy selection"""
+    GENERAL = "general"
+    SCIENCE = "science"
+    MEDICINE = "medicine"
+    LAW_POLICY = "law_policy"
+    FINANCE_ECON = "finance_econ"
+    TECH_SOFTWARE = "tech_software"
+    SECURITY = "security"
+    TRAVEL_TOURISM = "travel_tourism"
+    CLIMATE_ENV = "climate_env"
+
 
 class EvidenceCard(BaseModel):
-    id: str
-    subtopic_name: str
-    claim: str
-    supporting_text: str
-    source_url: str
-    source_title: str
-    source_domain: str
+    # Core identity
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Legacy fields (for backward compatibility - now optional)
+    subtopic_name: str = "Research Findings"
+    claim: str = ""
+    supporting_text: str = ""
+    source_url: Optional[str] = None  # Now optional - use 'url' instead
+    source_title: Optional[str] = None  # Now optional - use 'title' instead
+    source_domain: Optional[str] = None  # Now optional - derived from 'url'
     credibility_score: float = Field(ge=0, le=1)
-    is_primary_source: bool
+    is_primary_source: bool = False
     relevance_score: float = Field(ge=0, le=1)
-    confidence: float = Field(ge=0, le=1)
-    collected_at: str
+    confidence: float = Field(default=0.5, ge=0, le=1)
+    collected_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     search_provider: Optional[str] = None
     publication_date: Optional[str] = None
     author: Optional[str] = None
+    
+    # NEW required fields for blueprint compliance
+    url: str  # Canonical URL (required)
+    title: str  # Article title (required)
+    snippet: str  # Non-empty extract (required)
+    provider: Literal["tavily", "brave", "serper", "serpapi", "nps"]  # Required provider stamp
+    date: Optional[str] = None  # Publication date if available
+    
     # Controversy tracking fields
     stance: Literal["supports", "disputes", "neutral"] = "neutral"
-    claim_id: Optional[str] = None  # Cluster key for related claims
-    disputed_by: List[str] = Field(default_factory=list)  # IDs/URLs of opposing evidence
-    controversy_score: float = Field(default=0.0, ge=0, le=1)  # 0=consensus, 1=highly disputed
+    claim_id: Optional[str] = None
+    disputed_by: List[str] = Field(default_factory=list)
+    controversy_score: float = Field(default=0.0, ge=0, le=1)
+    
+    # Enhanced evidence anchoring & QA
+    quote_span: Optional[str] = None  # Exact quote from source
+    content_hash: Optional[str] = None  # For duplicate detection
+    reachability: float = Field(default=1.0, ge=0, le=1)  # 0=paywalled, 1=accessible
+    
+    # Topic tagging for conglomeration
+    topic: str = "seed"  # seed topic or related topic label
+    related_reason: Optional[str] = None  # Why this related topic was included
+    
+    # Discipline classification and persistent identifiers
+    discipline: Discipline = Discipline.GENERAL
+    doi: Optional[str] = None  # Digital Object Identifier
+    pmid: Optional[str] = None  # PubMed ID
+    arxiv_id: Optional[str] = None  # ArXiv identifier
+    law_citation: Optional[str] = None  # Legal citation (e.g., 15 U.S.C. §1)
+    cve_id: Optional[str] = None  # CVE identifier for security vulnerabilities
+    metadata: Optional[Dict[str, Any]] = None  # Additional metadata storage
+    
+    @model_validator(mode="after")
+    def backfill_required_fields(self):
+        """Ensure bidirectional field compatibility"""
+        # Backfill from legacy to new (if new are missing)
+        if not self.url and self.source_url:
+            self.url = self.source_url
+        if not self.title and self.source_title:
+            self.title = self.source_title
+        if not self.date and self.publication_date:
+            self.date = self.publication_date
+        if not self.snippet and self.supporting_text:
+            self.snippet = self.supporting_text[:500]
+            
+        # Backfill from new to legacy (if legacy are missing)
+        if not self.source_url and self.url:
+            self.source_url = self.url
+        if not self.source_title and self.title:
+            self.source_title = self.title
+        if not self.supporting_text and self.snippet:
+            self.supporting_text = self.snippet
+        if not self.source_domain and self.url:
+            from urllib.parse import urlparse
+            self.source_domain = urlparse(self.url).netloc
+        if not self.provider and self.search_provider:
+            self.provider = self.search_provider
+        if not self.claim and self.title:
+            self.claim = self.title[:200]  # Use title as claim if missing
+        if not self.source_url and self.url:
+            self.source_url = self.url
+        if not self.source_title and self.title:
+            self.source_title = self.title
+        if not self.publication_date and self.date:
+            self.publication_date = self.date
+        if not self.supporting_text and self.snippet:
+            self.supporting_text = self.snippet
+        if not self.search_provider and self.provider:
+            self.search_provider = self.provider
+            
+        # Enforce non-empty snippet and valid provider
+        assert self.snippet and self.snippet.strip(), "snippet must be non-empty"
+        assert self.provider in {"tavily", "brave", "serper", "serpapi", "nps"}, f"invalid provider: {self.provider}"
+        
+        return self
+    
+    def to_jsonl_dict(self) -> dict:
+        """Return canonical fields for JSONL output"""
+        d = self.model_dump()
+        # Output all required fields plus extras (including PE-grade fields for clustering)
+        keys = ["id", "title", "url", "snippet", "provider", "date",
+                "credibility_score", "relevance_score", "confidence",
+                "collected_at", "source_domain", "stance", "claim_id",
+                "disputed_by", "controversy_score", "subtopic_name",
+                "claim", "supporting_text", "is_primary_source",
+                "quote_span", "content_hash", "author", "source_title", 
+                "source_url", "search_provider", "publication_date"]
+        return {k: d.get(k) for k in keys if k in d}
 
 class ReportSection(BaseModel):
     title: str
@@ -75,3 +177,22 @@ class ResearchReport(BaseModel):
         md += f"- Total Cost: ${self.metrics.total_cost_usd:.2f}\n"
         
         return md
+
+
+class RelatedTopic(BaseModel):
+    """Represents a related topic discovered during research"""
+    name: str
+    score: float = Field(ge=0)
+    reason_to_include: str
+
+
+class EnhancedResearchRequest(BaseModel):
+    """Enhanced research request with expanded capabilities"""
+    topic: str
+    purpose: Literal["brief", "dossier", "market-scan"] = "brief"
+    audience: Literal["exec", "pm", "analyst"] = "exec"
+    depth_level: int = Field(ge=1, le=3, default=1)
+    freshness_days: int = Field(ge=1, le=365, default=90)
+    explore_radius: int = Field(ge=0, le=2, default=1)  # 0=seed only, 1=near, 2=broad
+    region: Optional[str] = None
+    providers: Optional[List[str]] = None  # Override provider policy if set

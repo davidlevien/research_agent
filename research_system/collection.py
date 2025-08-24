@@ -1,5 +1,6 @@
 import asyncio
 import time
+import re
 from typing import Dict, List, Optional
 from research_system.config import Settings
 from research_system.tools.registry import Registry
@@ -19,6 +20,15 @@ async def _exec(loop, registry: Registry, tool_name: str, req: SearchRequest) ->
     finally:
         SEARCH_LATENCY.labels(provider=provider).observe(time.perf_counter() - start)
 
+def _provider_policy(query: str, providers: List[str]) -> List[str]:
+    """Heuristic: include 'nps' only for park-specific queries."""
+    q = query.lower()
+    wants_nps = bool(re.search(r"\b(park|nps|national\s+park|trail|camp|permit|monument|memorial)\b", q))
+    normalized = [p for p in providers if p != "nps"]
+    if wants_nps and "nps" in providers:
+        normalized.append("nps")
+    return normalized
+
 async def parallel_provider_search(registry: Registry, query: str, count: int, freshness: Optional[str], region: Optional[str]):
     s = Settings()
     providers = s.enabled_providers()
@@ -30,8 +40,9 @@ async def parallel_provider_search(registry: Registry, query: str, count: int, f
         "nps": "search_nps"
     }
     req = SearchRequest(query=query, count=count, freshness_window=freshness, region=region)
-    # Only execute tools that are in the tool_map and enabled
-    valid_providers = [p for p in providers if p in tool_map]
+    # Apply provider policy to filter out irrelevant providers
+    normalized = _provider_policy(query, providers)
+    valid_providers = [p for p in normalized if p in tool_map]
     tasks = [_exec(asyncio.get_running_loop(), registry, tool_map[p], req) for p in valid_providers]
     results = await asyncio.gather(*tasks, return_exceptions=True)
     per_provider: Dict[str, List[SearchHit]] = {}

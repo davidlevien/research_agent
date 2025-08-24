@@ -11,7 +11,7 @@ import logging
 from bs4 import BeautifulSoup
 import hashlib
 
-from .registry import tool_registry
+# from .registry import tool_registry  # Not needed - removed to avoid registration issues
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class ContentProcessor:
     
     def __init__(self):
         self.stopwords = self._load_stopwords()
-        self._register_tools()
+        # Removed _register_tools() - not needed for our usage
     
     def _load_stopwords(self) -> set:
         """Load stopwords for filtering"""
@@ -59,43 +59,10 @@ class ContentProcessor:
                 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'
             }
     
-    def _register_tools(self):
-        """Register all content processing tools"""
-        tool_registry.register(
-            name="process_content",
-            description="Comprehensive content processing",
-            category="content",
-            function=self.process_content
-        )
-        
-        tool_registry.register(
-            name="extract_keywords",
-            description="Extract keywords from text",
-            category="content",
-            function=self.extract_keywords,
-            output_type=List[str]
-        )
-        
-        tool_registry.register(
-            name="summarize_content",
-            description="Generate content summary",
-            category="content",
-            function=self.summarize_content
-        )
-        
-        tool_registry.register(
-            name="detect_language",
-            description="Detect content language",
-            category="content",
-            function=self.detect_language
-        )
-        
-        tool_registry.register(
-            name="calculate_similarity",
-            description="Calculate text similarity",
-            category="content",
-            function=self.calculate_similarity
-        )
+    # def _register_tools(self):
+    #     """Register all content processing tools - DISABLED: not needed for our usage"""
+    #     # This was causing Registry.register() errors due to incompatible signatures
+    #     pass
     
     def process_content(
         self,
@@ -534,3 +501,98 @@ class ContentProcessor:
         
         # Generate SHA-256 hash
         return hashlib.sha256(normalized.encode()).hexdigest()
+    
+    def extract_related_topics(
+        self, 
+        cards: List[Any],  # List[EvidenceCard]
+        seed_topic: str, 
+        k: int = 8
+    ) -> List[Dict[str, Any]]:
+        """
+        Lightweight candidate generation for related topics:
+        - collect noun-ish tokens from titles/snippets/claims
+        - score by frequency × novelty × recency
+        - return k diverse candidates with inclusion reasons
+        """
+        from datetime import datetime
+        from collections import defaultdict
+        
+        def _tokenize(text: str) -> List[str]:
+            return [t.lower() for t in re.findall(r"[a-z0-9]{3,}", text or "")]
+        
+        def _score_related(cands: Dict[str, Dict[str, float]]) -> List[tuple]:
+            ranked = []
+            for key, metrics in cands.items():
+                score = metrics["freq"] * (1 + metrics.get("recency_boost", 0)) * (1 + metrics.get("novelty", 0))
+                reason = metrics.get("reason", "High co-mention frequency with new angles")
+                ranked.append((key, score, reason))
+            return sorted(ranked, key=lambda x: x[1], reverse=True)
+        
+        seed_tokens = set(_tokenize(seed_topic))
+        now = datetime.utcnow()
+        buckets: Dict[str, Dict[str, float]] = defaultdict(lambda: {"freq": 0, "novelty": 0, "recency_boost": 0})
+        
+        # Common words to exclude
+        exclude_words = {"the", "and", "for", "with", "from", "into", "about", "travel", "tourism", "trend", "trends", "2024", "2025"}
+        
+        for card in cards:
+            # Gather text from various fields
+            text_parts = []
+            if hasattr(card, 'title'):
+                text_parts.append(card.title)
+            if hasattr(card, 'snippet'):
+                text_parts.append(card.snippet or "")
+            if hasattr(card, 'claim'):
+                text_parts.append(card.claim or "")
+            
+            text = " ".join(text_parts)
+            tokens = _tokenize(text)
+            
+            for token in tokens:
+                if token in seed_tokens or token in exclude_words or len(token) < 4:
+                    continue
+                    
+                bucket = buckets[token]
+                bucket["freq"] += 1
+                
+                # Boost for novelty (not in seed)
+                if token not in seed_tokens:
+                    bucket["novelty"] = 0.2
+                
+                # Boost for recency
+                if hasattr(card, 'date') and card.date:
+                    try:
+                        card_date = datetime.fromisoformat(card.date.replace('Z', '+00:00')) if isinstance(card.date, str) else card.date
+                        age_days = max(1, (now - card_date).days)
+                        bucket["recency_boost"] = max(bucket["recency_boost"], min(1.0, 30 / age_days))
+                    except:
+                        pass
+        
+        # Score and rank
+        ranked = _score_related(buckets)
+        
+        # Diversify results
+        output = []
+        seen_roots = set()
+        
+        for term, score, reason in ranked[:k * 3]:  # Over-sample then filter
+            # Skip if too similar to already selected terms
+            root = term[:5]
+            if root in seen_roots:
+                continue
+            
+            # Skip if it's a substring of an existing term or vice versa
+            if any(term in existing["name"] or existing["name"] in term for existing in output):
+                continue
+            
+            output.append({
+                "name": term,
+                "score": float(score),
+                "reason_to_include": reason
+            })
+            seen_roots.add(root)
+            
+            if len(output) >= k:
+                break
+        
+        return output

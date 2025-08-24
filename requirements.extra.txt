@@ -1,0 +1,33 @@
+# Enhanced Research System Dependencies
+# Production-ready tools for PE-level research accuracy
+
+# Core clustering and similarity
+sentence-transformers>=3.0.1
+scikit-learn>=1.5.1
+hdbscan>=0.8.38
+
+# Near-duplicate detection
+datasketch>=1.6.5
+
+# Content extraction and parsing
+trafilatura>=1.12.0
+extruct>=0.17.0
+w3lib>=2.2.1
+tldextract>=5.1.2
+
+# HTTP client with better timeout handling
+httpx>=0.27.0
+
+# PDF processing
+pymupdf>=1.24.9
+pdfplumber>=0.11.4
+
+# Fast analytics
+duckdb>=1.1.0
+
+# Optional dependencies (uncomment as needed)
+# playwright>=1.48.0  # For JS-heavy sites
+# aiohttp-client-cache>=0.11.0  # For caching
+# aiolimiter>=1.1.0  # For rate limiting
+# presidio-analyzer>=2.2.355  # For PII detection
+# warcio>=1.7.4  # For WARC archiving

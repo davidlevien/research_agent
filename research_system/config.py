@@ -51,6 +51,39 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = None
     ENABLE_DATABASE: bool = False
     DATABASE_URL: Optional[str] = None
+    
+    # ==== Enhanced Features (PE-level) ====
+    ENABLE_PRIMARY_CONNECTORS: bool = True
+    ENABLE_EXTRACT: bool = True
+    ENABLE_SNAPSHOT: bool = False  # Off by default to avoid Wayback writes
+    ENABLE_MINHASH_DEDUP: bool = True
+    ENABLE_DUCKDB_AGG: bool = True
+    ENABLE_SBERT_CLUSTERING: bool = True
+    
+    # ==== Quality Thresholds ====
+    MIN_TRIANGULATION_RATE: float = 0.35
+    MAX_DOMAIN_CONCENTRATION: float = 0.25
+    MIN_CREDIBILITY: float = 0.6
+    STRICT: bool = False
+    
+    # ==== Open Access & Fallback Features ====
+    ENABLE_UNPAYWALL: bool = Field(default=False, description="Enable Unpaywall OA resolver")
+    ENABLE_S2: bool = Field(default=False, description="Enable Semantic Scholar fallback")
+    ENABLE_CORE: bool = Field(default=False, description="Enable CORE Academic fallback")
+    
+    # ==== Content Processing Features ====
+    ENABLE_PDF_TABLES: bool = Field(default=False, description="Enable PDF table extraction")
+    ENABLE_LANGDETECT: bool = Field(default=False, description="Enable language detection")
+    
+    # ==== Crawling & Caching Features ====
+    ENABLE_HTTP_CACHE: bool = Field(default=False, description="Enable HTTP caching with ETag support")
+    ENABLE_POLITENESS: bool = Field(default=False, description="Enable robots.txt compliance")
+    ENABLE_WARC: bool = Field(default=False, description="Enable WARC archiving for provenance")
+    HTTP_CACHE_DIR: str = Field(default="./.http_cache", description="Directory for HTTP cache")
+    
+    # ==== Domain Quality Features ====
+    ENABLE_TRANCO: bool = Field(default=False, description="Enable Tranco domain reputation")
+    ENABLE_GEO_NORM: bool = Field(default=False, description="Enable geographic normalization")
 
     class Config:
         env_file = ".env"

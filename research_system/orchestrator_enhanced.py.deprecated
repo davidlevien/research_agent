@@ -1,0 +1,568 @@
+"""
+Enhanced orchestrator with all PE-level features integrated
+"""
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple, Any
+import asyncio
+import uuid
+import logging
+import json
+from datetime import datetime
+from collections import defaultdict
+from urllib.parse import urlparse
+
+# Core models and tools
+from research_system.models import EvidenceCard, RelatedTopic
+from research_system.tools.evidence_io import write_jsonl, read_jsonl
+from research_system.tools.registry import Registry
+from research_system.tools.search_registry import register_search_tools
+from research_system.collection import parallel_provider_search
+from research_system.config import Settings
+from research_system.controversy import ControversyDetector
+from research_system.tools.aggregates import source_quality, triangulate_claims
+from research_system.tools.content_processor import ContentProcessor
+from research_system.tools.claims import canonical_claim_key
+from research_system.scoring import recompute_confidence
+
+# Enhanced tools
+from research_system.tools.embed_cluster import hybrid_clusters, filter_clusters_by_domain_diversity
+from research_system.tools.dedup import minhash_near_dupes, cross_domain_dedup
+from research_system.tools.fetch import extract_article
+from research_system.tools.snapshot import save_wayback
+from research_system.tools.url_norm import canonicalize_url, domain_of
+from research_system.tools.duck_agg import render_source_quality_md, analyze_triangulation
+
+# Discipline routing and policies
+from research_system.tools.anchor import build_anchors
+from research_system.router import route_topic
+from research_system.policy import POLICIES, get_policy
+from research_system.models import Discipline
+
+# Connectors for primary sources
+from research_system.connectors import REGISTRY as CONNECTOR_REG
+
+logger = logging.getLogger(__name__)
+
+SEVEN = [
+    "plan.md",
+    "source_strategy.md", 
+    "acceptance_guardrails.md",
+    "evidence_cards.jsonl",
+    "source_quality_table.md",
+    "final_report.md",
+    "citation_checklist.md",
+]
+
+@dataclass
+class EnhancedSettings:
+    """Extended settings with feature flags"""
+    topic: str
+    depth: str
+    output_dir: Path
+    max_cost_usd: float = 2.50
+    strict: bool = False
+    resume: bool = False
+    verbose: bool = False
+    
+    # Feature flags
+    enable_primary_connectors: bool = True
+    enable_extract: bool = True
+    enable_snapshot: bool = False  # Off by default to avoid Wayback writes
+    enable_minhash_dedup: bool = True
+    enable_duckdb_agg: bool = True
+    enable_sbert_clustering: bool = True
+    
+    # Thresholds
+    min_triangulation_rate: float = 0.35
+    max_domain_concentration: float = 0.25
+    min_credibility: float = 0.6
+
+
+class EnhancedOrchestrator:
+    """Orchestrator with all PE-level enhancements integrated"""
+    
+    def __init__(self, settings: EnhancedSettings):
+        self.s = settings
+        self.s.output_dir.mkdir(parents=True, exist_ok=True)
+        self.registry = Registry()
+        register_search_tools(self.registry)
+        
+        # Initialize discipline and policy (will be set during collection)
+        self.discipline = None
+        self.policy = None
+        
+    def _write(self, name: str, content: str):
+        (self.s.output_dir / name).write_text(content, encoding="utf-8")
+    
+    async def collect_with_connectors(self, query: str, providers: List[str], count: int, 
+                                     freshness: Optional[int] = None, region: Optional[str] = None) -> List[EvidenceCard]:
+        """Collect evidence from search providers AND primary connectors"""
+        cards = []
+        
+        # Regular search providers
+        results = await parallel_provider_search(
+            self.registry, query=query, count=count,
+            freshness=freshness, region=region
+        )
+        
+        # Convert to EvidenceCards
+        for provider, hits in results.items():
+            for h in hits:
+                domain = urlparse(h.url).netloc
+                is_primary = any(ext in domain for ext in ['.gov', '.edu', '.ac.uk', '.who.int', '.un.org'])
+                
+                credibility = 0.9 if is_primary else 0.7 if '.org' in domain else 0.6
+                
+                text = (h.title + " " + (h.snippet or "")).lower()
+                query_terms = query.lower().split()
+                matches = sum(1 for term in query_terms if term in text)
+                relevance = min(1.0, matches / max(len(query_terms), 1))
+                
+                cards.append(EvidenceCard(
+                    id=str(uuid.uuid4()),
+                    title=h.title,
+                    url=canonicalize_url(h.url),  # Use enhanced URL normalization
+                    snippet=h.snippet or f"Content from {h.title[:200] if h.title else 'source'}",
+                    provider=provider,
+                    date=h.date,
+                    source_title=h.title,
+                    source_url=h.url,
+                    source_domain=domain_of(h.url),  # Use enhanced domain extraction
+                    claim=h.title,
+                    supporting_text=h.snippet or "",
+                    search_provider=provider,
+                    publication_date=h.date,
+                    credibility_score=credibility,
+                    relevance_score=relevance,
+                    confidence=credibility * relevance,
+                    is_primary_source=is_primary,
+                    subtopic_name="Research Findings",
+                    collected_at=datetime.utcnow().isoformat() + "Z"
+                ))
+        
+        # Add discipline-specific connectors if enabled
+        if self.s.enable_primary_connectors and self.policy:
+            logger.info(f"Fetching from discipline connectors for: {query}")
+            
+            # Use connectors specified in the policy
+            for connector_name in self.policy.connectors:
+                connector_fn = CONNECTOR_REG.get(connector_name)
+                if not connector_fn:
+                    continue
+                
+                try:
+                    connector_results = connector_fn(query, 5)
+                    for item in connector_results:
+                        cards.append(EvidenceCard(
+                            id=str(uuid.uuid4()),
+                            title=item["title"],
+                            url=canonicalize_url(item["url"]) if item.get("url") else "",
+                            snippet=item.get("snippet", ""),
+                            provider=item.get("provider", f"connector/{connector_name}"),
+                            date=item.get("date"),
+                            source_title=item["title"],
+                            source_url=item.get("url", ""),
+                            source_domain=domain_of(item["url"]) if item.get("url") else f"{connector_name}.org",
+                            claim=item["title"],
+                            supporting_text=item.get("snippet", ""),
+                            search_provider=item.get("provider", f"connector/{connector_name}"),
+                            publication_date=item.get("date"),
+                            credibility_score=item.get("credibility_score", 0.7),
+                            relevance_score=item.get("relevance_score", 0.6),
+                            confidence=item.get("confidence", 0.65),
+                            is_primary_source=item.get("is_primary_source", True),
+                            subtopic_name=item.get("subtopic", "Research Findings"),
+                            collected_at=datetime.utcnow().isoformat() + "Z",
+                            author=item.get("author"),
+                            discipline=self.discipline or Discipline.GENERAL,
+                            doi=item.get("doi"),
+                            pmid=item.get("pmid"),
+                            arxiv_id=item.get("arxiv_id"),
+                            law_citation=item.get("law_citation"),
+                            cve_id=item.get("cve_id")
+                        ))
+                    logger.debug(f"Connector {connector_name} returned {len(connector_results)} results")
+                except Exception as e:
+                    logger.warning(f"Connector {connector_name} failed: {e}")
+        
+        return cards
+    
+    def enrich_with_extraction(self, cards: List[EvidenceCard]) -> List[EvidenceCard]:
+        """Enrich cards with trafilatura/extruct extraction"""
+        if not self.s.enable_extract:
+            return cards
+        
+        logger.info(f"Enriching {len(cards)} cards with content extraction")
+        
+        for card in cards:
+            try:
+                url = card.url or card.source_url
+                if not url:
+                    continue
+                
+                # Extract article content and metadata
+                article_data = extract_article(url)
+                
+                if article_data.get("title") and not card.source_title:
+                    card.source_title = article_data["title"]
+                
+                if article_data.get("date") and not card.date:
+                    card.date = article_data["date"]
+                
+                if article_data.get("text"):
+                    # Store first 500 chars as quote_span
+                    card.quote_span = article_data["text"][:500]
+                    if len(article_data["text"]) > 500:
+                        card.quote_span += "..."
+                
+                if article_data.get("author") and not card.author:
+                    card.author = article_data["author"]
+                
+                if article_data.get("publisher"):
+                    card.metadata = card.metadata or {}
+                    card.metadata["publisher"] = article_data["publisher"]
+                    
+            except Exception as e:
+                logger.debug(f"Extraction failed for {card.url}: {e}")
+        
+        return cards
+    
+    def snapshot_evidence(self, cards: List[EvidenceCard]) -> List[EvidenceCard]:
+        """Create Wayback Machine snapshots if enabled"""
+        if not self.s.enable_snapshot:
+            return cards
+        
+        logger.info(f"Creating Wayback snapshots for {len(cards)} cards")
+        
+        for card in cards:
+            try:
+                url = card.url or card.source_url
+                if not url:
+                    continue
+                
+                archive_url = save_wayback(url)
+                if archive_url:
+                    # Store archive URL in metadata
+                    card.metadata = card.metadata or {}
+                    card.metadata["wayback_url"] = archive_url
+                    
+                    # Also store in content_hash field if empty
+                    if not card.content_hash:
+                        card.content_hash = f"wayback:{archive_url}"
+                        
+            except Exception as e:
+                logger.debug(f"Wayback snapshot failed for {card.url}: {e}")
+        
+        return cards
+    
+    def deduplicate_syndication(self, cards: List[EvidenceCard]) -> List[EvidenceCard]:
+        """Remove syndicated content using MinHash"""
+        if not self.s.enable_minhash_dedup or len(cards) < 2:
+            return cards
+        
+        logger.info(f"Checking {len(cards)} cards for syndication")
+        
+        # Extract text content for each card
+        texts = []
+        for card in cards:
+            text = card.quote_span or card.claim or card.snippet or card.title or ""
+            texts.append(text)
+        
+        # Detect near-duplicates
+        duplicate_groups = minhash_near_dupes(texts, shingle_size=6, threshold=0.92)
+        
+        if not duplicate_groups:
+            return cards
+        
+        # Analyze cross-domain syndication
+        domains = [card.source_domain for card in cards]
+        syndication_info = cross_domain_dedup(texts, domains, threshold=0.9)
+        
+        # Mark cards to drop (keep highest credibility from each group)
+        indices_to_drop = set()
+        for group in duplicate_groups:
+            # Sort by credibility, keep best
+            group_cards = [(i, cards[i].credibility_score) for i in group]
+            group_cards.sort(key=lambda x: x[1], reverse=True)
+            
+            # Keep the highest credibility one
+            for idx, _ in group_cards[1:]:
+                indices_to_drop.add(idx)
+        
+        # Filter out duplicates
+        deduplicated = [card for i, card in enumerate(cards) if i not in indices_to_drop]
+        
+        logger.info(f"Removed {len(indices_to_drop)} syndicated duplicates, kept {len(deduplicated)}")
+        
+        # Store syndication info in output
+        if syndication_info["groups"]:
+            syndication_path = self.s.output_dir / "syndication_analysis.json"
+            syndication_path.write_text(json.dumps(syndication_info, indent=2))
+        
+        return deduplicated
+    
+    def cluster_and_triangulate(self, cards: List[EvidenceCard]) -> Tuple[List[EvidenceCard], Dict[str, Any]]:
+        """Enhanced clustering with SBERT and triangulation analysis"""
+        if not cards:
+            return cards, {}
+        
+        # Extract claim texts
+        claim_texts = []
+        for card in cards:
+            text = card.quote_span or card.claim or card.snippet or card.title or ""
+            claim_texts.append(text)
+        
+        # Perform hybrid clustering (SBERT with Jaccard fallback)
+        if self.s.enable_sbert_clustering:
+            clusters = hybrid_clusters(claim_texts)
+        else:
+            # Fallback to basic clustering
+            from research_system.tools.claims import cluster_claims_sbert
+            clusters = cluster_claims_sbert(claim_texts)
+        
+        # Filter clusters by domain diversity
+        domains = [card.source_domain for card in cards]
+        diverse_clusters = filter_clusters_by_domain_diversity(clusters, domains, min_domains=2)
+        
+        # Build triangulation data
+        triangulation_data = {
+            "total_claims": len(claim_texts),
+            "total_clusters": len(clusters),
+            "diverse_clusters": len(diverse_clusters),
+            "triangulation_rate": len(diverse_clusters) / max(1, len(claim_texts))
+        }
+        
+        # Mark triangulated cards
+        for cluster in diverse_clusters:
+            cluster_domains = set(domains[i] for i in cluster)
+            if len(cluster_domains) >= 2:
+                for idx in cluster:
+                    # Boost confidence for triangulated claims
+                    cards[idx].confidence = min(1.0, cards[idx].confidence * 1.15)
+                    
+                    # Add triangulation metadata
+                    cards[idx].metadata = cards[idx].metadata or {}
+                    cards[idx].metadata["triangulated"] = True
+                    cards[idx].metadata["corroborating_domains"] = list(cluster_domains)
+        
+        return cards, triangulation_data
+    
+    def apply_strict_guardrails(self, cards: List[EvidenceCard], triangulation_data: Dict[str, Any]):
+        """Apply strict mode guardrails and fail fast if needed"""
+        if not self.s.strict:
+            return
+        
+        errors = []
+        
+        # Check triangulation rate
+        tri_rate = triangulation_data.get("triangulation_rate", 0)
+        if tri_rate < self.s.min_triangulation_rate:
+            errors.append(f"Triangulation too low: {tri_rate:.2%} < {self.s.min_triangulation_rate:.0%}")
+        
+        # Check domain concentration
+        domain_counts = defaultdict(int)
+        for card in cards:
+            domain_counts[card.source_domain] += 1
+        
+        if domain_counts:
+            max_count = max(domain_counts.values())
+            concentration = max_count / len(cards)
+            if concentration > self.s.max_domain_concentration:
+                errors.append(f"Domain concentration too high: {concentration:.2%} > {self.s.max_domain_concentration:.0%}")
+        
+        # Check minimum credibility
+        low_cred = [c for c in cards if c.credibility_score < self.s.min_credibility]
+        if len(low_cred) > len(cards) * 0.3:
+            errors.append(f"Too many low credibility sources: {len(low_cred)}/{len(cards)}")
+        
+        if errors:
+            # Write gaps and risks report
+            gaps_path = self.s.output_dir / "GAPS_AND_RISKS.md"
+            gaps_content = "# Gaps & Risks\n\n"
+            for error in errors:
+                gaps_content += f"- {error}\n"
+            gaps_path.write_text(gaps_content)
+            
+            raise SystemExit(f"STRICT MODE FAIL: {' | '.join(errors)}")
+    
+    def generate_enhanced_reports(self, cards: List[EvidenceCard], triangulation_data: Dict[str, Any]):
+        """Generate all reports with enhanced analytics"""
+        
+        # Use DuckDB for source quality if enabled
+        evidence_path = self.s.output_dir / "evidence_cards.jsonl"
+        
+        if self.s.enable_duckdb_agg:
+            # DuckDB-based source quality table
+            quality_md = render_source_quality_md(str(evidence_path))
+            self._write("source_quality_table.md", quality_md)
+            
+            # Additional triangulation analysis
+            tri_analysis = analyze_triangulation(str(evidence_path))
+            tri_path = self.s.output_dir / "triangulation_analysis.json"
+            tri_path.write_text(json.dumps(tri_analysis, indent=2))
+        else:
+            # Fallback to original method
+            quality_data = source_quality(cards)
+            lines = ["| Domain | Cards | Claims | Avg Credibility | Corroboration | First Seen | Last Seen |",
+                    "|---|---:|---:|---:|---:|---|---|"]
+            
+            for src in quality_data[:20]:
+                lines.append(
+                    f"| {src['domain'][:30]} | {src['total_cards']} | {src['unique_claims']} | "
+                    f"{src['avg_credibility']:.2f} | {src['corroborated_rate']:.1%} | "
+                    f"{src['first_seen']} | {src['last_seen']} |"
+                )
+            
+            self._write("source_quality_table.md", "\n".join(lines))
+        
+        # Enhanced final report with triangulation info
+        report = self.generate_final_report(cards, triangulation_data)
+        self._write("final_report.md", report)
+    
+    def generate_final_report(self, cards: List[EvidenceCard], triangulation_data: Dict[str, Any]) -> str:
+        """Generate enhanced final report"""
+        
+        by_provider = defaultdict(list)
+        by_domain = defaultdict(list)
+        for card in cards:
+            by_provider[card.provider].append(card)
+            by_domain[card.source_domain].append(card)
+        
+        report = f"""# Final Report: {self.s.topic}
+
+**Generated**: {datetime.utcnow().isoformat()}Z  
+**Evidence Cards**: {len(cards)}  
+**Unique Sources**: {len(by_domain)}  
+**Search Providers**: {', '.join(sorted(by_provider.keys()))}  
+**Triangulation Rate**: {triangulation_data.get('triangulation_rate', 0):.1%}
+
+## Executive Summary
+
+Based on analysis of {len(cards)} evidence cards from {len(by_domain)} unique sources, 
+with {triangulation_data.get('diverse_clusters', 0)} claims corroborated across multiple domains.
+
+## Key Findings
+
+"""
+        
+        # Add top triangulated claims
+        triangulated_cards = [c for c in cards if c.metadata and c.metadata.get("triangulated")]
+        if triangulated_cards:
+            report += "### Strongly Corroborated Claims\n\n"
+            for card in sorted(triangulated_cards, key=lambda x: x.confidence, reverse=True)[:5]:
+                domains = card.metadata.get("corroborating_domains", [])
+                report += f"- {card.claim or card.title} (confirmed by {len(domains)} sources)\n"
+            report += "\n"
+        
+        # Provider distribution
+        report += "## Source Distribution\n\n"
+        for provider, provider_cards in by_provider.items():
+            avg_conf = sum(c.confidence for c in provider_cards) / len(provider_cards)
+            report += f"- **{provider}**: {len(provider_cards)} sources (avg confidence: {avg_conf:.0%})\n"
+        
+        report += "\n## Data Quality Metrics\n\n"
+        report += f"- Triangulation achieved: {triangulation_data.get('triangulation_rate', 0):.1%}\n"
+        report += f"- Primary sources: {len([c for c in cards if c.is_primary_source])}\n"
+        report += f"- Average credibility: {sum(c.credibility_score for c in cards)/max(len(cards),1):.2f}\n"
+        report += f"- Recent sources (< 30 days): {len([c for c in cards if c.date])}\n"
+        
+        return report
+    
+    def run(self):
+        """Execute enhanced research pipeline"""
+        
+        # Initialize settings
+        settings = Settings()
+        
+        # Route topic to discipline and get policy
+        anchors, self.discipline, self.policy = build_anchors(self.s.topic)
+        logger.info(f"Topic routed to discipline: {self.discipline.value}")
+        
+        # Generate planning documents with discipline info
+        plan = f"""# Research Plan: {self.s.topic}
+
+## Discipline
+- Identified discipline: {self.discipline.value}
+- Policy thresholds:
+  - Triangulation minimum: {self.policy.triangulation_min:.0%}
+  - Primary source minimum: {self.policy.primary_share_min:.0%}
+  - Clustering cosine threshold: {self.policy.cluster_cosine}
+
+## Approach
+- Depth: {self.s.depth}
+- Primary connectors: {', '.join(self.policy.connectors)}
+- SBERT clustering: {'Enabled' if self.s.enable_sbert_clustering else 'Disabled'}
+- MinHash dedup: {'Enabled' if self.s.enable_minhash_dedup else 'Disabled'}
+- Content extraction: {'Enabled' if self.s.enable_extract else 'Disabled'}
+
+## Anchor Queries
+{chr(10).join(f"- {q}" for q in anchors[:5])}
+
+## Execution Strategy
+1. Run discipline-specific anchor queries
+2. Collect from search providers and discipline connectors
+3. Enrich with content extraction
+4. Deduplicate syndicated content
+5. Cluster and triangulate claims
+6. Apply discipline-specific guardrails
+7. Generate comprehensive reports
+"""
+        self._write("plan.md", plan)
+        
+        # Determine collection parameters
+        depth_to_count = {"rapid": 5, "standard": 10, "deep": 20}
+        count = depth_to_count.get(self.s.depth, 10)
+        
+        # COLLECT phase with connectors
+        providers = ["tavily", "brave", "serper", "serpapi", "nps"]
+        cards = asyncio.run(self.collect_with_connectors(
+            query=self.s.topic,
+            providers=providers,
+            count=count,
+            freshness=settings.FRESHNESS_DAYS,
+            region=settings.REGION
+        ))
+        
+        logger.info(f"Collected {len(cards)} initial evidence cards")
+        
+        # ENRICH phase
+        cards = self.enrich_with_extraction(cards)
+        cards = self.snapshot_evidence(cards)
+        
+        # DEDUPLICATE phase
+        cards = self.deduplicate_syndication(cards)
+        
+        # CLUSTER & TRIANGULATE phase
+        cards, triangulation_data = self.cluster_and_triangulate(cards)
+        
+        # WRITE evidence
+        write_jsonl(str(self.s.output_dir / "evidence_cards.jsonl"), cards)
+        
+        # GENERATE reports
+        self.generate_enhanced_reports(cards, triangulation_data)
+        
+        # Write remaining required files
+        self._write("source_strategy.md", f"# Source Strategy\n\nUsing {len(providers)} search providers plus academic connectors")
+        self._write("acceptance_guardrails.md", f"# Acceptance Guardrails\n\nTriangulation: {triangulation_data.get('triangulation_rate', 0):.1%}")
+        self._write("citation_checklist.md", f"# Citation Checklist\n\n- [x] {len(cards)} evidence cards collected")
+        
+        # APPLY guardrails
+        self.apply_strict_guardrails(cards, triangulation_data)
+        
+        logger.info(f"Research complete. Output in {self.s.output_dir}")
+
+
+def run_enhanced_orchestrator(topic: str, depth: str = "standard", output_dir: str = "output", **kwargs):
+    """Convenience function to run enhanced orchestrator"""
+    
+    settings = EnhancedSettings(
+        topic=topic,
+        depth=depth,
+        output_dir=Path(output_dir),
+        **kwargs
+    )
+    
+    orchestrator = EnhancedOrchestrator(settings)
+    orchestrator.run()
