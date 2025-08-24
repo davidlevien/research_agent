@@ -66,7 +66,18 @@ class Orchestrator:
         register_search_tools(self.registry)
 
     def _write(self, name: str, content: str):
-        (self.s.output_dir / name).write_text(content, encoding="utf-8")
+        """Atomic write with temp file + rename."""
+        import tempfile
+        target = self.s.output_dir / name
+        # Write to temp file in same directory (for atomic rename)
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', 
+                                        dir=self.s.output_dir, 
+                                        delete=False) as tmp:
+            tmp.write(content)
+            tmp.flush()
+            os.fsync(tmp.fileno())  # Ensure written to disk
+        # Atomic rename
+        os.replace(tmp.name, target)
     
     def _filter_relevance(self, cards: List[EvidenceCard], threshold: float = 0.5) -> List[EvidenceCard]:
         """Filter cards by relevance score (minimal enhancement)"""

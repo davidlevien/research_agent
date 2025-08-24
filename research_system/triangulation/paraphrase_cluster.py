@@ -26,18 +26,35 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
     import logging
     logger = logging.getLogger(__name__)
     
-    texts_raw = [getattr(c, "quote_span", None) or c.claim or c.snippet or c.title or "" for c in cards]
+    # Define what looks like a claim (has numbers, dates, or percentages)
+    CLAIMISH = re.compile(r'\b(?:\d{1,3}(?:\.\d+)?%|\d{4}|Q[1-4]\s*\d{4}|million|billion|trillion)\b', re.I)
+    
+    def is_claimish(text: str) -> bool:
+        """Check if text contains claim-like patterns."""
+        return bool(text and CLAIMISH.search(text))
+    
+    # Extract texts, preferring quote spans
+    texts_raw = []
+    valid_indices = []
+    
+    for i, c in enumerate(cards):
+        text = getattr(c, "quote_span", None) or c.claim or c.snippet or c.title or ""
+        if is_claimish(text):
+            texts_raw.append(text)
+            valid_indices.append(i)
+    
+    # Normalize texts
     texts = [_norm_for_para(t) for t in texts_raw]
-    idx_map = list(range(len(texts)))
     clusters = []
     
     logger.info(f"\n=== TRIANGULATION DEBUG ===")
-    logger.info(f"Processing {len(cards)} cards for triangulation")
+    logger.info(f"Processing {len(cards)} cards, {len(valid_indices)} with claim-like text")
     
     # Log sample texts and domains
-    for i, card in enumerate(cards[:5]):
-        logger.info(f"Card {i}: domain={card.source_domain}, text='{texts_raw[i][:100]}...'")
-        logger.info(f"  Normalized: '{texts[i][:100]}...'")
+    for j, i in enumerate(valid_indices[:5]):
+        card = cards[i]
+        logger.info(f"Card {i}: domain={card.source_domain}, text='{texts_raw[j][:100]}...'")
+        logger.info(f"  Normalized: '{texts[j][:100]}...'")
 
     try:
         # Try SBERT for semantic similarity
@@ -96,7 +113,9 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
                 logger.debug(f"Skipping group {gidx}: only {len(members)} member")
                 continue
             
-            doms = {cards[i].source_domain for i in members}
+            # Map back to original card indices
+            original_indices = [valid_indices[m] for m in members]
+            doms = {cards[idx].source_domain for idx in original_indices}
             logger.info(f"Group {gidx}: {len(members)} members from domains {doms}")
             
             if len(doms) < 2: 
@@ -106,14 +125,14 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
             logger.info(f"  -> Multi-domain cluster found!")
             
             # Get representative claim (highest credibility)
-            best_idx = max(members, key=lambda i: cards[i].credibility_score)
-            representative = texts_raw[best_idx][:240]
+            best_local_idx = max(members, key=lambda m: cards[valid_indices[m]].credibility_score)
+            representative = texts_raw[best_local_idx][:240]
             
             clusters.append({
-                "indices": members, 
+                "indices": original_indices, 
                 "domains": sorted(doms),
                 "representative_claim": representative,
-                "size": len(members)
+                "size": len(original_indices)
             })
         
         logger.info(f"\nFinal triangulation results: {len(clusters)} multi-domain clusters")

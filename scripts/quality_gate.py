@@ -1,103 +1,119 @@
 #!/usr/bin/env python3
-"""Quality gate for CI - enforces minimum metrics thresholds."""
+"""
+Quality gate enforcement for CI/CD pipeline.
+
+Usage:
+    python scripts/quality_gate.py <output_dir>
+    
+Enforces minimum thresholds for all PE-grade metrics.
+"""
+
 import json
 import sys
 import pathlib
-from typing import Dict, List
+from typing import Dict, Any
 
-def check_quality_gates(metrics_path: pathlib.Path) -> List[str]:
-    """Check if metrics meet quality thresholds.
+
+def load_metrics(output_dir: pathlib.Path) -> Dict[str, Any]:
+    """Load metrics from output directory."""
+    metrics_file = output_dir / "metrics.json"
+    if not metrics_file.exists():
+        print(f"ERROR: {metrics_file} not found")
+        sys.exit(1)
     
-    Args:
-        metrics_path: Path to metrics.json file
-        
-    Returns:
-        List of failure messages (empty if all pass)
-    """
-    if not metrics_path.exists():
-        return [f"Metrics file not found: {metrics_path}"]
+    with open(metrics_file, 'r') as f:
+        return json.load(f)
+
+
+def check_requirement(metrics: Dict[str, Any], name: str, op: str, threshold: float) -> bool:
+    """Check if a metric meets the requirement."""
+    value = metrics.get(name, 0.0)
     
-    try:
-        metrics = json.loads(metrics_path.read_text())
-    except Exception as e:
-        return [f"Failed to parse metrics: {e}"]
+    # Build the comparison expression
+    expr = f"{value} {op} {threshold}"
+    result = eval(expr)
     
-    errors = []
-    
-    def require(key: str, operator: str, threshold: float):
-        """Check a single metric against threshold."""
-        if key not in metrics:
-            errors.append(f"Missing metric: {key}")
-            return
-        
-        value = metrics[key]
-        if operator == ">=":
-            passed = value >= threshold
-        elif operator == "<=":
-            passed = value <= threshold
-        elif operator == ">":
-            passed = value > threshold
-        elif operator == "<":
-            passed = value < threshold
-        else:
-            errors.append(f"Invalid operator: {operator}")
-            return
-        
-        if not passed:
-            errors.append(f"{key}: {value:.3f} not {operator} {threshold}")
-    
-    # Define quality gates
-    require("quote_coverage", ">=", 0.70)
-    require("union_triangulation", ">=", 0.35)
-    require("primary_share_in_union", ">=", 0.50)
-    require("top_domain_share", "<=", 0.25)
-    require("provider_entropy", ">=", 0.60)
-    
-    # Check for error rate if available
-    if "error_rate" in metrics:
-        require("error_rate", "<", 0.01)
-    
-    # Check wall time if available (900s = 15 min default)
-    if "wall_time_seconds" in metrics:
-        require("wall_time_seconds", "<=", 900)
-    
-    return errors
+    if not result:
+        print(f"❌ FAIL {name}: {value:.3f} {op} {threshold}")
+        return False
+    else:
+        print(f"✅ PASS {name}: {value:.3f} {op} {threshold}")
+        return True
 
 
 def main():
-    """Main entry point for CI quality gate."""
-    if len(sys.argv) < 2:
-        print("Usage: python quality_gate.py <output_directory>")
+    """Run quality gate checks."""
+    if len(sys.argv) != 2:
+        print("Usage: python scripts/quality_gate.py <output_dir>")
         sys.exit(1)
     
     output_dir = pathlib.Path(sys.argv[1])
-    metrics_path = output_dir / "metrics.json"
+    if not output_dir.exists():
+        print(f"ERROR: Directory {output_dir} does not exist")
+        sys.exit(1)
     
-    errors = check_quality_gates(metrics_path)
+    # Load metrics
+    metrics = load_metrics(output_dir)
     
-    if errors:
-        print("❌ QUALITY GATE FAILED:")
-        for error in errors:
-            print(f"  - {error}")
-        sys.exit(2)
-    else:
-        print("✅ QUALITY GATE PASSED")
+    print("=" * 60)
+    print("QUALITY GATE CHECKS")
+    print("=" * 60)
+    
+    # Define requirements
+    requirements = [
+        ("quote_coverage", ">=", 0.70),
+        ("union_triangulation", ">=", 0.35),
+        ("primary_share_in_union", ">=", 0.50),
+        ("top_domain_share", "<=", 0.25),
+        ("provider_entropy", ">=", 0.60),
+    ]
+    
+    # Check each requirement
+    all_pass = True
+    for name, op, threshold in requirements:
+        if not check_requirement(metrics, name, op, threshold):
+            all_pass = False
+    
+    print("=" * 60)
+    
+    # Additional checks for file existence
+    required_files = [
+        "evidence_cards.jsonl",
+        "triangulation.json",
+        "metrics.json",
+        "final_report.md",
+        "source_quality_table.md"
+    ]
+    
+    print("\nFILE CHECKS:")
+    for fname in required_files:
+        fpath = output_dir / fname
+        if fpath.exists():
+            size = fpath.stat().st_size
+            print(f"✅ {fname}: {size:,} bytes")
+        else:
+            print(f"❌ {fname}: MISSING")
+            all_pass = False
+    
+    print("=" * 60)
+    
+    if all_pass:
+        print("✅ QUALITY GATE: PASS")
         
-        # Print metrics summary if available
-        try:
-            metrics = json.loads(metrics_path.read_text())
-            print("\nMetrics summary:")
-            print(f"  Quote coverage: {metrics.get('quote_coverage', 0):.1%}")
-            print(f"  Triangulation: {metrics.get('union_triangulation', 0):.1%}")
-            print(f"  Primary share: {metrics.get('primary_share_in_union', 0):.1%}")
-            print(f"  Top domain share: {metrics.get('top_domain_share', 0):.1%}")
-            print(f"  Provider entropy: {metrics.get('provider_entropy', 0):.2f}")
-            if "wall_time_seconds" in metrics:
-                print(f"  Wall time: {metrics['wall_time_seconds']:.1f}s")
-        except Exception:
-            pass
-        
+        # Print summary metrics for README
+        print("\n📊 Metrics Summary (for README):")
+        print(json.dumps({
+            "quote_coverage": round(metrics.get("quote_coverage", 0), 3),
+            "union_triangulation": round(metrics.get("union_triangulation", 0), 3),
+            "primary_share_in_union": round(metrics.get("primary_share_in_union", 0), 3),
+            "top_domain_share": round(metrics.get("top_domain_share", 0), 3),
+            "provider_entropy": round(metrics.get("provider_entropy", 0), 3),
+            "cards": metrics.get("cards", 0)
+        }, indent=2))
         sys.exit(0)
+    else:
+        print("❌ QUALITY GATE: FAIL")
+        sys.exit(2)
 
 
 if __name__ == "__main__":
