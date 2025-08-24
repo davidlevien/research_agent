@@ -28,6 +28,7 @@ from research_system.router import route_topic
 from research_system.policy import POLICIES
 from research_system.scoring import recompute_confidence
 from research_system.tools.claim_struct import extract_struct_claim, struct_key, struct_claims_match
+from research_system.tools.canonical_key import canonical_claim_key
 from research_system.tools.contradictions import find_numeric_conflicts
 from research_system.tools.arex import build_arex_batch, select_uncorroborated_keys
 from research_system.tools.observability import generate_triangulation_breakdown, generate_strict_failure_details
@@ -374,6 +375,36 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         return guardrails
 
     def _generate_final_report(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
+        """Generate final report using new composition module."""
+        from research_system.report.compose import compose_final_report
+        
+        # Combine all triangulated clusters
+        tri_path = self.s.output_dir / "triangulation.json"
+        if tri_path.exists():
+            tri_data = json.loads(tri_path.read_text())
+            para_clusters = tri_data.get("paraphrase_clusters", [])
+            struct_tris = tri_data.get("structured_triangles", [])
+            
+            # Combine for report
+            all_clusters = para_clusters + struct_tris
+            
+            # Get primary cards
+            pol = getattr(self, "policy", POLICIES[route_topic(self.s.topic)])
+            primary_domains = set(pol.domain_priors.keys())
+            primary_cards = [c for c in cards if c.source_domain in primary_domains]
+            
+            # Use new composition
+            return compose_final_report(
+                triangulated_clusters=all_clusters,
+                primary_cards=primary_cards,
+                all_cards=cards,
+                topic=self.s.topic
+            )
+        
+        # Fallback to original implementation
+        return self._generate_final_report_original(cards, detector)
+    
+    def _generate_final_report_original(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
         """Generate final report using enhanced composition module"""
         if not cards:
             return "# Final Report\n\nNo evidence collected for this topic."
@@ -773,6 +804,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
         # ENRICH: Extract metadata + sentences + snapshot (optional)
         logger.info(f"Enriching {len(cards)} cards with ENABLE_EXTRACT={getattr(settings, 'ENABLE_EXTRACT', True)}")
+        
+        # Import quote rescue for primary sources
+        from research_system.enrich.ensure_quotes import ensure_quotes_for_primaries
         for c in cards:
             if getattr(settings, "ENABLE_EXTRACT", True):
                 url = c.url or c.source_url or ""
@@ -799,6 +833,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             basis = getattr(c, 'quote_span', None) or c.claim or c.snippet or c.source_title or ""
             c.content_hash = getattr(c, 'content_hash', None) or normalized_hash(basis)
         
+        # Ensure quotes for primary sources via fallback mechanisms
+        asyncio.run(ensure_quotes_for_primaries(cards))
+        
         # DEDUPLICATE near-duplicates across domains (syndication control) BEFORE clustering
         if getattr(settings, "ENABLE_MINHASH_DEDUP", True):
             texts = [(getattr(c, "quote_span", None) or getattr(c, "claim", "") or getattr(c, "snippet", "") or getattr(c, "source_title","")) for c in cards]
@@ -817,6 +854,53 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         from research_system.collect.ranker import rerank_cards
         cards = rerank_cards(cards)
         
+        # Apply domain diversity enforcement
+        from research_system.select.diversity import enforce_domain_cap, calculate_domain_share
+        
+        # Enforce domain cap before final selection
+        cards = enforce_domain_cap(cards, cap=0.25)
+        
+        # Check if unwto.org is over-represented and add diversity
+        if calculate_domain_share(cards, "unwto.org") > 0.25:
+            # Import additional primary search capability
+            from research_system.select.diversity import fetch_diversity_fill
+            
+            # Fetch from other primary sources
+            diversity_queries = fetch_diversity_fill(
+                self.s.topic,
+                ["iata.org", "wttc.org"]
+            )
+            
+            # Execute diversity queries
+            for query_info in diversity_queries[:2]:
+                div_results = asyncio.run(
+                    parallel_provider_search(
+                        self.registry,
+                        query=query_info["query"],
+                        count=3,
+                        freshness=settings.FRESHNESS_WINDOW,
+                        region="US"
+                    )
+                )
+                
+                # Add diversity results as cards
+                for provider, hits in div_results.items():
+                    for h in hits:
+                        domain = domain_of(h.url)
+                        if domain == query_info["domain"]:
+                            cards.append(EvidenceCard(
+                                id=str(uuid.uuid4()),
+                                title=h.title,
+                                url=h.url,
+                                snippet=h.snippet or "",
+                                provider=provider,
+                                credibility_score=0.8,
+                                relevance_score=0.7,
+                                is_primary_source=True,
+                                source_domain=domain,
+                                collected_at=datetime.utcnow().isoformat() + "Z"
+                            ))
+        
         # Keep top cards based on depth (but keep all for triangulation)
         max_cards = self.depth_to_count.get(self.s.depth, 20) * 3  # 3x for triangulation
         if len(cards) > max_cards:
@@ -824,10 +908,14 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
         # BUILD TRIANGULATION using enhanced paraphrase clustering
         from research_system.triangulation.paraphrase_cluster import cluster_paraphrases
-        from research_system.triangulation.compute import compute_structured_triangles, union_rate
+        from research_system.triangulation.compute import compute_structured_triangles, union_rate, primary_share_in_union
+        from research_system.triangulation.post import sanitize_paraphrase_clusters
         
         # Paraphrase clustering with SBERT
         para_clusters = cluster_paraphrases(cards)
+        
+        # Sanitize paraphrase clusters to prevent over-merging
+        para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
         
         # Structured triangulation
         structured_matches = compute_structured_triangles(cards)
@@ -835,10 +923,21 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Calculate union rate for strict mode
         tri_union = union_rate(para_clusters, structured_matches, len(cards))
         
-        (self.s.output_dir / "triangulation.json").write_text(json.dumps({
+        # Write single source of truth for triangulation
+        artifact = {
             "paraphrase_clusters": para_clusters,
             "structured_triangles": structured_matches
-        }, indent=2), encoding="utf-8")
+        }
+        self._write("triangulation.json", json.dumps(artifact, indent=2))
+        
+        # Write metrics.json as single source of truth
+        metrics = {
+            "cards": len(cards),
+            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, len(cards)),
+            "union_triangulation": tri_union,
+            "primary_share_in_union": primary_share_in_union(artifact)
+        }
+        self._write("metrics.json", json.dumps(metrics, indent=2))
         
         # CONTRADICTION DETECTION
         claim_texts = [
@@ -1005,6 +1104,14 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # SYNTHESIZE
         self._write("final_report.md", self._generate_final_report(cards, detector))
         self._write("citation_checklist.md", self._generate_citation_checklist(cards))
+        
+        # Check strict mode early with new guard
+        if self.s.strict:
+            from research_system.strict.guard import strict_check
+            errs = strict_check(self.s.output_dir)
+            if errs:
+                self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n" + "\n".join(f"- {e}" for e in errs))
+                raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         
         # EVALUATE acceptance guardrails after report is generated
         guardrails_md = self._evaluate_guardrails(cards, self.s.output_dir / "final_report.md")

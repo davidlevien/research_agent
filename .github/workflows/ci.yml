@@ -7,5 +7,19 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with: { python-version: '3.11' }
-    - run: python -m pip install -e ".[dev]"
+    - run: python -m pip install --upgrade pip
+    - run: python -m pip install -e ".[web,test,dev]"
+    - name: Check packaged schema
+      run: |
+        python - << 'PY'
+        try:
+            from importlib import resources
+            with resources.files("research_system.resources.schemas").joinpath("evidence.schema.json").open() as f:
+                import json
+                js = json.load(f)
+                print("✓ Schema loaded successfully, keys:", list(js.keys())[:3])
+        except Exception as e:
+            print(f"✗ Failed to load schema: {e}")
+            exit(1)
+        PY
     - run: pytest -q

@@ -1,8 +1,25 @@
 from __future__ import annotations
 import httpx, datetime as dt
 from typing import Optional, Dict, Any, Tuple
-import trafilatura, extruct
-from w3lib.html import get_base_url
+
+# Make optional dependencies robust
+try:
+    import trafilatura
+    import extruct
+    HAS_TRAFILATURA = True
+except ImportError:
+    trafilatura = None
+    extruct = None
+    HAS_TRAFILATURA = False
+
+try:
+    from w3lib.html import get_base_url
+    HAS_W3LIB = True
+except ImportError:
+    HAS_W3LIB = False
+    def get_base_url(html: str, url: str) -> str:
+        # Simple fallback
+        return url
 from .claim_select import select_claim_sentences
 from .pdf_extract import extract_pdf_text
 from .doi_tools import extract_doi, crossref_meta
@@ -127,22 +144,34 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     
     base_url = get_base_url(html, url)
     meta = {}
-    try:
-        ld = extruct.extract(html, base_url=base_url, syntaxes=['json-ld']).get('json-ld', [])
-        for item in ld:
-            if isinstance(item, dict) and item.get("@type") in ("NewsArticle","ScholarlyArticle","Article","Report"):
-                meta["title"] = item.get("headline") or item.get("name")
-                meta["datePublished"] = item.get("datePublished") or item.get("dateModified")
-                src = item.get("publisher") or {}
-                meta["publisher"] = (src.get("name") if isinstance(src, dict) else src)
-                break
-    except Exception:
-        pass
-    text = trafilatura.extract(html, include_comments=False, include_tables=False) or ""
-    try:
-        tmeta = trafilatura.extract_metadata(html)
-        title_fallback = tmeta.title if tmeta else None
-    except Exception:
+    
+    # Try extruct if available
+    if HAS_TRAFILATURA and extruct:
+        try:
+            ld = extruct.extract(html, base_url=base_url, syntaxes=['json-ld']).get('json-ld', [])
+            for item in ld:
+                if isinstance(item, dict) and item.get("@type") in ("NewsArticle","ScholarlyArticle","Article","Report"):
+                    meta["title"] = item.get("headline") or item.get("name")
+                    meta["datePublished"] = item.get("datePublished") or item.get("dateModified")
+                    src = item.get("publisher") or {}
+                    meta["publisher"] = (src.get("name") if isinstance(src, dict) else src)
+                    break
+        except Exception:
+            pass
+    
+    # Extract text with trafilatura if available, otherwise basic fallback
+    if HAS_TRAFILATURA and trafilatura:
+        text = trafilatura.extract(html, include_comments=False, include_tables=False) or ""
+        try:
+            tmeta = trafilatura.extract_metadata(html)
+            title_fallback = tmeta.title if tmeta else None
+        except Exception:
+            title_fallback = None
+    else:
+        # Basic HTML text extraction fallback
+        import re
+        text = re.sub(r'<[^>]+>', ' ', html or '')
+        text = re.sub(r'\s+', ' ', text).strip()[:5000]
         title_fallback = None
     title = meta.get("title") or title_fallback
     date = None

@@ -4,6 +4,10 @@ from pathlib import Path
 import json
 from jsonschema import validate, ValidationError
 from research_system.models import EvidenceCard
+try:
+    from importlib import resources
+except ImportError:
+    import importlib_resources as resources
 
 # Required fields that MUST be present and valid
 REQUIRED_FIELDS = [
@@ -12,18 +16,34 @@ REQUIRED_FIELDS = [
 ]
 
 def _load_schema() -> dict:
-    # Load schema from file system
-    schema_path = Path(__file__).parent.parent / "resources" / "schemas" / "evidence.schema.json"
-    with open(schema_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """
+    Load JSON schema from installed package data (works in dev, sdist, wheel).
+    Falls back to repo-relative path in editable installs.
+    """
+    try:
+        pkg = "research_system.resources.schemas"
+        with resources.files(pkg).joinpath("evidence.schema.json").open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        # Fallback for editable layout
+        schema_path = Path(__file__).parent.parent / "resources" / "schemas" / "evidence.schema.json"
+        with open(schema_path, "r", encoding="utf-8") as f:
+            return json.load(f)
 
-_SCHEMA = _load_schema()
+# Lazy load to avoid import-time issues
+_SCHEMA = None
+
+def _schema():
+    global _SCHEMA
+    if _SCHEMA is None:
+        _SCHEMA = _load_schema()
+    return _SCHEMA
 
 def validate_evidence_dict(data: dict) -> None:
     """Enhanced validation with strict field requirements"""
     # JSONSchema validation (existing)
     try:
-        validate(instance=data, schema=_SCHEMA)
+        validate(instance=data, schema=_schema())
     except ValidationError as e:
         raise ValueError(f"Evidence schema validation failed: {e.message}")
     

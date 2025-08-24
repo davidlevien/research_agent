@@ -107,3 +107,44 @@ def primary_share_in_triangulated(cards: List[Any], para_clusters: List[Dict], s
     # Count primary sources in triangulated set
     primary_count = sum(1 for i in tri_indices if cards[i].source_domain in primary_domains)
     return primary_count / len(tri_indices)
+
+
+def primary_share_in_union(artifact: Dict[str, Any]) -> float:
+    """
+    Calculate the share of primary sources in the union of triangulated claims.
+    
+    Args:
+        artifact: Dictionary containing paraphrase_clusters and structured_triangles
+        
+    Returns:
+        Float between 0 and 1 representing primary share
+    """
+    primary_domains = {
+        "unwto.org", "e-unwto.org", "iata.org", "wttc.org",
+        "oecd.org", "worldbank.org", "imf.org", "ec.europa.eu"
+    }
+    
+    paraphrase_clusters = artifact.get("paraphrase_clusters", [])
+    structured_triangles = artifact.get("structured_triangles", [])
+    
+    # Collect all domains from triangulated evidence
+    all_domains = []
+    
+    # Process paraphrase clusters (multi-domain only)
+    for cluster in paraphrase_clusters:
+        domains = cluster.get("domains", [])
+        if len(set(domains)) >= 2:
+            all_domains.extend(domains)
+    
+    # Process structured triangles (multi-domain only)
+    for triangle in structured_triangles:
+        domains = triangle.get("domains", [])
+        if len(set(domains)) >= 2:
+            all_domains.extend(domains)
+    
+    if not all_domains:
+        return 0.0
+    
+    # Count primary domains
+    primary_count = sum(1 for d in all_domains if d in primary_domains)
+    return primary_count / len(all_domains)

@@ -15,6 +15,7 @@ authors = [
 keywords = ["research", "agent", "ai", "automation", "information-gathering"]
 
 dependencies = [
+    "sentence-transformers>=2.2.0",
     "crewai>=0.30.0",
     "pydantic>=2.0.0",
     "httpx>=0.25.0",
@@ -55,6 +56,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+web = [
+    "trafilatura>=1.7.0",
+    "extruct>=0.16.0",
+    "w3lib>=2.2.1",
+    "tldextract>=5.0.0",
+]
+
+test = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=6.0",
+    "responses>=0.25",
+]
+
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
@@ -86,11 +101,16 @@ Documentation = "https://docs.research-system.io"
 Repository = "https://github.com/research-system/research-system"
 Issues = "https://github.com/research-system/research-system/issues"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["research_system*"]
 
 [tool.setuptools.package-data]
+"research_system.resources.schemas" = ["*.json"]
+"research_system.resources.config" = ["*.yaml"]
 research_system = [
     "resources/schemas/*.json",
     "resources/config/*.yaml",

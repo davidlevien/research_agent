@@ -5,7 +5,25 @@ URL normalization utilities using w3lib and tldextract
 from __future__ import annotations
 import hashlib
 import urllib.parse as _up
-from w3lib.url import canonicalize_url as _canon
+
+# Make w3lib optional
+try:
+    from w3lib.url import canonicalize_url as _canon
+    HAS_W3LIB = True
+except ImportError:
+    HAS_W3LIB = False
+    # Simple fallback canonicalization
+    def _canon(u: str) -> str:
+        p = _up.urlparse(u or "")
+        return _up.urlunparse((
+            p.scheme.lower(),
+            p.netloc.lower(),
+            p.path,
+            "",  # Drop params
+            "",  # Drop query
+            ""   # Drop fragment
+        ))
+
 import tldextract
 
 def canonicalize_url(url: str) -> str:
