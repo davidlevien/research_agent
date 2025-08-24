@@ -12,7 +12,7 @@
 
 ### Evaluation Criteria
 - **Credibility**: Author expertise, institutional affiliation
-- **Relevance**: Direct relation to global tourism recovery and trends 2025 Q1 international arrivals receipts UNWTO IATA WTTC
+- **Relevance**: Direct relation to global tourism recovery trends 2025
 - **Recency**: Preference for recent publications
 - **Objectivity**: Minimal bias, multiple viewpoints
 

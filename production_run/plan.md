@@ -1,10 +1,10 @@
 # Research Plan
 
 ## Topic
-global tourism recovery and trends 2025 Q1 international arrivals receipts UNWTO IATA WTTC
+global tourism recovery trends 2025
 
 ## Depth
-Deep - Comprehensive analysis with extensive sources (30-60 minutes)
+Standard - Balanced research with quality sources (15-30 minutes)
 
 ## Objectives
 1. Gather evidence from multiple search providers
@@ -13,4 +13,4 @@ Deep - Comprehensive analysis with extensive sources (30-60 minutes)
 4. Provide citations for all claims
 
 ## Budget
-Maximum cost: $5.00
+Maximum cost: $2.50

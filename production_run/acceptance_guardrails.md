@@ -1,7 +1,7 @@
 # Acceptance Guardrails
 
-**Topic**: global tourism recovery and trends 2025 Q1 international arrivals receipts UNWTO IATA WTTC
-**Execution Time**: 2025-08-24T19:13:50.137278Z
+**Topic**: global tourism recovery trends 2025
+**Execution Time**: 2025-08-24T21:54:00.556216Z
 
 ## Evidence Requirements (To Be Validated)
 - [ ] Minimum 3 independent sources per major claim
