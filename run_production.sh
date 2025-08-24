@@ -2,7 +2,7 @@
 # Production run with all features enabled
 
 echo "========================================="
-echo "PE-GRADE RESEARCH SYSTEM v5.0"
+echo "PE-GRADE RESEARCH SYSTEM v6.0"
 echo "========================================="
 echo ""
 echo "Topic: Global Tourism Recovery and Trends 2025"
@@ -21,9 +21,18 @@ echo "✓ Paraphrase Clustering"
 echo "✓ Structured Triangulation"
 echo "✓ Primary Quote Rescue"
 echo "✓ Domain Diversity Enforcement"
+echo "✓ PDF Size Limits (12MB cap)"
+echo "✓ Paywall Loop Prevention"
+echo "✓ Cloudflare Detection"
 echo ""
 echo "Starting research run..."
 echo "========================================="
+
+# Check for required security keys
+if [ -z "$RESEARCH_ENCRYPTION_KEY" ]; then
+    echo "⚠️  Warning: RESEARCH_ENCRYPTION_KEY not set. Generating temporary key..."
+    export RESEARCH_ENCRYPTION_KEY=$(python3.11 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+fi
 
 # Set all feature flags
 export ENABLE_HTTP_CACHE=true
@@ -34,6 +43,14 @@ export ENABLE_POLITENESS=true
 export ENABLE_AREX=true
 export ENABLE_CONTROVERSY=true
 export STRICT=true
+
+# Set v6.0 performance and security settings
+export MAX_PDF_MB=12
+export PDF_MAX_PAGES=6
+export PDF_RETRIES=2
+export WALL_TIMEOUT_SEC=600
+export PROVIDER_TIMEOUT_SEC=20
+export CONCURRENCY=16
 
 # Set higher limits for deep analysis
 export MAX_COST_USD=5.00
