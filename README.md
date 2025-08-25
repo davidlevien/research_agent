@@ -167,6 +167,203 @@ ENABLED_PROVIDERS=worldbank,oecd,imf python -m research_system \
 python -m research_system --topic "climate change impacts" --strict
 ```
 
+## 📖 How It Works: Complete Step-by-Step Process
+
+### Overview
+The Research Agent System transforms a simple text query into a comprehensive, evidence-based research report through a sophisticated multi-stage pipeline that prioritizes accuracy, verification, and source quality.
+
+### 🔄 Complete Processing Pipeline
+
+#### **Phase 1: Input & Planning** (0-5 seconds)
+1. **User Input**: Receives research topic as text string
+   - Example: `"global tourism recovery indicators 2025 OECD data"`
+   
+2. **Topic Classification**: 
+   - Analyzes query against 11 domain packs (macroeconomics, health, climate, etc.)
+   - Uses alias matching + anchor term weighting
+   - Output: Topic classification with confidence score
+   - Example: `macroeconomics (score: 10.0, confidence: 1.0)`
+
+3. **Provider Selection**:
+   - Chooses providers based on topic expertise from 20+ available APIs
+   - Applies selection strategy (high_precision, broad_coverage, academic_focus)
+   - Example: `[worldbank, oecd, imf, fred, eurostat]` for economics
+
+4. **Query Refinement**:
+   - Adds topic-specific expansions (e.g., "GDP", "inflation rate", "OECD")
+   - Applies provider-specific refiners (e.g., `site:worldbank.org`)
+   - Creates optimized queries per provider
+
+5. **Planning Documents Generated**:
+   - `plan.md`: Research objectives and depth settings
+   - `source_strategy.md`: Source evaluation criteria
+   - `acceptance_guardrails.md`: Quality thresholds to enforce
+
+#### **Phase 2: Evidence Collection** (5-30 seconds)
+6. **Parallel Web Search**:
+   - Executes searches across 4-5 web providers simultaneously
+   - Providers: Brave, Tavily, Serper, SerpAPI
+   - Returns initial seed results (typically 20-40 URLs)
+
+7. **Free API Collection** (Parallel):
+   - Queries 10+ free APIs concurrently based on topic
+   - Each provider has individual 30s timeout
+   - Examples:
+     - Economics: WorldBank indicators, OECD datasets, IMF data
+     - Health: PubMed articles, Europe PMC papers
+     - Science: OpenAlex metadata, Crossref DOIs, arXiv preprints
+
+8. **Off-Topic Filtering**:
+   - Applies Jaccard similarity against topic vocabulary
+   - Checks for required terms per domain
+   - Removes irrelevant results (e.g., filters entertainment from economics)
+
+9. **Evidence Card Creation**:
+   - Transforms raw results into structured evidence cards
+   - Fields: title, URL, snippet, provider, date, credibility score
+   - Assigns scoring: credibility (0-1), relevance (0-1), confidence
+
+#### **Phase 3: Content Enrichment** (10-60 seconds)
+10. **Content Extraction**:
+    - Fetches full text from URLs (respects robots.txt)
+    - Handles PDFs, HTML, and academic papers
+    - Fallback: DOI resolution via Crossref/Unpaywall for paywalled content
+
+11. **Quote Extraction**:
+    - Extracts relevant quotes from full text
+    - Prioritizes primary sources
+    - Two-try system with fallback for difficult sources
+
+12. **Metadata Enhancement**:
+    - Adds publication dates, authors, institutions
+    - Tracks source licenses (CC0, CC-BY, etc.)
+    - Canonical domain normalization
+
+13. **Snapshot Archival** (Optional):
+    - Saves to Wayback Machine for permanence
+    - Creates archival URLs for citations
+
+#### **Phase 4: Analysis & Triangulation** (5-15 seconds)
+14. **Deduplication**:
+    - MinHash algorithm removes duplicate content
+    - Title similarity threshold: 90%
+    - Preserves highest quality version
+
+15. **Paraphrase Clustering**:
+    - Sentence transformer embeddings (all-MiniLM-L6-v2)
+    - Groups similar claims across sources
+    - Threshold: 0.4 cosine similarity
+
+16. **Structured Triangulation**:
+    - Domain-specific pattern matching
+    - Example: GDP indicators from WB, OECD, IMF aligned
+    - Creates multi-source verification clusters
+
+17. **Controversy Detection**:
+    - Identifies conflicting claims
+    - Calculates controversy scores
+    - Flags disputed evidence
+
+18. **Domain Balance**:
+    - Caps single domain to <24% of evidence
+    - Ensures source diversity
+    - Backfills from primary sources if needed
+
+#### **Phase 5: Quality Control** (2-5 seconds)
+19. **Metrics Calculation**:
+    - Quote coverage: % of cards with extracted quotes
+    - Primary share: % from authoritative sources
+    - Union triangulation: % with multi-source verification
+    - Provider entropy: Diversity of search providers
+    - Top domain share: Concentration check
+
+20. **Strict Mode Enforcement** (if --strict):
+    - Quote coverage must be ≥70%
+    - Primary share must be ≥50%
+    - Union triangulation must be ≥35%
+    - Fails fast if thresholds not met
+
+21. **Primary Source Backfill**:
+    - If primary share <50%, searches for more .gov, .edu sources
+    - Targeted queries to authoritative domains
+    - Up to 3 backfill iterations
+
+#### **Phase 6: Report Generation** (3-10 seconds)
+22. **Evidence Ranking**:
+    - Sorts by combined credibility * relevance score
+    - Prioritizes primary sources
+    - Considers recency for time-sensitive topics
+
+23. **Claim Synthesis**:
+    - Groups evidence by triangulated claims
+    - Generates consensus findings
+    - Preserves minority viewpoints
+
+24. **Report Composition**:
+    - Executive summary with key findings
+    - Detailed sections with inline citations
+    - Source quality table
+    - Gaps and risks assessment
+    - Citation checklist
+
+25. **Output Files Generated**:
+    ```
+    output_dir/
+    ├── evidence_cards.jsonl       # All collected evidence
+    ├── evidence_cards.errors.jsonl # Failed extractions
+    ├── triangulation.json         # Clustering results
+    ├── metrics.json              # Quality metrics
+    ├── final_report.md           # Main research report
+    ├── source_quality_table.md   # Domain analysis
+    ├── GAPS_AND_RISKS.md        # Limitations identified
+    └── citation_checklist.md     # Verification checklist
+    ```
+
+### 🔍 Data Flow Example
+
+**Input**: `"AI impact on healthcare 2025"`
+
+**Processing**:
+```
+1. Classification → health/technology (confidence: 0.95)
+2. Providers → [pubmed, europepmc, openalex, crossref, arxiv]
+3. Web Search → 25 initial URLs from Brave, Tavily, Serper
+4. API Collection → 15 papers from PubMed, 20 from OpenAlex
+5. Filtering → 35 relevant cards after off-topic removal
+6. Extraction → Full text from 28 sources, quotes from 25
+7. Clustering → 5 multi-source claim families identified
+8. Triangulation → 3 claims verified across 3+ sources
+9. Metrics → Quote: 71%, Primary: 55%, Triangulation: 40%
+10. Report → 2500 words, 35 citations, 5 key findings
+```
+
+### ⚡ Performance Characteristics
+
+- **Total Time**: 30-120 seconds depending on depth
+- **Parallelization**: All APIs query simultaneously (10-20x speedup)
+- **Resilience**: Continues if individual providers fail
+- **Rate Limiting**: Automatic compliance with API terms
+- **Memory Usage**: ~500MB for typical research
+- **Network**: ~10-50MB download depending on PDFs
+
+### 🛡️ Quality Guarantees
+
+1. **Multi-Source Verification**: Claims must appear in 2+ independent sources
+2. **Primary Source Priority**: .gov, .edu, .int domains weighted higher
+3. **Quote Validation**: Extracted quotes must exist in source
+4. **Controversy Flagging**: Conflicting evidence highlighted
+5. **Domain Diversity**: No single domain >24% of evidence
+6. **Transparent Attribution**: Every claim linked to sources
+
+### 🔧 Customization Points
+
+- **Topic Packs** (`topic_packs.yaml`): Add new domains
+- **Provider Capabilities** (`provider_capabilities.yaml`): Configure provider expertise
+- **Structured Keys** (`structured_keys.yaml`): Domain-specific patterns
+- **Selection Strategies**: Tune provider selection logic
+- **Quality Thresholds**: Adjust strict mode requirements
+- **Rate Limits**: Configure per-provider limits
+
 ## 🎯 Generalized Topic Routing System (v8.3)
 
 **PE-Grade Domain-Agnostic Router** - No hard-coded verticals, fully extensible via YAML configuration.
