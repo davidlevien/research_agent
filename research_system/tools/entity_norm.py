@@ -37,6 +37,11 @@ ALIASES: Dict[str, Set[str]] = {
         "eu", "e.u.", "europe", "european"
     },
     
+    # Global/International scope
+    "global": {
+        "international", "worldwide", "world", "globally"
+    },
+    
     # International Organizations
     "unwto": {
         "un tourism", "u.n. tourism", "un-tourism", "world tourism organization",

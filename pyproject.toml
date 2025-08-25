@@ -147,6 +147,7 @@ markers = [
     "performance: Performance tests",
     "security: Security tests",
     "slow: Slow running tests",
+    "asyncio: Asynchronous tests",
 ]
 
 [tool.coverage.run]

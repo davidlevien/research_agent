@@ -118,7 +118,7 @@ def test_structured_claim_extraction():
     # Period normalization in claim
     text2 = "Europe hotel occupancy was 75% in Jan-Mar 2025"
     sc2 = extract_struct_claim(text2)
-    assert sc2.entity == "europe"
+    assert sc2.entity == "european union"  # Normalized from europe
     assert sc2.metric == "hotel_occupancy_rate"  # Normalized
     assert sc2.period == "Q1 2025"  # Normalized from Jan-Mar
     assert sc2.value == 75.0
@@ -129,7 +129,7 @@ def test_structured_claim_extraction():
     assert key1 == "global|international_tourist_arrivals|Q1 2025"
     
     key2 = struct_key(sc2)
-    assert key2 == "europe|hotel_occupancy_rate|Q1 2025"
+    assert key2 == "european union|hotel_occupancy_rate|Q1 2025"  # Normalized entity
 
 
 def test_contradiction_detection():

@@ -32,6 +32,12 @@ def sample_evidence():
     """Create sample evidence cards"""
     return [
         EvidenceCard(
+            # Required fields
+            url="https://example.com/1",
+            title="Source 1",
+            snippet="Supporting text for claim 1",
+            provider="test_provider",
+            # Legacy fields for compatibility
             subtopic_name="Subtopic 1",
             claim="Test claim 1",
             supporting_text="Supporting text for claim 1",
@@ -43,6 +49,12 @@ def sample_evidence():
             is_primary_source=True
         ),
         EvidenceCard(
+            # Required fields
+            url="https://example.org/2",
+            title="Source 2",
+            snippet="Supporting text for claim 2",
+            provider="test_provider",
+            # Legacy fields for compatibility
             subtopic_name="Subtopic 2",
             claim="Test claim 2",
             supporting_text="Supporting text for claim 2",
@@ -70,37 +82,40 @@ class TestResearchEngine:
     async def test_all_deliverables_produced(self, research_engine, sample_request, sample_evidence, tmp_path):
         """Test that all 7 deliverables are produced"""
         
-        # Mock the orchestrator methods
-        with patch.object(research_engine.orchestrator, '_execute_planning') as mock_planning:
-            with patch.object(research_engine.orchestrator, '_execute_collection') as mock_collection:
-                with patch.object(research_engine.orchestrator, '_execute_synthesis') as mock_synthesis:
+        # Mock the research engine methods
+        with patch.object(research_engine, '_execute_planning_phase') as mock_planning:
+            with patch.object(research_engine, '_execute_collection_phase') as mock_collection:
+                with patch.object(research_engine, '_execute_synthesis_phase') as mock_synthesis:
                     
                     # Setup mocks
-                    from research_system.models import ResearchPlan, ResearchReport, ResearchMethodology, Subtopic
+                    from research_system.models import ResearchPlan, ResearchReport, ResearchMetrics, Subtopic
                     
                     mock_plan = ResearchPlan(
                         topic="Test Topic",
-                        depth=ResearchDepth.STANDARD,
-                        subtopics=[
-                            Subtopic(name="Subtopic 1", rationale="Test", search_queries=["query1"]),
-                            Subtopic(name="Subtopic 2", rationale="Test", search_queries=["query2"])
-                        ],
-                        methodology=ResearchMethodology(
-                            search_strategy="Test strategy",
-                            quality_criteria=["criterion1", "criterion2"]
-                        ),
-                        constraints=Mock(),
-                        budget={"max_cost_usd": 1.0}
+                        objectives=["Objective 1", "Objective 2"],
+                        methodology="Test methodology",
+                        expected_sources=["Source 1", "Source 2"]
                     )
                     
+                    from datetime import datetime
                     mock_report = ResearchReport(
-                        request_id=sample_request.request_id,
+                        report_id="test-report-id",
                         topic="Test Topic",
                         executive_summary="Test summary",
                         sections=[],
                         evidence=sample_evidence,
-                        methodology=mock_plan.methodology,
-                        metrics=Mock()
+                        metrics=ResearchMetrics(
+                            total_sources_examined=10,
+                            total_evidence_collected=2,
+                            unique_domains=2,
+                            avg_credibility_score=0.75,
+                            execution_time_seconds=10.0,
+                            total_cost_usd=0.10,
+                            llm_calls=5,
+                            search_api_calls=3
+                        ),
+                        created_at=datetime.now(),
+                        status="completed"
                     )
                     
                     mock_planning.return_value = mock_plan
@@ -159,8 +174,10 @@ class TestResearchEngine:
     def test_quality_table_generation(self, research_engine, sample_evidence):
         """Test source quality table generation"""
         
-        assessments = research_engine._assess_evidence_quality(sample_evidence)
-        filepath = research_engine._save_quality_table(assessments)
+        # Save evidence cards first
+        evidence_path = research_engine._save_evidence_cards(sample_evidence)
+        # Generate quality table from evidence file
+        filepath = research_engine._save_quality_table_from_evidence(Path(evidence_path))
         
         content = Path(filepath).read_text()
         
@@ -174,24 +191,33 @@ class TestResearchEngine:
     def test_citation_checklist_generation(self, research_engine, sample_evidence):
         """Test citation checklist generation"""
         
-        from research_system.models import ResearchReport, ResearchSection
+        from research_system.models import ResearchReport, ResearchSection, ResearchMetrics
         
+        from datetime import datetime
         mock_report = ResearchReport(
-            request_id="test-id",
+            report_id="test-id",
             topic="Test Topic",
             executive_summary="Summary",
             sections=[
                 ResearchSection(
                     title="Section 1",
                     content="Test claim 1 is important. Another statement here.",
-                    evidence_ids=[sample_evidence[0].id],
-                    confidence=0.8,
-                    word_count=10
+                    evidence_ids=[sample_evidence[0].id]
                 )
             ],
             evidence=sample_evidence,
-            methodology=Mock(),
-            metrics=Mock()
+            metrics=ResearchMetrics(
+                total_sources_examined=10,
+                total_evidence_collected=2,
+                unique_domains=2,
+                avg_credibility_score=0.75,
+                execution_time_seconds=10.0,
+                total_cost_usd=0.10,
+                llm_calls=5,
+                search_api_calls=3
+            ),
+            created_at=datetime.now(),
+            status="completed"
         )
         
         checklist = research_engine._generate_citation_checklist(mock_report, sample_evidence)

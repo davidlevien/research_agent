@@ -142,6 +142,11 @@ class TestProviderCompliance:
     
     def test_contact_email_used(self):
         """Contact email should be used when set."""
+        # Reset the daily counters before testing
+        from research_system.providers.http import _daily_counts, _daily_reset
+        _daily_counts.clear()
+        _daily_reset.clear()
+        
         os.environ["CONTACT_EMAIL"] = "test@example.com"
         
         # Test OpenAlex uses it

@@ -99,6 +99,7 @@ class EvidenceCard(BaseModel):
             self.claim = self.title[:200]  # Use title as claim if missing
         if not self.source_url and self.url:
             self.source_url = self.url
+        return self
     
     @classmethod
     def from_seed(cls, d: dict, provider: str):
@@ -241,6 +242,43 @@ class RelatedTopic(BaseModel):
     score: float = Field(ge=0)
     reason_to_include: str
 
+
+# Legacy models for backward compatibility with tests
+class ResearchDepth(str, Enum):
+    """Research depth levels"""
+    RAPID = "rapid"
+    STANDARD = "standard"
+    DEEP = "deep"
+
+class ResearchRequest(BaseModel):
+    """Legacy research request for tests"""
+    topic: str
+    depth: ResearchDepth = ResearchDepth.STANDARD
+    max_sources: int = 20
+    
+class ResearchPlan(BaseModel):
+    """Research plan structure"""
+    topic: str
+    objectives: List[str]
+    methodology: str
+    expected_sources: List[str]
+    
+class Subtopic(BaseModel):
+    """Subtopic for research"""
+    name: str
+    relevance: float
+    
+class ResearchMethodology(BaseModel):
+    """Research methodology details"""
+    approach: str
+    data_sources: List[str]
+    quality_criteria: Dict[str, Any]
+
+class ResearchSection(BaseModel):
+    """Section in research report"""
+    title: str
+    content: str
+    evidence_ids: List[str] = Field(default_factory=list)
 
 class EnhancedResearchRequest(BaseModel):
     """Enhanced research request with expanded capabilities"""

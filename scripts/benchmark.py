@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.11
 """Benchmark suite for testing research system across multiple topics."""
 import subprocess
 import json

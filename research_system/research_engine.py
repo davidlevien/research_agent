@@ -15,7 +15,7 @@ from .models import (
     ResearchRequest, ResearchPlan, EvidenceCard, ResearchReport,
     ResearchMetrics, ResearchSection, Subtopic, ResearchMethodology
 )
-from .orchestrator import ResearchOrchestrator
+from .orchestrator import Orchestrator
 from .core.quality_assurance import QualityAssurance
 from .tools.storage_tools import StorageTools
 from .config import Settings
@@ -41,7 +41,7 @@ class ResearchEngine:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize components
-        self.orchestrator = ResearchOrchestrator(config)
+        self.orchestrator = Orchestrator(config)
         self.qa_system = QualityAssurance()
         self.storage = StorageTools(str(self.output_dir))
         
