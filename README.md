@@ -1,6 +1,37 @@
-# Research Agent System v8.4 (PE-Grade)
+# Research System v8.4 - PE-Grade Decision Intelligence Platform
 
-A production-ready, principal-engineer-grade research system with comprehensive triangulation, iterative quality gates, LLM-powered synthesis, 20+ free API integrations, and intelligent query planning. Delivers evidence-based research reports with multi-source verification, structured claims extraction, and guaranteed quality thresholds.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with guaranteed quality thresholds. Built with v8.4 enhancements for comprehensive, multi-source research with automatic quality enforcement and intelligent query planning.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Python 3.11+** (required)
+- API keys in `.env` file (optional, but recommended for full features)
+
+### Installation & Setup
+```bash
+# 1. Clone and setup
+git clone https://github.com/your-org/research_agent.git
+cd research_agent
+./setup_environment.sh
+
+# 2. Add API keys to .env (optional)
+cp .env.example .env
+# Edit .env with your API keys
+
+# 3. Run research
+./run_full_features.sh "Your research topic here"
+```
+
+### Example Usage
+```bash
+# Full-featured research with all enhancements
+./run_full_features.sh "AI impact on global economy 2024-2025"
+
+# Basic research (without API keys)
+SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
+  --topic "your topic" --strict --output-dir outputs
+```
 
 ## Latest PE-Grade Enhancements (v8.4)
 
