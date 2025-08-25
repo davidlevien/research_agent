@@ -28,7 +28,7 @@ from research_system.tools.snapshot import save_wayback
 from research_system.tools.url_norm import canonicalize_url, domain_of, normalized_hash
 from research_system.tools.domain_norm import canonical_domain, is_primary_domain, PRIMARY_CANONICALS
 from research_system.tools.anchor import build_anchors
-from research_system.router import route_topic
+from research_system.routing.topic_router import route_topic
 from research_system.policy import POLICIES
 from research_system.scoring import recompute_confidence
 from research_system.tools.claim_struct import extract_struct_claim, struct_key, struct_claims_match

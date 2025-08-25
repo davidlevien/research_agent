@@ -1,0 +1,90 @@
+# Comprehensive Topic Packs for Generalized Research Router
+# PE-grade domain taxonomy with extensible architecture
+
+general:
+  aliases: ["overview", "background", "history", "trends", "analysis", "report", "study", "research"]
+  anchors: []
+  query_expansions: []
+  off_topic:
+    must_contain_any: []
+    min_jaccard: 0.05
+
+macroeconomics:
+  aliases: ["gdp", "inflation", "cpi", "unemployment", "growth", "recession", "oecd", "imf", "world bank", "economic indicators", "monetary policy", "fiscal policy", "trade balance", "current account", "sovereign debt", "interest rates", "central bank", "federal reserve", "ecb", "boj", "tourism arrivals", "visitor spend", "revpar", "occupancy rate"]
+  anchors: ["gdp", "inflation", "cpi", "imf", "oecd", "world bank", "unemployment", "interest rates", "tourism", "arrivals"]
+  query_expansions: ["GDP", "CPI", "inflation rate", "unemployment rate", "OECD", "IMF", "World Bank", "tourism arrivals", "RevPAR", "visitor spend", "economic indicators", "monetary policy"]
+  off_topic:
+    must_contain_any: ["gdp", "inflation", "cpi", "oecd", "imf", "world bank", "unemployment", "economic", "monetary", "fiscal", "tourism", "arrivals", "occupancy", "revpar"]
+    min_jaccard: 0.10
+
+health:
+  aliases: ["epidemiology", "incidence", "prevalence", "mortality", "morbidity", "who", "cdc", "nih", "pubmed", "cochrane", "systematic review", "randomized", "clinical trial", "vaccine", "drug", "treatment", "diagnosis", "biomarker", "pathogen", "disease", "health outcomes", "public health", "healthcare"]
+  anchors: ["who", "pubmed", "cochrane", "nih", "cdc", "clinical", "epidemiology"]
+  query_expansions: ["systematic review", "randomized controlled trial", "incidence rate", "prevalence", "WHO", "PubMed", "Cochrane", "clinical trial", "epidemiological", "public health"]
+  off_topic:
+    must_contain_any: ["who", "pubmed", "cochrane", "incidence", "prevalence", "clinical", "health", "medical", "disease", "treatment", "vaccine", "epidemiology"]
+    min_jaccard: 0.10
+
+climate:
+  aliases: ["co2", "carbon dioxide", "ppm", "temperature anomaly", "ipcc", "noaa", "nasa", "emissions", "ghg", "greenhouse gas", "mitigation", "adaptation", "climate change", "global warming", "carbon footprint", "renewable energy", "sustainability", "cop28", "cop29", "paris agreement", "net zero", "decarbonization"]
+  anchors: ["ipcc", "noaa", "nasa", "emissions", "co2", "climate change", "global warming"]
+  query_expansions: ["IPCC", "NOAA", "NASA", "CO2 ppm", "temperature anomaly", "GHG emissions", "climate change", "global warming", "carbon emissions", "renewable energy"]
+  off_topic:
+    must_contain_any: ["ipcc", "noaa", "nasa", "emissions", "co2", "ppm", "climate", "warming", "carbon", "renewable", "sustainability", "mitigation"]
+    min_jaccard: 0.10
+
+technology:
+  aliases: ["ai", "artificial intelligence", "machine learning", "deep learning", "neural network", "software", "semiconductor", "cloud computing", "cybersecurity", "blockchain", "cryptocurrency", "quantum computing", "5g", "6g", "internet of things", "iot", "automation", "robotics", "fintech", "edtech", "healthtech", "ar", "vr", "augmented reality", "virtual reality"]
+  anchors: ["ai", "artificial intelligence", "software", "cloud", "cybersecurity", "blockchain", "quantum", "machine learning"]
+  query_expansions: ["AI adoption", "software market", "cloud computing", "cybersecurity", "blockchain technology", "quantum computing", "machine learning", "automation", "digital transformation"]
+  off_topic:
+    must_contain_any: ["ai", "artificial intelligence", "software", "cloud", "cyber", "blockchain", "quantum", "machine learning", "automation", "digital", "technology"]
+    min_jaccard: 0.10
+
+travel_tourism:
+  aliases: ["tourism", "travel", "arrivals", "departures", "unwto", "iata", "wttc", "hotel", "accommodation", "occupancy", "revpar", "adr", "visitor spend", "tourism receipts", "passenger traffic", "airline", "aviation", "hospitality", "destination", "tourism recovery", "tourist arrivals", "international visitors"]
+  anchors: ["unwto", "iata", "wttc", "tourism", "arrivals", "hotel", "occupancy", "revpar"]
+  query_expansions: ["UNWTO Barometer", "IATA passenger statistics", "WTTC economic impact", "tourism arrivals", "RevPAR", "hotel occupancy", "visitor arrivals", "tourism recovery", "international tourism"]
+  off_topic:
+    must_contain_any: ["tourism", "unwto", "iata", "wttc", "arrivals", "hotel", "occupancy", "revpar", "visitor", "travel", "aviation", "hospitality"]
+    min_jaccard: 0.10
+
+science:
+  aliases: ["research", "scientific", "peer review", "publication", "citation", "h-index", "impact factor", "arxiv", "preprint", "manuscript", "journal", "conference", "academic", "university", "laboratory", "experiment", "hypothesis", "methodology", "data analysis", "statistics", "reproducibility", "open science"]
+  anchors: ["arxiv", "doi", "pubmed", "citation", "peer review", "journal", "research"]
+  query_expansions: ["peer-reviewed", "scientific publication", "research findings", "academic study", "citation analysis", "impact factor", "preprint", "journal article"]
+  off_topic:
+    must_contain_any: ["research", "scientific", "study", "journal", "citation", "academic", "publication", "peer", "arxiv", "doi", "experiment", "analysis"]
+    min_jaccard: 0.10
+
+policy:
+  aliases: ["policy", "regulation", "legislation", "law", "legal", "governance", "government", "regulatory", "compliance", "directive", "ordinance", "bill", "act", "statute", "rule", "guideline", "framework", "public policy", "regulatory framework", "legal framework", "judicial", "court", "supreme court", "constitutional", "administrative"]
+  anchors: ["policy", "regulation", "law", "legal", "government", "regulatory", "directive"]
+  query_expansions: ["public policy", "regulatory framework", "government regulation", "legal framework", "policy analysis", "legislation", "compliance requirements"]
+  off_topic:
+    must_contain_any: ["policy", "regulation", "law", "legal", "government", "regulatory", "directive", "legislation", "compliance", "governance", "judicial"]
+    min_jaccard: 0.10
+
+geospatial:
+  aliases: ["gis", "geographic", "spatial", "mapping", "cartographic", "osm", "openstreetmap", "poi", "overpass", "geocoding", "geolocation", "shapefile", "geojson", "satellite", "remote sensing", "urban planning", "land use", "demographics", "population density", "geographic information systems"]
+  anchors: ["gis", "osm", "openstreetmap", "geographic", "spatial", "mapping", "geolocation"]
+  query_expansions: ["geographic information systems", "OpenStreetMap", "spatial analysis", "mapping data", "geospatial data", "location intelligence", "geographic data"]
+  off_topic:
+    must_contain_any: ["gis", "geographic", "spatial", "mapping", "osm", "openstreetmap", "geospatial", "location", "cartographic", "satellite"]
+    min_jaccard: 0.10
+
+corporate:
+  aliases: ["earnings", "revenue", "profit", "financial results", "quarterly report", "annual report", "sec filing", "10-k", "10-q", "balance sheet", "income statement", "cash flow", "market share", "competitive analysis", "merger", "acquisition", "ipo", "stock price", "market cap", "enterprise value", "corporate governance", "csr", "sustainability report"]
+  anchors: ["earnings", "revenue", "sec filing", "quarterly", "annual report", "financial"]
+  query_expansions: ["quarterly earnings", "financial results", "SEC filing", "annual report", "corporate performance", "market share", "competitive landscape"]
+  off_topic:
+    must_contain_any: ["earnings", "revenue", "financial", "quarterly", "annual", "sec", "corporate", "market", "business", "company", "profit"]
+    min_jaccard: 0.10
+
+news:
+  aliases: ["breaking", "news", "current", "latest", "recent", "today", "this week", "this month", "press release", "announcement", "breaking news", "headline", "media", "journalism", "reporter", "correspondent", "news agency", "wire service", "bulletin", "update", "developing story"]
+  anchors: ["breaking", "news", "announcement", "press release", "today", "recent"]
+  query_expansions: ["breaking news", "latest news", "recent developments", "press release", "news update", "current events", "media reports"]
+  off_topic:
+    must_contain_any: ["news", "breaking", "announcement", "press", "media", "recent", "latest", "current", "today", "headline"]
+    min_jaccard: 0.08

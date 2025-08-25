@@ -1,0 +1,246 @@
+# Structured Keys for Domain-Aware Triangulation
+# PE-grade extensible patterns for cross-provider data alignment
+
+macroeconomics:
+  patterns:
+    # GDP Indicators
+    gdp_current_usd:
+      codes:
+        worldbank: ["NY.GDP.MKTP.CD"]
+        imf: ["NGDPD"]
+        oecd: ["SNA_TABLE1.GDP"]
+        fred: ["GDP"]
+      aliases: ["gdp current usd", "nominal gdp", "gdp (current prices)", "gross domestic product current"]
+      units: ["usd", "billions usd", "millions usd"]
+      frequency: ["annual", "quarterly"]
+      
+    gdp_growth_rate:
+      codes:
+        worldbank: ["NY.GDP.MKTP.KD.ZG"]
+        imf: ["NGDP_RPCH"]
+        oecd: ["SNA_TABLE1.GDPVPCH"]
+        fred: ["GDPC1"]
+      aliases: ["gdp growth", "real gdp growth", "gdp yoy", "economic growth rate"]
+      units: ["percent", "%", "annual %", "percentage"]
+      frequency: ["annual", "quarterly"]
+      
+    # Inflation Indicators  
+    inflation_cpi_yoy:
+      codes:
+        worldbank: ["FP.CPI.TOTL.ZG"]
+        imf: ["PCPIPCH"]
+        oecd: ["MEI_PRICES.CPALTT01"]
+        fred: ["CPIAUCSL"]
+      aliases: ["cpi inflation", "inflation yoy", "consumer prices", "price inflation", "cpi annual"]
+      units: ["percent", "%", "annual %", "index", "2015=100"]
+      frequency: ["monthly", "annual"]
+      
+    # Unemployment Indicators
+    unemployment_rate:
+      codes:
+        worldbank: ["SL.UEM.TOTL.ZS"]
+        imf: ["LUR"]
+        oecd: ["MEI_LABOUR.LRHUTTTT"]
+        fred: ["UNRATE"]
+      aliases: ["unemployment rate", "jobless rate", "labour force unemployment", "unemployment %"]
+      units: ["percent", "%", "rate"]
+      frequency: ["monthly", "annual"]
+      
+    # Interest Rate Indicators
+    interest_rate_policy:
+      codes:
+        worldbank: ["FR.INR.RINR"]
+        imf: ["FPOLM"]
+        fred: ["DFF", "FEDFUNDS"]
+        oecd: ["MEI_FIN.IR3TIB01"]
+      aliases: ["policy rate", "central bank rate", "federal funds rate", "base rate", "benchmark rate"]
+      units: ["percent", "%", "basis points"]
+      frequency: ["daily", "monthly"]
+      
+    # Tourism Indicators
+    tourist_arrivals:
+      codes:
+        worldbank: ["ST.INT.ARVL"]
+        oecd: ["TOURISM.INTNIGHTS"]
+        unwto: ["arrivals.total"]
+      aliases: ["tourist arrivals", "visitor arrivals", "international arrivals", "tourism arrivals"]
+      units: ["thousands", "millions", "number"]
+      frequency: ["monthly", "annual"]
+      
+    tourism_receipts:
+      codes:
+        worldbank: ["ST.INT.RCPT.CD"]
+        oecd: ["TOURISM.INTRECEIPTS"]
+        unwto: ["receipts.total"]
+      aliases: ["tourism receipts", "travel receipts", "tourism revenue", "visitor spending"]
+      units: ["usd", "millions usd", "billions usd"]
+      frequency: ["annual", "quarterly"]
+
+health:
+  patterns:
+    # Disease Incidence Rates
+    incidence_rate:
+      codes:
+        who: ["INCIDENCE"]
+        pubmed: ["incidence[mesh]"]
+        europepmc: ["incidence rate"]
+      aliases: ["incidence rate", "per 100k", "cases per 100,000", "disease incidence", "new cases rate"]
+      units: ["per 100000", "per capita", "rate", "cases/100k"]
+      frequency: ["annual"]
+      
+    prevalence_rate:
+      codes:
+        who: ["PREVALENCE"] 
+        pubmed: ["prevalence[mesh]"]
+        europepmc: ["prevalence"]
+      aliases: ["prevalence rate", "disease prevalence", "total cases rate", "burden rate"]
+      units: ["per 100000", "per capita", "rate", "%"]
+      frequency: ["annual"]
+      
+    # Mortality Indicators
+    mortality_rate:
+      codes:
+        who: ["MORTALITY"]
+        worldbank: ["SP.DYN.CDRT.IN"]
+        oecd: ["HEALTH_STAT.MORT"]
+      aliases: ["mortality rate", "death rate", "fatality rate", "deaths per 1000"]
+      units: ["per 1000", "per 100000", "rate"]
+      frequency: ["annual"]
+      
+    life_expectancy:
+      codes:
+        who: ["LIFEEXP"]
+        worldbank: ["SP.DYN.LE00.IN"]
+        oecd: ["HEALTH_STAT.LIFEEXP"]
+      aliases: ["life expectancy", "average lifespan", "longevity", "life expectancy at birth"]
+      units: ["years", "age"]
+      frequency: ["annual"]
+
+climate:
+  patterns:
+    # Temperature Indicators
+    temperature_anomaly:
+      codes:
+        nasa: ["TEMP_ANOM"]
+        noaa: ["TAVG_ANOM"]
+        ipcc: ["temperature.anomaly"]
+      aliases: ["temperature anomaly", "temp anomaly", "warming anomaly", "climate anomaly"]
+      units: ["celsius", "°c", "degrees c", "kelvin"]
+      frequency: ["monthly", "annual"]
+      
+    # Emission Indicators
+    co2_emissions:
+      codes:
+        worldbank: ["EN.ATM.CO2E.KT"]
+        oecd: ["AIR_GHG.CO2"]
+        ipcc: ["emissions.co2"]
+      aliases: ["co2 emissions", "carbon dioxide emissions", "carbon emissions", "ghg emissions"]
+      units: ["kt co2", "mt co2", "tonnes co2", "kilotons"]
+      frequency: ["annual"]
+      
+    co2_concentration:
+      codes:
+        noaa: ["CO2_PPM"]
+        nasa: ["MOLE_FRACTION_CO2"]
+      aliases: ["co2 ppm", "co2 concentration", "atmospheric co2", "carbon dioxide ppm"]
+      units: ["ppm", "parts per million", "μmol/mol"]
+      frequency: ["monthly", "annual"]
+
+technology:
+  patterns:
+    # AI/ML Indicators
+    ai_investment:
+      codes:
+        oecd: ["ANBERD.AI"]
+        crunchbase: ["ai.funding"]
+      aliases: ["ai investment", "artificial intelligence funding", "ml investment", "ai venture capital"]
+      units: ["usd", "millions usd", "billions usd"]
+      frequency: ["annual", "quarterly"]
+      
+    ai_patents:
+      codes:
+        uspto: ["ai.patents"]
+        wipo: ["artificial.intelligence"]
+        oecd: ["PATS.AI"]
+      aliases: ["ai patents", "artificial intelligence patents", "machine learning patents", "ai ip"]
+      units: ["number", "count"]
+      frequency: ["annual"]
+      
+    # Software Development Indicators
+    github_activity:
+      codes:
+        github: ["repositories", "commits", "stars"]
+        stackoverflow: ["questions.ai", "tags.machine-learning"]
+      aliases: ["github activity", "open source activity", "development activity", "code commits"]
+      units: ["count", "number"]
+      frequency: ["monthly", "annual"]
+
+policy:
+  patterns:
+    # Regulatory Indicators
+    policy_count:
+      codes:
+        oecd: ["REGREF.COUNT"]
+        ec: ["regulations.count"]
+      aliases: ["policy count", "regulation count", "legislative acts", "policy measures"]
+      units: ["number", "count"]
+      frequency: ["annual"]
+      
+    regulatory_burden:
+      codes:
+        oecd: ["PMR.REGBURDEN"]
+        worldbank: ["IC.BUS.EASE.XQ"]
+      aliases: ["regulatory burden", "red tape index", "bureaucracy index", "compliance cost"]
+      units: ["index", "score", "ranking"]
+      frequency: ["annual"]
+
+corporate:
+  patterns:
+    # Financial Performance
+    revenue_growth:
+      codes:
+        sec: ["revenue.yoy"]
+        yahoo_finance: ["revenue"]
+        bloomberg: ["sales"]
+      aliases: ["revenue growth", "sales growth", "top line growth", "turnover growth"]
+      units: ["percent", "%", "usd", "millions usd"]
+      frequency: ["quarterly", "annual"]
+      
+    market_cap:
+      codes:
+        yahoo_finance: ["marketCap"]
+        bloomberg: ["market_value"]
+        sec: ["market.capitalization"]
+      aliases: ["market cap", "market capitalization", "market value", "equity value"]
+      units: ["usd", "millions usd", "billions usd"]
+      frequency: ["daily", "monthly"]
+
+# Cross-Domain Mappings
+cross_domain:
+  # Economic impact of technology
+  tech_gdp_contribution:
+    source_domains: ["technology", "macroeconomics"]
+    aliases: ["digital economy", "tech sector gdp", "ict contribution", "digital transformation impact"]
+    
+  # Health economics  
+  healthcare_spending:
+    source_domains: ["health", "macroeconomics"]
+    aliases: ["healthcare expenditure", "health spending", "medical costs", "healthcare budget"]
+    
+  # Climate economics
+  green_transition_investment:
+    source_domains: ["climate", "macroeconomics"]  
+    aliases: ["green investment", "climate finance", "renewable energy investment", "sustainability spending"]
+    
+  # Tourism economics
+  tourism_gdp_impact:
+    source_domains: ["travel_tourism", "macroeconomics"]
+    aliases: ["tourism contribution to gdp", "travel economic impact", "hospitality sector gdp", "tourism multiplier"]
+
+# Validation Rules
+validation:
+  required_fields: ["codes", "aliases", "units"]
+  min_aliases: 2
+  min_providers: 1
+  supported_frequencies: ["daily", "weekly", "monthly", "quarterly", "annual"]
+  supported_units_types: ["currency", "percentage", "rate", "index", "count", "physical"]

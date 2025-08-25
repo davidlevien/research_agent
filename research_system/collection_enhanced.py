@@ -13,6 +13,7 @@ from research_system.providers.registry import PROVIDERS
 from research_system.tools.domain_norm import canonical_domain
 from research_system.models import EvidenceCard
 from research_system.routing.provider_router import choose_providers
+from research_system.routing.topic_router import route_query, is_off_topic
 import logging
 import uuid
 from datetime import datetime
@@ -71,7 +72,9 @@ async def _execute_provider_async(
     provider_name: str,
     topic: str,
     impl: Dict[str, Any],
-    settings: Optional[Any] = None
+    settings: Optional[Any] = None,
+    refined_query: Optional[str] = None,
+    topic_key: Optional[str] = None
 ) -> List[EvidenceCard]:
     """Execute a single provider asynchronously and return evidence cards."""
     cards = []
@@ -90,13 +93,22 @@ async def _execute_provider_async(
             to_cards_fn = impl.get("to_cards")
             
             if search_fn:
-                # Execute search in thread pool
-                results = await loop.run_in_executor(None, search_fn, topic)
+                # Use refined query if provided, otherwise fall back to original topic
+                query_to_use = refined_query if refined_query else topic
                 
-                # Convert to cards
+                # Execute search in thread pool
+                results = await loop.run_in_executor(None, search_fn, query_to_use)
+                
+                # Convert to cards with off-topic filtering
                 if to_cards_fn and results:
                     seed_cards = to_cards_fn(results)
                     for s in seed_cards:
+                        # Apply off-topic filtering if topic_key is provided
+                        if topic_key and is_off_topic(s, topic_key):
+                            if settings and hasattr(settings, 'logger'):
+                                settings.logger.debug(f"Filtered off-topic content from {provider_name}: {s.get('title', 'No title')[:50]}...")
+                            continue
+                            
                         card = EvidenceCard.from_seed(s, provider=provider_name)
                         cards.append(card)
                         
@@ -105,10 +117,19 @@ async def _execute_provider_async(
             to_cards_fn = impl.get("to_cards")
             
             if events_fn:
-                events = await loop.run_in_executor(None, events_fn, topic)
+                # Use refined query if provided, otherwise fall back to original topic
+                query_to_use = refined_query if refined_query else topic
+                
+                events = await loop.run_in_executor(None, events_fn, query_to_use)
                 if to_cards_fn and events:
                     seed_cards = to_cards_fn(events)
                     for s in seed_cards:
+                        # Apply off-topic filtering if topic_key is provided
+                        if topic_key and is_off_topic(s, topic_key):
+                            if settings and hasattr(settings, 'logger'):
+                                settings.logger.debug(f"Filtered off-topic GDELT content: {s.get('title', 'No title')[:50]}...")
+                            continue
+                            
                         card = EvidenceCard.from_seed(s, provider="gdelt")
                         cards.append(card)
                         
@@ -193,14 +214,22 @@ async def collect_from_free_apis_async(
     # Environment override for testing
     if os.getenv("ENABLED_PROVIDERS"):
         provs = [p.strip() for p in os.getenv("ENABLED_PROVIDERS").split(",") if p.strip()]
+        routing_decision = None
+        topic_key = "general"
     elif providers:
         provs = providers
+        routing_decision = None
+        topic_key = "general"
     else:
-        # Use router to choose providers based on topic
-        decision = choose_providers(topic)
-        provs = decision.providers
+        # Use new generalized router for provider selection
+        routing_decision = route_query(topic, strategy="broad_coverage")
+        provs = routing_decision.providers
+        topic_key = routing_decision.topic_match.topic_key
+        
         if settings and hasattr(settings, 'logger'):
-            settings.logger.info(f"Router selected providers: {provs} for categories: {decision.categories}")
+            settings.logger.info(f"Router selected {len(provs)} providers for topic '{topic_key}' (confidence: {routing_decision.topic_match.confidence:.2f}): {provs[:5]}")
+            if routing_decision.query_refinements:
+                settings.logger.info(f"Query refinements applied for {len(routing_decision.query_refinements)} providers")
     
     # Create tasks for each provider
     tasks = []
@@ -209,10 +238,22 @@ async def collect_from_free_apis_async(
     for p in provs:
         impl = PROVIDERS.get(p, {})
         if impl:
-            # Create task with timeout
+            # Get refined query for this provider if available
+            refined_query = None
+            if routing_decision and p in routing_decision.query_refinements:
+                refined_query = routing_decision.query_refinements[p]
+                
+            # Create task with timeout, passing refined query and topic key
             task = asyncio.create_task(
                 asyncio.wait_for(
-                    _execute_provider_async(p, topic, impl, settings),
+                    _execute_provider_async(
+                        p, 
+                        topic, 
+                        impl, 
+                        settings, 
+                        refined_query=refined_query, 
+                        topic_key=topic_key
+                    ),
                     timeout=timeout_per_provider
                 )
             )

@@ -1,10 +1,20 @@
-# Research Agent System v8.2 (PE-Grade)
+# Research Agent System v8.3 (PE-Grade)
 
-A production-ready, principal-engineer-grade research system with comprehensive triangulation, primary source backfill, 20+ free API integrations, and strict quality enforcement. Delivers evidence-based research reports with multi-source verification, API compliance, and domain-specific expertise.
+A production-ready, principal-engineer-grade research system with comprehensive triangulation, primary source backfill, 20+ free API integrations, generalized topic routing, and strict quality enforcement. Delivers evidence-based research reports with multi-source verification, API compliance, and domain-agnostic expertise.
 
-## Latest PE-Grade Enhancements (v8.2)
+## Latest PE-Grade Enhancements (v8.3)
 
-### Performance Optimization (v8.2 - Latest)
+### Generalized Topic Routing System (v8.3 - Latest)
+- ✅ **Domain-Agnostic Router**: YAML-driven topic classification, no hard-coded verticals
+- ✅ **Extensible Topic Packs**: Add new domains without code changes via `topic_packs.yaml`
+- ✅ **Provider Capability Matrix**: Strategic provider selection via `provider_capabilities.yaml`  
+- ✅ **Query Refinement**: Automatic topic-specific expansions and provider optimizations
+- ✅ **Off-Topic Filtering**: Jaccard similarity + required term validation for content quality
+- ✅ **Selection Strategies**: high_precision, broad_coverage, academic_focus, real_time routing
+- ✅ **Structured Triangulation**: Domain-aware patterns via `structured_keys.yaml`
+- ✅ **Backward Compatibility**: Legacy router interfaces maintained for seamless migration
+
+### Performance Optimization (v8.2)
 - ✅ **Parallel API Execution**: All 20+ free APIs now execute concurrently (10-20x speedup)
 - ✅ **Per-Provider Timeouts**: Individual 30s timeouts prevent single provider delays
 - ✅ **Async/Await Architecture**: Non-blocking I/O for maximum throughput
@@ -157,20 +167,68 @@ ENABLED_PROVIDERS=worldbank,oecd,imf python -m research_system \
 python -m research_system --topic "climate change impacts" --strict
 ```
 
-## 📊 Provider Router Categories
+## 🎯 Generalized Topic Routing System (v8.3)
 
-The system automatically selects appropriate providers based on topic:
+**PE-Grade Domain-Agnostic Router** - No hard-coded verticals, fully extensible via YAML configuration.
 
-| Category | Keywords | Selected Providers |
-|----------|----------|-------------------|
-| **Biomed** | trial, vaccine, pubmed | PubMed, Europe PMC, Crossref, Unpaywall, OpenAlex |
-| **Macro** | gdp, inflation, tourism | World Bank, OECD, IMF, Eurostat, FRED, Wikidata |
-| **Science** | arxiv, citation, h-index | OpenAlex, Crossref, arXiv, Unpaywall, Wikidata |
-| **Tech** | software, benchmark, AI | OpenAlex, arXiv, Crossref, Unpaywall, Wikipedia |
-| **Climate** | emission, IPCC, temperature | OECD, World Bank, Eurostat, OpenAlex, Crossref |
-| **News** | breaking, announced | GDELT, Wikipedia, Wayback |
-| **Geospatial** | POI, openstreetmap | Overpass, Wikipedia, Wikidata |
-| **Policy** | regulation, directive | OECD, EC, World Bank, OpenAlex, Crossref |
+### 📊 Topic Classification & Provider Selection
+
+The system uses a sophisticated 3-stage routing pipeline:
+
+1. **Topic Classification**: AI-powered analysis against extensible topic packs
+2. **Provider Selection**: Strategy-driven selection based on topic expertise  
+3. **Query Refinement**: Provider-specific optimization with off-topic filtering
+
+| Topic Domain | Confidence Indicators | Primary Providers | Strategy |
+|--------------|----------------------|-------------------|----------|
+| **Macroeconomics** | GDP, inflation, OECD, World Bank, tourism | World Bank, OECD, IMF, FRED, Eurostat | high_precision |
+| **Health** | WHO, clinical, prevalence, PubMed, systematic review | PubMed, Europe PMC, OpenAlex, Crossref | academic_focus |  
+| **Technology** | AI, software, machine learning, cloud, cybersecurity | OpenAlex, arXiv, Brave, Tavily, Crossref | broad_coverage |
+| **Climate** | IPCC, emissions, CO₂, climate change, temperature | OECD, World Bank, OpenAlex, Crossref | high_precision |
+| **Science** | DOI, peer review, journal, citation, research | OpenAlex, Crossref, arXiv, PubMed, Unpaywall | academic_focus |
+| **Travel & Tourism** | UNWTO, arrivals, RevPAR, occupancy, visitor spend | World Bank, OECD, Brave, Tavily | broad_coverage |
+| **Policy** | regulation, legislation, government, directive | OECD, EC, World Bank, OpenAlex | high_precision |
+| **Corporate** | earnings, SEC filing, revenue, market cap | Brave, Tavily, SerpAPI | real_time |
+| **News** | breaking, announcement, current events | GDELT, Brave, Tavily, Wikipedia | real_time |
+| **Geospatial** | OpenStreetMap, GIS, POI, geographic | Overpass, Wikipedia, Wikidata | broad_coverage |
+
+### 🔧 Extensible Configuration
+
+**Topic Packs** (`topic_packs.yaml`):
+```yaml
+macroeconomics:
+  aliases: ["gdp", "inflation", "unemployment", "tourism", "arrivals"]
+  anchors: ["gdp", "oecd", "world bank", "tourism"] 
+  query_expansions: ["GDP", "economic indicators", "tourism arrivals"]
+  off_topic:
+    must_contain_any: ["gdp", "economic", "tourism"]
+    min_jaccard: 0.10
+```
+
+**Provider Capabilities** (`provider_capabilities.yaml`):
+```yaml
+worldbank:
+  topics: ["macroeconomics", "travel_tourism", "climate"]
+  query_refiners: ["site:worldbank.org"]
+  strength: high
+  specialty: ["development indicators", "tourism statistics"]
+```
+
+### 📈 Selection Strategies
+
+| Strategy | Use Case | Max Providers | Priority Order |
+|----------|----------|---------------|----------------|
+| **high_precision** | Authoritative research | 6 | Primary sources → Academic → Web |
+| **broad_coverage** | Comprehensive analysis | 8 | Balanced mix of all provider types |
+| **academic_focus** | Scholarly research | 6 | Academic → Primary → Web |
+| **real_time** | Current events | 5 | Web search → News → Archives |
+
+### 🎛️ Query Refinement & Filtering
+
+- **Topic Expansions**: Automatic inclusion of domain-specific terms
+- **Provider Refiners**: Site-specific search optimization (e.g., `site:oecd.org`)
+- **Off-topic Filtering**: Jaccard similarity + required term validation
+- **Backward Compatibility**: Legacy `choose_providers()` interface maintained
 
 ## 🔒 Security & Compliance
 
@@ -195,17 +253,16 @@ For high-volume PubMed usage:
 
 ## 🏗️ Architecture
 
-### Provider Integration Flow
+### Generalized Routing Flow (v8.3)
 ```
-Topic → Router → Provider Selection → Parallel Collection
-         ↓                                    ↓
-    Categories                          Rate Limited
-         ↓                                    ↓
-    Provider List                      Policy Headers
-                                             ↓
-                                      Evidence Cards
-                                             ↓
-                                     License Attribution
+User Query → Topic Classification → Strategy Selection → Provider Selection
+     ↓              ↓                       ↓                    ↓
+  "GDP tourism"   score: 8.5            broad_coverage      [worldbank,
+     ↓          topic: macroeconomics         ↓              oecd, brave]
+Query Refinement → Off-topic Filtering → Parallel Collection → Evidence Cards
+     ↓                   ↓                       ↓                  ↓
+"GDP tourism     Filter irrelevant        Rate Limited        License
+site:oecd.org"   content via Jaccard     Policy Headers      Attribution
 ```
 
 ### Core Components
@@ -231,15 +288,19 @@ research_system/
 │   ├── unpaywall.py      # OA full-text
 │   ├── overpass.py       # OpenStreetMap
 │   └── ec.py             # EU Open Data
-├── routing/
-│   └── provider_router.py  # Topic-based selection
+├── routing/                 # PE-grade generalized routing system
+│   ├── topic_router.py     # Domain-agnostic classification & selection  
+│   └── provider_router.py  # Legacy compatibility layer
 ├── tools/
 │   └── domain_norm.py      # Primary source recognition
 ├── enrich/
 │   ├── primary_fill.py     # Primary backfill
 │   └── ensure_quotes.py    # Quote rescue
-└── resources/
-    └── provider_profiles.yaml  # Router configuration
+└── resources/               # YAML-driven configuration
+    ├── topic_packs.yaml      # Extensible domain taxonomy  
+    ├── provider_capabilities.yaml # Provider-topic mapping
+    ├── structured_keys.yaml  # Domain-aware triangulation patterns
+    └── provider_profiles.yaml # Legacy router configuration
 ```
 
 ## 📈 Performance & Limits
@@ -354,8 +415,8 @@ We gratefully acknowledge these free API providers:
 
 ---
 
-**Version**: 8.2.0  
+**Version**: 8.3.0  
 **Last Updated**: August 2025  
-**Status**: Production-Ready with Parallel Execution, Resilience & Error Recovery  
-**Compliance Level**: PE-Grade with Rate Limiting, Attribution & Graceful Degradation  
-**Performance**: 10-20x faster with parallel API execution
+**Status**: Production-Ready with Generalized Topic Routing, Parallel Execution & Resilience  
+**Compliance Level**: PE-Grade with Domain-Agnostic Architecture, Rate Limiting & Attribution  
+**Performance**: 10-20x faster with parallel API execution + intelligent topic routing

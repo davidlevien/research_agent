@@ -1,0 +1,170 @@
+# Provider Capabilities Matrix for PE-Grade Generalized Routing
+# Maps providers to their topic strengths and query refinement strategies
+
+providers:
+  # === Free API Providers (Primary Data Sources) ===
+  worldbank:
+    topics: ["macroeconomics", "travel_tourism", "climate", "general"]
+    query_refiners: ["site:worldbank.org", "site:data.worldbank.org"]
+    strength: high
+    coverage: global
+    specialty: ["development indicators", "economic data", "climate finance", "tourism statistics"]
+
+  oecd:
+    topics: ["macroeconomics", "health", "policy", "climate", "general"]
+    query_refiners: ["site:oecd.org", "site:data.oecd.org"]
+    strength: high
+    coverage: oecd_countries
+    specialty: ["economic policy", "health statistics", "education", "environmental data"]
+
+  imf:
+    topics: ["macroeconomics", "general"]
+    query_refiners: ["site:imf.org", "site:data.imf.org"]
+    strength: high
+    coverage: global
+    specialty: ["financial stability", "balance of payments", "fiscal data", "exchange rates"]
+
+  eurostat:
+    topics: ["macroeconomics", "health", "climate", "general"]
+    query_refiners: ["site:eurostat.ec.europa.eu", "site:ec.europa.eu"]
+    strength: high
+    coverage: european_union
+    specialty: ["eu statistics", "demographic data", "economic indicators", "environmental stats"]
+
+  fred:
+    topics: ["macroeconomics", "general"]
+    query_refiners: ["site:fred.stlouisfed.org"]
+    strength: high
+    coverage: united_states
+    specialty: ["us economic data", "federal reserve", "financial markets", "labor statistics"]
+
+  # === Academic and Scientific Providers ===
+  openalex:
+    topics: ["science", "technology", "health", "climate", "general"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["scholarly publications", "citation networks", "research trends", "academic metrics"]
+
+  crossref:
+    topics: ["science", "technology", "health", "policy", "general"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["doi resolution", "academic publishing", "peer review", "journal metadata"]
+
+  arxiv:
+    topics: ["technology", "science", "general"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["preprints", "computer science", "physics", "mathematics", "ai research"]
+
+  pubmed:
+    topics: ["health", "science", "general"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["biomedical literature", "clinical trials", "medical research", "life sciences"]
+
+  europepmc:
+    topics: ["health", "science", "general"]
+    query_refiners: []
+    strength: high
+    coverage: european_focus
+    specialty: ["european biomedical", "life sciences", "clinical research", "open access"]
+
+  unpaywall:
+    topics: ["science", "technology", "health", "general"]
+    query_refiners: []
+    strength: medium
+    coverage: global
+    specialty: ["open access", "full text papers", "academic publishing", "doi resolution"]
+
+  # === Knowledge and Reference Providers ===
+  wikipedia:
+    topics: ["general", "technology", "science", "health", "policy", "news"]
+    query_refiners: ["site:wikipedia.org"]
+    strength: medium
+    coverage: global
+    specialty: ["encyclopedic content", "general knowledge", "current events", "biographical data"]
+
+  wikidata:
+    topics: ["general", "science", "geospatial", "corporate"]
+    query_refiners: []
+    strength: medium
+    coverage: global
+    specialty: ["structured data", "entity relationships", "identifiers", "factual data"]
+
+  # === Specialized Domain Providers ===
+  gdelt:
+    topics: ["news", "policy", "geospatial", "general"]
+    query_refiners: []
+    strength: medium
+    coverage: global
+    specialty: ["global events", "news monitoring", "conflict data", "political events"]
+
+  wayback:
+    topics: ["general", "news", "corporate", "policy"]
+    query_refiners: []
+    strength: low
+    coverage: global
+    specialty: ["historical web content", "archived pages", "temporal analysis", "web preservation"]
+
+  overpass:
+    topics: ["geospatial", "general"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["openstreetmap data", "poi extraction", "geographic queries", "spatial data"]
+
+  ec:
+    topics: ["policy", "climate", "macroeconomics", "general"]
+    query_refiners: ["site:ec.europa.eu", "site:europa.eu"]
+    strength: medium
+    coverage: european_union
+    specialty: ["eu policy", "regulatory framework", "environmental policy", "trade data"]
+
+  # === Web Search Providers (Broad Coverage) ===
+  brave:
+    topics: ["general", "technology", "macroeconomics", "health", "climate", "travel_tourism", "corporate", "news", "policy"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["web search", "current content", "diverse sources", "real-time information"]
+
+  serpapi:
+    topics: ["general", "technology", "macroeconomics", "health", "climate", "travel_tourism", "corporate", "news", "policy"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["google search api", "structured results", "knowledge panels", "local search"]
+
+  tavily:
+    topics: ["general", "technology", "macroeconomics", "health", "climate", "travel_tourism", "corporate", "news", "policy"]
+    query_refiners: []
+    strength: high
+    coverage: global
+    specialty: ["ai-powered search", "content summarization", "source verification", "research assistant"]
+
+# === Provider Selection Strategies ===
+selection_strategies:
+  high_precision:
+    # Prioritize authoritative, primary sources
+    provider_order: ["worldbank", "oecd", "imf", "fred", "eurostat", "openalex", "crossref", "pubmed", "arxiv"]
+    max_providers: 6
+    
+  broad_coverage:
+    # Balance between authority and coverage
+    provider_order: ["brave", "tavily", "serpapi", "wikipedia", "openalex", "worldbank", "oecd"]
+    max_providers: 8
+    
+  academic_focus:
+    # Research and scholarly emphasis
+    provider_order: ["openalex", "crossref", "arxiv", "pubmed", "europepmc", "unpaywall", "brave", "tavily"]
+    max_providers: 6
+
+  real_time:
+    # Current events and breaking news
+    provider_order: ["brave", "tavily", "serpapi", "gdelt", "wikipedia", "wayback"]
+    max_providers: 5

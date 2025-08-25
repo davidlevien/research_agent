@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Tuple
-from ..router import route_topic
+from ..routing.topic_router import route_topic
 from ..policy import POLICIES
 
 def build_anchors(topic: str) -> Tuple[list[str], str, object]:

@@ -80,7 +80,7 @@ async def targeted_primary_arex(
     from research_system.models import EvidenceCard
     from research_system.tools.url_norm import domain_of
     from research_system.policy import POLICIES
-    from research_system.router import route_topic
+    from research_system.routing.topic_router import route_topic
     
     # Identify gaps: keys without primary source corroboration
     gaps = []

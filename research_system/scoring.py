@@ -141,7 +141,7 @@ def domain_prior_for(topic: str, url: str) -> float:
     Returns:
         Domain credibility score (0-1)
     """
-    from .router import route_topic
+    from .routing.topic_router import route_topic
     from .policy import get_policy
     from .tools.url_norm import domain_of
     
