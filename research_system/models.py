@@ -87,8 +87,9 @@ class EvidenceCard(BaseModel):
             self.source_url = self.url
         if not self.source_title and self.title:
             self.source_title = self.title
-        if not self.supporting_text and self.snippet:
-            self.supporting_text = self.snippet
+        # Belt-and-suspenders: ensure supporting_text is never empty
+        if not self.supporting_text:
+            self.supporting_text = (self.snippet or self.title or "")[:5000]
         if not self.source_domain and self.url:
             from urllib.parse import urlparse
             self.source_domain = urlparse(self.url).netloc

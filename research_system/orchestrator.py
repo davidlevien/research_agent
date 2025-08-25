@@ -1397,8 +1397,19 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Write metrics ONCE
         self._write("metrics.json", json.dumps(metrics, indent=2))
         
-        # Always write evidence cards, even if there might be failures later
-        write_jsonl(str(self.s.output_dir / "evidence_cards.jsonl"), cards)
+        # Always write evidence cards; skip invalid ones instead of crashing
+        ok, bad = write_jsonl(
+            str(self.s.output_dir / "evidence_cards.jsonl"),
+            cards,
+            skip_invalid=True,
+            errors_path=str(self.s.output_dir / "evidence_cards.errors.jsonl")
+        )
+        self.logger.info(f"Evidence write: ok={ok} bad={bad}")
+        
+        # Trim in-memory set as well to keep metrics/report consistent
+        if bad:
+            from research_system.tools.evidence_io import read_jsonl
+            cards = read_jsonl(str(self.s.output_dir / "evidence_cards.jsonl"))
 
         # CONSOLIDATE / QUALITY - derive from written JSONL
         evidence_path = self.s.output_dir / "evidence_cards.jsonl"

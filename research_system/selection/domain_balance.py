@@ -21,7 +21,8 @@ def _domain(card) -> str:
 def enforce_cap(cards: List, cfg: BalanceConfig) -> Tuple[List, Dict[str,int]]:
     doms = [_domain(c) for c in cards]
     n = len(cards) or 1
-    cap_abs = max(1, int(cfg.cap * n))
+    # Subtract tiny epsilon to avoid rounding up to 25%
+    cap_abs = max(1, int((cfg.cap - 1e-9) * n))
     counts = Counter(doms)
     keep: List = []
     kept_per_domain = defaultdict(int)

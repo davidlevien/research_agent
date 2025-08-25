@@ -1,5 +1,5 @@
 from __future__ import annotations
-import httpx, datetime as dt, os, logging
+import httpx, datetime as dt, os, logging, re
 from typing import Optional, Dict, Any, Tuple
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,7 @@ from .doi_tools import extract_doi, crossref_meta
 from .unpaywall import doi_to_oa_url
 from .politeness import allowed, sync_host_throttle
 from .cache import get as cached_get, get_binary as cached_get_binary
+from .doi_fallback import doi_rescue, extract_doi_from_url
 from .warc_dump import warc_capture
 from .langpipe import to_english, detect_language
 from .pdf_tables import find_numeric_cells
@@ -121,6 +122,25 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
                         cache_set(cache_key, ttl, (r.text, dict(r.headers), r.status_code, r.headers.get("content-type", "")))
                     CIRCUIT.ok(host)
                 else:
+                    # Check for 401/403 and try DOI fallback if applicable
+                    if r.status_code in (401, 403):
+                        doi = extract_doi_from_url(url)
+                        if doi:
+                            logger.info(f"Got {r.status_code} for {url}, trying DOI metadata fallback")
+                            email = os.getenv("CONTACT_EMAIL", "ci@example.org")
+                            meta = doi_rescue(doi, email=email)
+                            if meta:
+                                text = meta.get("abstract") or ""
+                                title_fallback = meta.get("title") or None
+                                quotes = select_claim_sentences(text or title_fallback or "", max_sentences=2)
+                                return {
+                                    "title": title_fallback,
+                                    "text": (text or title_fallback or "")[:5000],
+                                    "date": meta.get("date"),
+                                    "publisher": meta.get("publisher"),
+                                    "quotes": quotes,
+                                    "source": meta.get("source", "doi_metadata")
+                                }
                     CIRCUIT.fail(host)
                 
                 # Check for Cloudflare challenge
