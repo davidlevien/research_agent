@@ -16,16 +16,22 @@ PRIMARY_SITES = [
 
 def _queries_for_family(fam: Dict) -> List[str]:
     """Build tight queries from the representative claim/key if present."""
-    key = fam.get("key") or fam.get("rep_claim") or ""
+    key = fam.get("key") or fam.get("representative_claim") or ""
+    
+    # Convert tuple keys (from structured triangulation) to string
+    if isinstance(key, tuple):
+        key = " ".join(str(k) for k in key if k and k != "unknown")
+    
     parts = []
     # include numbers/period tokens if available
     if key:
-        parts.append(key[:140])
+        key_str = str(key)
+        parts.append(key_str[:140])
     
     # Also try to use any specific metric patterns found
     import re
     metric_pattern = re.compile(r'\b(?:\d{1,3}(?:\.\d+)?%|Q[1-4]\s*\d{4}|\b20\d{2}\b|\bmillion\b|\bbillion\b)')
-    metrics = metric_pattern.findall(key)
+    metrics = metric_pattern.findall(str(key))
     if metrics:
         parts.extend(metrics[:2])  # Use first couple metrics
     

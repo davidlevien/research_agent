@@ -1063,9 +1063,23 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         tri_union = union_rate(para_clusters, structured_matches, len(cards))
         
         # Write single source of truth for triangulation
+        # Convert structured_matches cards from objects to indices for JSON serialization
+        serializable_structured = []
+        for match in structured_matches:
+            serializable_match = {
+                "key": match["key"],
+                "indices": match.get("indices", []),  # Use indices if available
+                "domains": match["domains"],
+                "size": match["size"]
+            }
+            # If indices not available but cards are, extract indices
+            if not serializable_match["indices"] and "cards" in match:
+                serializable_match["indices"] = [cards.index(c) for c in match["cards"] if c in cards]
+            serializable_structured.append(serializable_match)
+        
         artifact = {
-            "paraphrase_clusters": para_clusters,
-            "structured_triangles": structured_matches
+            "paraphrase_clusters": para_clusters,  # Already has correct structure with indices
+            "structured_triangles": serializable_structured
         }
         self._write("triangulation.json", json.dumps(artifact, indent=2))
         
@@ -1410,7 +1424,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             
             # Check primary share (for some topics)
             discipline = getattr(self, 'discipline', Discipline.GENERAL)
-            if discipline in [Discipline.MACROECONOMICS, Discipline.HEALTH, Discipline.CLIMATE]:
+            if discipline in [Discipline.FINANCE_ECON, Discipline.MEDICINE, Discipline.CLIMATE_ENV]:
                 if current_metrics["primary_share"] < 0.30:
                     needs_backfill = True
                     backfill_reason.append(f"primary share {current_metrics['primary_share']:.2%} < 30%")
