@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     HTTP_TIMEOUT_SECONDS: int = 30
     RETRY_MAX_TRIES: int = 5
     RETRY_BACKOFF_BASE_SECONDS: float = 0.5
-    WALL_TIMEOUT_SEC: int = Field(600, description="Wall clock timeout for entire operation")
+    WALL_TIMEOUT_SEC: int = Field(1800, description="Wall clock timeout for entire operation")
     PROVIDER_TIMEOUT_SEC: int = Field(20, description="Timeout for search/extract provider calls")
     
     @property

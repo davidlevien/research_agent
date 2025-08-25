@@ -742,8 +742,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
     def run(self):
         settings = Settings()  # validated at CLI
         
-        # Set global time budget (default 900 seconds / 15 minutes)
-        total_seconds = getattr(self.s, 'timeout', 900)
+        # Set global time budget (default 1800 seconds / 30 minutes)
+        total_seconds = getattr(self.s, 'timeout', 1800)
         budget = set_global_budget(total_seconds)
         logger.info(f"Set global time budget: {total_seconds}s")
         

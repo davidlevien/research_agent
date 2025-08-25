@@ -16,6 +16,8 @@ from research_system.routing.provider_router import choose_providers
 import logging
 import uuid
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -65,18 +67,125 @@ async def parallel_provider_search(registry: Registry, query: str, count: int, f
         # Do NOT backfill; failures remain empty by design
     return per_provider
 
-def collect_from_free_apis(
+async def _execute_provider_async(
+    provider_name: str,
     topic: str,
-    providers: Optional[List[str]] = None,
+    impl: Dict[str, Any],
     settings: Optional[Any] = None
 ) -> List[EvidenceCard]:
+    """Execute a single provider asynchronously and return evidence cards."""
+    cards = []
+    start_time = time.perf_counter()
+    
+    try:
+        # Use metrics tracking
+        SEARCH_REQUESTS.labels(provider=provider_name).inc()
+        
+        # Run provider in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        
+        if provider_name in ("openalex", "crossref", "wikipedia", "worldbank", "oecd", 
+                             "imf", "arxiv", "pubmed", "europepmc", "eurostat", "ec", "overpass"):
+            search_fn = impl.get("search")
+            to_cards_fn = impl.get("to_cards")
+            
+            if search_fn:
+                # Execute search in thread pool
+                results = await loop.run_in_executor(None, search_fn, topic)
+                
+                # Convert to cards
+                if to_cards_fn and results:
+                    seed_cards = to_cards_fn(results)
+                    for s in seed_cards:
+                        card = EvidenceCard.from_seed(s, provider=provider_name)
+                        cards.append(card)
+                        
+        elif provider_name == "gdelt":
+            events_fn = impl.get("events")
+            to_cards_fn = impl.get("to_cards")
+            
+            if events_fn:
+                events = await loop.run_in_executor(None, events_fn, topic)
+                if to_cards_fn and events:
+                    seed_cards = to_cards_fn(events)
+                    for s in seed_cards:
+                        card = EvidenceCard.from_seed(s, provider="gdelt")
+                        cards.append(card)
+                        
+        elif provider_name == "fred":
+            # FRED needs special handling - look for economic indicators in topic
+            if any(term in topic.lower() for term in ["inflation", "cpi", "gdp", "unemployment", "interest", "tourism", "travel"]):
+                series_fn = impl.get("series")
+                to_cards_fn = impl.get("to_cards")
+                
+                if series_fn:
+                    # Extended map with tourism indicators
+                    series_map = {
+                        "inflation": "CPIAUCSL",
+                        "cpi": "CPIAUCSL",
+                        "gdp": "GDP",
+                        "unemployment": "UNRATE",
+                        "interest": "DFF",
+                        "tourism": "HOUST",  # Housing starts as proxy
+                        "travel": "HOUST"
+                    }
+                    
+                    for term, series_id in series_map.items():
+                        if term in topic.lower():
+                            resp = await loop.run_in_executor(None, series_fn, series_id)
+                            if to_cards_fn and resp.get("observations"):
+                                seed_cards = to_cards_fn(resp, series_id)
+                                for s in seed_cards:
+                                    card = EvidenceCard.from_seed(s, provider="fred")
+                                    cards.append(card)
+                            break
+                            
+        # Log successful completion
+        if settings and hasattr(settings, 'logger'):
+            settings.logger.debug(f"Provider {provider_name} returned {len(cards)} cards")
+        else:
+            logger.debug(f"Provider {provider_name} returned {len(cards)} cards")
+            
+    except asyncio.TimeoutError:
+        SEARCH_ERRORS.labels(provider=provider_name).inc()
+        if settings and hasattr(settings, 'logger'):
+            settings.logger.warning(f"Provider {provider_name} timed out")
+        else:
+            logger.warning(f"Provider {provider_name} timed out")
+    except Exception as e:
+        SEARCH_ERRORS.labels(provider=provider_name).inc()
+        if settings and hasattr(settings, 'logger'):
+            settings.logger.warning(f"Provider {provider_name} error: {e}")
+        else:
+            logger.warning(f"Provider {provider_name} error: {e}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Provider {provider_name} traceback: {traceback.format_exc()}")
+    finally:
+        # Record latency
+        SEARCH_LATENCY.labels(provider=provider_name).observe(time.perf_counter() - start_time)
+    
+    # Canonicalize domains and ensure provider is set
+    for c in cards:
+        c.source_domain = canonical_domain(c.source_domain or "")
+        if not getattr(c, "provider", None):
+            c.provider = provider_name
+    
+    return cards
+
+async def collect_from_free_apis_async(
+    topic: str,
+    providers: Optional[List[str]] = None,
+    settings: Optional[Any] = None,
+    timeout_per_provider: int = 30
+) -> List[EvidenceCard]:
     """
-    Collect evidence from free API providers.
+    Collect evidence from free API providers in parallel.
     
     Args:
         topic: Research topic
         providers: List of provider names to use (or None for auto-routing)
         settings: Optional settings object with logger
+        timeout_per_provider: Maximum seconds per provider (default 30)
         
     Returns:
         List of evidence cards from free providers
@@ -93,85 +202,85 @@ def collect_from_free_apis(
         if settings and hasattr(settings, 'logger'):
             settings.logger.info(f"Router selected providers: {provs} for categories: {decision.categories}")
     
-    cards: List[EvidenceCard] = []
+    # Create tasks for each provider
+    tasks = []
+    provider_names = []
     
     for p in provs:
         impl = PROVIDERS.get(p, {})
-        
-        try:
-            # Most providers have standard search + to_cards pattern
-            if p in ("openalex", "crossref", "wikipedia", "worldbank", "oecd", 
-                     "imf", "arxiv", "pubmed", "europepmc", "eurostat", "ec", "overpass"):
-                # These have direct search functions
-                search_fn = impl.get("search")
-                to_cards_fn = impl.get("to_cards")
-                
-                if not search_fn:
-                    continue
-                
-                # Execute search
-                results = search_fn(topic)
-                
-                # Convert to cards
-                if to_cards_fn and results:
-                    seed_cards = to_cards_fn(results)
-                    for s in seed_cards:
-                        cards.append(EvidenceCard.from_seed(s, provider=p))
-                        
-            elif p == "gdelt":
-                # GDELT uses events function
-                events_fn = impl.get("events")
-                to_cards_fn = impl.get("to_cards")
-                
-                if events_fn:
-                    events = events_fn(topic)
-                    if to_cards_fn and events:
-                        seed_cards = to_cards_fn(events)
-                        for s in seed_cards:
-                            cards.append(EvidenceCard.from_seed(s, provider="gdelt"))
-                            
-            elif p == "fred":
-                # FRED needs special handling - look for economic indicators in topic
-                if any(term in topic.lower() for term in ["inflation", "cpi", "gdp", "unemployment", "interest"]):
-                    series_fn = impl.get("series")
-                    to_cards_fn = impl.get("to_cards")
-                    
-                    if series_fn:
-                        # Map common terms to FRED series IDs
-                        series_map = {
-                            "inflation": "CPIAUCSL",
-                            "cpi": "CPIAUCSL",
-                            "gdp": "GDP",
-                            "unemployment": "UNRATE",
-                            "interest": "DFF"
-                        }
-                        
-                        for term, series_id in series_map.items():
-                            if term in topic.lower():
-                                resp = series_fn(series_id)
-                                if to_cards_fn and resp.get("observations"):
-                                    seed_cards = to_cards_fn(resp, series_id)
-                                    for s in seed_cards:
-                                        cards.append(EvidenceCard.from_seed(s, provider="fred"))
-                                break
-                                
-            # Wayback is used for resilience, not search
-            # Unpaywall is used for enrichment by DOI
-            # Wikidata is used for entity resolution
-            
-        except Exception as e:
+        if impl:
+            # Create task with timeout
+            task = asyncio.create_task(
+                asyncio.wait_for(
+                    _execute_provider_async(p, topic, impl, settings),
+                    timeout=timeout_per_provider
+                )
+            )
+            tasks.append(task)
+            provider_names.append(p)
+    
+    if not tasks:
+        return []
+    
+    # Execute all providers in parallel
+    if settings and hasattr(settings, 'logger'):
+        settings.logger.info(f"Executing {len(tasks)} providers in parallel: {provider_names}")
+    else:
+        logger.info(f"Executing {len(tasks)} providers in parallel: {provider_names}")
+    
+    # Gather results with return_exceptions=True to handle failures gracefully
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Combine all successful results
+    all_cards = []
+    for provider_name, result in zip(provider_names, results):
+        if isinstance(result, Exception):
             if settings and hasattr(settings, 'logger'):
-                settings.logger.warning(f"Provider {p} error: {e}")
+                settings.logger.warning(f"Provider {provider_name} failed: {result}")
             else:
-                logger.warning(f"Provider {p} error: {e}")
+                logger.warning(f"Provider {provider_name} failed: {result}")
+        elif result:
+            all_cards.extend(result)
+            if settings and hasattr(settings, 'logger'):
+                settings.logger.info(f"Provider {provider_name} contributed {len(result)} cards")
     
-    # Canonicalize domains and ensure provider is set
-    for c in cards:
-        c.source_domain = canonical_domain(c.source_domain or "")
-        if not getattr(c, "provider", None):
-            c.provider = "free_api"
+    return all_cards
+
+def collect_from_free_apis(
+    topic: str,
+    providers: Optional[List[str]] = None,
+    settings: Optional[Any] = None
+) -> List[EvidenceCard]:
+    """
+    Collect evidence from free API providers (synchronous wrapper).
     
-    return cards
+    This is a synchronous wrapper around the async parallel implementation.
+    It executes all providers in parallel for much better performance.
+    
+    Args:
+        topic: Research topic
+        providers: List of provider names to use (or None for auto-routing)
+        settings: Optional settings object with logger
+        
+    Returns:
+        List of evidence cards from free providers
+    """
+    # Check if we're already in an event loop
+    try:
+        loop = asyncio.get_running_loop()
+        # We're in an async context, need to use run_in_executor
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(
+                asyncio.run,
+                collect_from_free_apis_async(topic, providers, settings)
+            )
+            return future.result(timeout=300)  # 5 minute total timeout
+    except RuntimeError:
+        # No event loop, we can use asyncio.run directly
+        return asyncio.run(
+            collect_from_free_apis_async(topic, providers, settings)
+        )
 
 def collect_initial_cards(
     topic: str,
