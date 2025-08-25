@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     REGIONS: str = "US,EU"  # CSV of priority regions
     SOURCE_WHITELIST: str = '[".gov",".edu",".ac.uk",".who.int",".un.org"]'  # JSON list as str
     ENABLE_FREE_APIS: bool = Field(True, description="Enable collection from free API providers")
+    
+    # ==== Enhanced Features (Always Active with Fallbacks) ====
+    USE_LLM_CLAIMS: bool = Field(True, description="Use LLM for claims extraction (falls back to rules)")
+    USE_LLM_SYNTH: bool = Field(True, description="Use LLM for synthesis (falls back to rules)")
+    USE_LLM_RERANK: bool = Field(True, description="Use LLM/cross-encoder for reranking")
+    OPENAI_MODEL: str = Field("gpt-4-turbo-preview", description="OpenAI model to use")
+    ANTHROPIC_MODEL: str = Field("claude-3-opus-20240229", description="Anthropic model to use")
+    MIN_EVIDENCE_CARDS: int = Field(24, description="Minimum evidence cards required")
+    MAX_BACKFILL_ATTEMPTS: int = Field(3, description="Maximum backfill iterations")
 
     # ==== HTTP & retries ====
     HTTP_TIMEOUT_SECONDS: int = 30

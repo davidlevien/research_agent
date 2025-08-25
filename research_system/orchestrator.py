@@ -1374,6 +1374,154 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Apply final domain cap enforcement as safety measure
         cards = enforce_domain_cap(cards, cap=0.24)  # Final safety buffer below 0.25 threshold
         
+        # ========== ITERATIVE BACKFILL LOOP FOR QUALITY GATES ==========
+        # Recompute triangulation on balanced cards for quality assessment
+        para_clusters_final = cluster_paraphrases(cards)
+        para_clusters_final = sanitize_paraphrase_clusters(para_clusters_final, cards)
+        structured_matches_final = structured_triangles(cards)
+        tri_union_final = union_rate(para_clusters_final, structured_matches_final, len(cards))
+        
+        # Calculate current metrics for quality gates
+        current_metrics = {
+            "cards": len(cards),
+            "union_triangulation": tri_union_final,
+            "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final),
+            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, len(cards))
+        }
+        
+        # Check quality gates and backfill if needed
+        backfill_attempts = 0
+        max_attempts = getattr(settings, 'MAX_BACKFILL_ATTEMPTS', 3)
+        min_cards = getattr(settings, 'MIN_EVIDENCE_CARDS', 24)
+        
+        while backfill_attempts < max_attempts:
+            needs_backfill = False
+            backfill_reason = []
+            
+            # Check triangulation threshold
+            if current_metrics["union_triangulation"] < 0.35:
+                needs_backfill = True
+                backfill_reason.append(f"triangulation {current_metrics['union_triangulation']:.2%} < 35%")
+            
+            # Check minimum card count
+            if current_metrics["cards"] < min_cards:
+                needs_backfill = True
+                backfill_reason.append(f"cards {current_metrics['cards']} < {min_cards}")
+            
+            # Check primary share (for some topics)
+            discipline = getattr(self, 'discipline', Discipline.GENERAL)
+            if discipline in [Discipline.MACROECONOMICS, Discipline.HEALTH, Discipline.CLIMATE]:
+                if current_metrics["primary_share"] < 0.30:
+                    needs_backfill = True
+                    backfill_reason.append(f"primary share {current_metrics['primary_share']:.2%} < 30%")
+            
+            if not needs_backfill:
+                logger.info(f"Quality gates passed after {backfill_attempts} backfill attempts")
+                break
+            
+            backfill_attempts += 1
+            logger.info(f"Backfill attempt {backfill_attempts}/{max_attempts}: {', '.join(backfill_reason)}")
+            
+            # Generate targeted backfill queries using related topics axes
+            from research_system.tools.related_topics_axes import generate_backfill_queries
+            
+            backfill_queries = generate_backfill_queries(
+                topic_key=route_topic(self.s.topic),
+                user_query=self.s.topic,
+                metrics=current_metrics,
+                max_queries=6
+            )
+            
+            if not backfill_queries:
+                logger.warning("No backfill queries generated, exiting loop")
+                break
+            
+            # Execute backfill queries
+            new_cards = []
+            for purpose, query in backfill_queries:
+                try:
+                    logger.debug(f"Executing backfill query ({purpose}): {query}")
+                    
+                    # Use reranking for better precision
+                    backfill_results = asyncio.run(
+                        parallel_provider_search(
+                            self.registry,
+                            query=query,
+                            count=4,
+                            freshness=settings.FRESHNESS_WINDOW,
+                            region="US"
+                        )
+                    )
+                    
+                    # Process results with reranking if available
+                    for provider, hits in backfill_results.items():
+                        # Apply reranking to improve relevance
+                        if getattr(settings, 'USE_LLM_RERANK', False):
+                            from research_system.rankers.cross_encoder import rerank
+                            hits = rerank(self.s.topic, hits, topk=3, use_llm=False)
+                        
+                        for h in hits[:3]:  # Take top 3 after reranking
+                            domain = domain_of(h.url)
+                            
+                            # Skip if already have too many from this domain
+                            existing_from_domain = sum(1 for c in cards if c.source_domain == canonical_domain(domain))
+                            if existing_from_domain >= 6:
+                                continue
+                            
+                            pol = getattr(self, "policy", POLICIES[route_topic(self.s.topic)])
+                            credibility = pol.domain_priors.get(domain, 0.5)
+                            
+                            new_cards.append(EvidenceCard(
+                                id=str(uuid.uuid4()),
+                                title=h.title,
+                                url=h.url,
+                                snippet=h.snippet or "",
+                                provider=provider,
+                                date=h.date,
+                                credibility_score=credibility,
+                                relevance_score=0.7,
+                                confidence=credibility * 0.7,
+                                is_primary_source=is_primary_domain(domain),
+                                search_provider=provider,
+                                source_domain=canonical_domain(domain),
+                                collected_at=datetime.utcnow().isoformat() + "Z",
+                                backfill_reason=purpose
+                            ))
+                except Exception as e:
+                    logger.warning(f"Backfill query failed ({purpose}): {e}")
+                    continue
+            
+            if not new_cards:
+                logger.warning("No new cards from backfill, exiting loop")
+                break
+            
+            logger.info(f"Added {len(new_cards)} cards from backfill")
+            
+            # Merge new cards with existing
+            cards = self._dedup(cards + new_cards)
+            
+            # Re-apply domain cap to maintain balance
+            cards = enforce_domain_cap(cards, cap=0.24)
+            
+            # Recompute metrics for next iteration
+            para_clusters_final = cluster_paraphrases(cards)
+            para_clusters_final = sanitize_paraphrase_clusters(para_clusters_final, cards)
+            structured_matches_final = structured_triangles(cards)
+            tri_union_final = union_rate(para_clusters_final, structured_matches_final, len(cards))
+            
+            current_metrics = {
+                "cards": len(cards),
+                "union_triangulation": tri_union_final,
+                "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final),
+                "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, len(cards))
+            }
+        
+        # Store final triangulation for report generation
+        para_clusters = para_clusters_final
+        structured_matches = structured_matches_final
+        tri_union = tri_union_final
+        primary_share = current_metrics["primary_share"]
+        
         # FINAL METRICS CALCULATION - Single source of truth after ALL processing
         N_final = len(cards)
         dom_ct_final = Counter(canonical_domain(c.source_domain) for c in cards)

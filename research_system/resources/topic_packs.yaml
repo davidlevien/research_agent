@@ -13,6 +13,11 @@ macroeconomics:
   aliases: ["gdp", "inflation", "cpi", "unemployment", "growth", "recession", "oecd", "imf", "world bank", "economic indicators", "monetary policy", "fiscal policy", "trade balance", "current account", "sovereign debt", "interest rates", "central bank", "federal reserve", "ecb", "boj", "tourism arrivals", "visitor spend", "revpar", "occupancy rate"]
   anchors: ["gdp", "inflation", "cpi", "imf", "oecd", "world bank", "unemployment", "interest rates", "tourism", "arrivals"]
   query_expansions: ["GDP", "CPI", "inflation rate", "unemployment rate", "OECD", "IMF", "World Bank", "tourism arrivals", "RevPAR", "visitor spend", "economic indicators", "monetary policy"]
+  related_axes:
+    upstream: ["supply chain", "commodity prices", "energy costs", "labor market"]
+    downstream: ["consumer spending", "business investment", "housing market", "stock market"]
+    risks: ["recession risk", "debt crisis", "currency crisis", "stagflation"]
+  antithesis_terms: ["limitations", "uncertainty", "criticism", "failure", "negative", "decline", "weakness"]
   off_topic:
     must_contain_any: ["gdp", "inflation", "cpi", "oecd", "imf", "world bank", "unemployment", "economic", "monetary", "fiscal", "tourism", "arrivals", "occupancy", "revpar"]
     min_jaccard: 0.10
@@ -21,6 +26,11 @@ health:
   aliases: ["epidemiology", "incidence", "prevalence", "mortality", "morbidity", "who", "cdc", "nih", "pubmed", "cochrane", "systematic review", "randomized", "clinical trial", "vaccine", "drug", "treatment", "diagnosis", "biomarker", "pathogen", "disease", "health outcomes", "public health", "healthcare"]
   anchors: ["who", "pubmed", "cochrane", "nih", "cdc", "clinical", "epidemiology"]
   query_expansions: ["systematic review", "randomized controlled trial", "incidence rate", "prevalence", "WHO", "PubMed", "Cochrane", "clinical trial", "epidemiological", "public health"]
+  related_axes:
+    upstream: ["risk factors", "prevention", "screening", "early detection"]
+    downstream: ["treatment outcomes", "quality of life", "healthcare costs", "mortality"]
+    risks: ["adverse events", "drug resistance", "pandemic risk", "healthcare access"]
+  antithesis_terms: ["side effects", "limitations", "contraindications", "failure", "ineffective", "harmful", "controversy"]
   off_topic:
     must_contain_any: ["who", "pubmed", "cochrane", "incidence", "prevalence", "clinical", "health", "medical", "disease", "treatment", "vaccine", "epidemiology"]
     min_jaccard: 0.10
@@ -37,6 +47,11 @@ technology:
   aliases: ["ai", "artificial intelligence", "machine learning", "deep learning", "neural network", "software", "semiconductor", "cloud computing", "cybersecurity", "blockchain", "cryptocurrency", "quantum computing", "5g", "6g", "internet of things", "iot", "automation", "robotics", "fintech", "edtech", "healthtech", "ar", "vr", "augmented reality", "virtual reality"]
   anchors: ["ai", "artificial intelligence", "software", "cloud", "cybersecurity", "blockchain", "quantum", "machine learning"]
   query_expansions: ["AI adoption", "software market", "cloud computing", "cybersecurity", "blockchain technology", "quantum computing", "machine learning", "automation", "digital transformation"]
+  related_axes:
+    upstream: ["semiconductor supply", "compute costs", "energy requirements", "talent availability"]
+    downstream: ["productivity impact", "job displacement", "economic growth", "social implications"]
+    risks: ["AI safety", "cybersecurity threats", "privacy concerns", "regulatory risk", "ethical issues"]
+  antithesis_terms: ["limitations", "bias", "failure", "breach", "vulnerability", "criticism", "hype", "bubble"]
   off_topic:
     must_contain_any: ["ai", "artificial intelligence", "software", "cloud", "cyber", "blockchain", "quantum", "machine learning", "automation", "digital", "technology"]
     min_jaccard: 0.10

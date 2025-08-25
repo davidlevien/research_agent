@@ -6,6 +6,9 @@ providers:
   worldbank:
     topics: ["macroeconomics", "travel_tourism", "climate", "general"]
     query_refiners: ["site:worldbank.org", "site:data.worldbank.org"]
+    api_params:
+      date_param: "date"  # Format: "2020:2025"
+      format: "json"
     strength: high
     coverage: global
     specialty: ["development indicators", "economic data", "climate finance", "tourism statistics"]
@@ -13,6 +16,9 @@ providers:
   oecd:
     topics: ["macroeconomics", "health", "policy", "climate", "general"]
     query_refiners: ["site:oecd.org", "site:data.oecd.org"]
+    api_params:
+      startTime_param: "startTime"  # ISO format
+      endTime_param: "endTime"
     strength: high
     coverage: oecd_countries
     specialty: ["economic policy", "health statistics", "education", "environmental data"]
@@ -20,6 +26,9 @@ providers:
   imf:
     topics: ["macroeconomics", "general"]
     query_refiners: ["site:imf.org", "site:data.imf.org"]
+    api_params:
+      start_date: "start"
+      end_date: "end"
     strength: high
     coverage: global
     specialty: ["financial stability", "balance of payments", "fiscal data", "exchange rates"]
@@ -27,6 +36,9 @@ providers:
   eurostat:
     topics: ["macroeconomics", "health", "climate", "general"]
     query_refiners: ["site:eurostat.ec.europa.eu", "site:ec.europa.eu"]
+    api_params:
+      sinceTimePeriod: "sinceTimePeriod"
+      untilTimePeriod: "untilTimePeriod"
     strength: high
     coverage: european_union
     specialty: ["eu statistics", "demographic data", "economic indicators", "environmental stats"]
@@ -34,6 +46,9 @@ providers:
   fred:
     topics: ["macroeconomics", "general"]
     query_refiners: ["site:fred.stlouisfed.org"]
+    api_params:
+      observation_start: "observation_start"
+      observation_end: "observation_end"
     strength: high
     coverage: united_states
     specialty: ["us economic data", "federal reserve", "financial markets", "labor statistics"]
@@ -129,6 +144,10 @@ providers:
   brave:
     topics: ["general", "technology", "macroeconomics", "health", "climate", "travel_tourism", "corporate", "news", "policy"]
     query_refiners: []
+    query_templates:
+      - '({q}) {refiners} {time_band}'
+      - '({q}) {refiners} {time_band} filetype:pdf'
+      - '({q}) {refiners} {time_band} site:.gov OR site:.org OR site:.edu'
     strength: high
     coverage: global
     specialty: ["web search", "current content", "diverse sources", "real-time information"]
@@ -136,6 +155,10 @@ providers:
   serpapi:
     topics: ["general", "technology", "macroeconomics", "health", "climate", "travel_tourism", "corporate", "news", "policy"]
     query_refiners: []
+    query_templates:
+      - '({q}) {refiners} {time_band}'
+      - '({q}) {refiners} {time_band} site:.gov OR site:.org'
+      - '({q}) {refiners} {time_band} filetype:pdf'
     strength: high
     coverage: global
     specialty: ["google search api", "structured results", "knowledge panels", "local search"]
@@ -143,6 +166,9 @@ providers:
   tavily:
     topics: ["general", "technology", "macroeconomics", "health", "climate", "travel_tourism", "corporate", "news", "policy"]
     query_refiners: []
+    query_templates:
+      - '({q}) {refiners} {time_band}'
+      - '({q}) {refiners} {time_band} research report'
     strength: high
     coverage: global
     specialty: ["ai-powered search", "content summarization", "source verification", "research assistant"]

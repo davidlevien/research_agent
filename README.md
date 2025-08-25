@@ -1,10 +1,20 @@
-# Research Agent System v8.3 (PE-Grade)
+# Research Agent System v8.4 (PE-Grade)
 
-A production-ready, principal-engineer-grade research system with comprehensive triangulation, primary source backfill, 20+ free API integrations, generalized topic routing, and strict quality enforcement. Delivers evidence-based research reports with multi-source verification, API compliance, and domain-agnostic expertise.
+A production-ready, principal-engineer-grade research system with comprehensive triangulation, iterative quality gates, LLM-powered synthesis, 20+ free API integrations, and intelligent query planning. Delivers evidence-based research reports with multi-source verification, structured claims extraction, and guaranteed quality thresholds.
 
-## Latest PE-Grade Enhancements (v8.3)
+## Latest PE-Grade Enhancements (v8.4)
 
-### Generalized Topic Routing System (v8.3 - Latest)
+### Intelligent Query Planning & Execution (v8.4 - Latest)
+- ✅ **Query Planner**: Automatic time/geo/entity extraction with constraint handling
+- ✅ **Provider-Specific Templates**: Optimized queries per provider (PDF, site:, date ranges)
+- ✅ **Related Topics Axes**: Structured exploration (upstream/downstream/risks/counter)
+- ✅ **Iterative Quality Gates**: Automatic backfill until triangulation ≥35% achieved
+- ✅ **Smart Backfill Targeting**: Gap-aware queries based on metrics deficiencies
+- ✅ **Cross-Encoder Reranking**: Local ML models for relevance without API calls
+- ✅ **LLM Claims Extraction**: Atomic, grounded claims with strict validation
+- ✅ **LLM Synthesis**: Executive-grade reports with claim-level citations
+
+### Generalized Topic Routing System (v8.3)
 - ✅ **Domain-Agnostic Router**: YAML-driven topic classification, no hard-coded verticals
 - ✅ **Extensible Topic Packs**: Add new domains without code changes via `topic_packs.yaml`
 - ✅ **Provider Capability Matrix**: Strategic provider selection via `provider_capabilities.yaml`  
@@ -269,24 +279,35 @@ The Research Agent System transforms a simple text query into a comprehensive, e
     - Ensures source diversity
     - Backfills from primary sources if needed
 
-#### **Phase 5: Quality Control** (2-5 seconds)
-19. **Metrics Calculation**:
+#### **Phase 5: Quality Control & Iterative Improvement** (5-20 seconds)
+19. **Initial Metrics Calculation**:
     - Quote coverage: % of cards with extracted quotes
     - Primary share: % from authoritative sources
     - Union triangulation: % with multi-source verification
     - Provider entropy: Diversity of search providers
     - Top domain share: Concentration check
 
-20. **Strict Mode Enforcement** (if --strict):
+20. **Iterative Quality Gates** (NEW in v8.4):
+    - Automatically detects quality deficiencies
+    - Generates targeted backfill queries based on gaps:
+      - Low triangulation → upstream/downstream/risk queries
+      - Low primary share → site-specific primary source queries
+      - Low quote coverage → filetype:pdf and report queries
+    - Executes up to 3 backfill iterations
+    - Recomputes metrics after each iteration
+    - Stops when quality thresholds met or max attempts reached
+
+21. **Strict Mode Enforcement** (if --strict):
     - Quote coverage must be ≥70%
     - Primary share must be ≥50%
     - Union triangulation must be ≥35%
-    - Fails fast if thresholds not met
+    - Fails fast if thresholds not met after all backfill attempts
 
-21. **Primary Source Backfill**:
-    - If primary share <50%, searches for more .gov, .edu sources
-    - Targeted queries to authoritative domains
-    - Up to 3 backfill iterations
+22. **LLM Claims Extraction** (if configured):
+    - Extracts atomic, verifiable claims from evidence
+    - Ensures groundedness (all claims traced to quotes)
+    - Deduplicates and normalizes similar claims
+    - Falls back to rules-based extraction if LLM unavailable
 
 #### **Phase 6: Report Generation** (3-10 seconds)
 22. **Evidence Ranking**:
