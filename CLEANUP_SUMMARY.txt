@@ -1,0 +1,18 @@
+# File Cleanup Summary
+
+## Removed Files
+- run_production.sh - Outdated (v6.0), replaced by run_full_features.sh
+
+## Files Kept
+- run_research.sh - Generic runner (Python 3.11+)
+- run_full_features.sh - v8.4 full features
+- run_full_features.py - Python alternative
+- setup_environment.sh - Setup script
+- test_ci_locally.sh - CI testing
+- validate_integration.py - Integration tests
+
+## CI/CD Ready
+- .env excluded from git (good)
+- Schema files included
+- Test env vars set in CI
+- Python 3.11 enforced
