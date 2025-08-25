@@ -99,7 +99,9 @@ def collect_from_free_apis(
         impl = PROVIDERS.get(p, {})
         
         try:
-            if p in ("openalex", "crossref", "wikipedia"):
+            # Most providers have standard search + to_cards pattern
+            if p in ("openalex", "crossref", "wikipedia", "worldbank", "oecd", 
+                     "imf", "arxiv", "pubmed", "europepmc", "eurostat", "ec", "overpass"):
                 # These have direct search functions
                 search_fn = impl.get("search")
                 to_cards_fn = impl.get("to_cards")

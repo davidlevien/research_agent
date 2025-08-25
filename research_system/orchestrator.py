@@ -15,6 +15,8 @@ from research_system.tools.evidence_io import write_jsonl
 from research_system.tools.registry import Registry
 from research_system.tools.search_registry import register_search_tools
 from research_system.collection import parallel_provider_search
+from research_system.collection_enhanced import collect_from_free_apis
+from research_system.routing.provider_router import choose_providers
 from research_system.config import Settings
 from research_system.controversy import ControversyDetector
 from research_system.tools.aggregates import source_quality, triangulate_claims
@@ -756,9 +758,35 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             all_results[provider].extend(hits)
         
         per_provider = all_results
+        
+        # ADD FREE API PROVIDERS
+        if getattr(settings, 'ENABLE_FREE_APIS', True):
+            logger.info(f"Collecting from free APIs for topic: {self.s.topic}")
+            
+            # Use router to select appropriate providers
+            decision = choose_providers(self.s.topic)
+            logger.info(f"Router selected providers: {decision.providers[:10]} for categories: {decision.categories}")
+            
+            # Collect from free APIs
+            free_api_cards = collect_from_free_apis(
+                self.s.topic,
+                providers=decision.providers[:10],  # Limit to top 10 to avoid too many requests
+                settings=settings
+            )
+            
+            logger.info(f"Collected {len(free_api_cards)} cards from free APIs")
+            
+            # These will be added to cards list below
+        else:
+            free_api_cards = []
 
         # TRANSFORM to EvidenceCard (stamp search_provider)
         cards: List[EvidenceCard] = []
+        
+        # Add free API cards first (they're already EvidenceCard objects)
+        cards.extend(free_api_cards)
+        
+        # Then add web search results
         for provider, hits in per_provider.items():
             for h in hits:
                 # Calculate scoring based on source attributes and discipline

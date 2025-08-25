@@ -23,7 +23,7 @@ KEYWORDS = {
     "policy":   r"\b(regulat|policy|directive|ordinance|legislation|sec filing|fcc|who|eu|ec)\b",
     "science":  r"\b(arxiv|preprint|citation|h-index|openalex|doi:10\.)\b",
     "tech":     r"\b(software|framework|library|benchmark|github|ai model|dataset|latency|throughput)\b",
-    "climate":  r"\b(ghg|emission|ipcc|temperature anomaly|pmm|precipitation|ocean heat|noaa|cop\d+)\b",
+    "climate":  r"\b(ghg|emissions?|ipcc|temperature anomaly|pmm|precipitation|ocean heat|noaa|cop\d+|climate change)\b",
     "geospatial": r"\b(osm|openstreetmap|poi|overpass|geocode|shapefile|geojson)\b",
     "news":     r"\b(breaking|today|this week|press release|announced|report says|news)\b",
 }
