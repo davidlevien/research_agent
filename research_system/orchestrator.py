@@ -1404,7 +1404,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             skip_invalid=True,
             errors_path=str(self.s.output_dir / "evidence_cards.errors.jsonl")
         )
-        self.logger.info(f"Evidence write: ok={ok} bad={bad}")
+        logger.info(f"Evidence write: ok={ok} bad={bad}")
         
         # Trim in-memory set as well to keep metrics/report consistent
         if bad:
