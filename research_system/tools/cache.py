@@ -7,12 +7,14 @@ import httpx
 from datetime import datetime, timedelta
 from typing import Tuple, Dict, Optional, Any
 import logging
-from ..config import Settings
+from ..config import get_settings
 
 logger = logging.getLogger(__name__)
 
-settings = Settings()
-CACHE_DIR = settings.HTTP_CACHE_DIR
+# Lazy load settings to avoid import-time instantiation
+def _get_cache_dir():
+    return get_settings().HTTP_CACHE_DIR
+
 DEFAULT_TTL = timedelta(days=7)
 
 
@@ -26,7 +28,7 @@ def _cache_path(url: str) -> str:
     key = _cache_key(url)
     # Use subdirectories to avoid too many files in one directory
     subdir = key[:2]
-    return os.path.join(CACHE_DIR, subdir, f"{key}.json")
+    return os.path.join(_get_cache_dir(), subdir, f"{key}.json")
 
 
 def _save_to_cache(path: str, response: httpx.Response):
@@ -70,7 +72,7 @@ def get(
     if ttl is None:
         ttl = DEFAULT_TTL
         
-    os.makedirs(CACHE_DIR, exist_ok=True)
+    os.makedirs(_get_cache_dir(), exist_ok=True)
     cache_path = _cache_path(url)
     
     # Check cache
@@ -149,13 +151,13 @@ def get_binary(
     if ttl is None:
         ttl = DEFAULT_TTL
         
-    os.makedirs(CACHE_DIR, exist_ok=True)
+    os.makedirs(_get_cache_dir(), exist_ok=True)
     
     # Use separate binary cache
     key = _cache_key(url)
     subdir = key[:2]
-    cache_path = os.path.join(CACHE_DIR, subdir, f"{key}.bin")
-    meta_path = os.path.join(CACHE_DIR, subdir, f"{key}.meta.json")
+    cache_path = os.path.join(_get_cache_dir(), subdir, f"{key}.bin")
+    meta_path = os.path.join(_get_cache_dir(), subdir, f"{key}.meta.json")
     
     # Check cache
     if os.path.exists(cache_path) and os.path.exists(meta_path):
@@ -206,10 +208,11 @@ def clear_cache():
     """Clear all cached files."""
     import shutil
     
-    if os.path.exists(CACHE_DIR):
+    if os.path.exists(_get_cache_dir()):
         try:
-            shutil.rmtree(CACHE_DIR)
-            logger.info(f"Cleared cache directory: {CACHE_DIR}")
+            cache_dir = _get_cache_dir()
+            shutil.rmtree(cache_dir)
+            logger.info(f"Cleared cache directory: {cache_dir}")
         except Exception as e:
             logger.error(f"Failed to clear cache: {e}")
 
@@ -218,10 +221,10 @@ def get_cache_size() -> int:
     """Get total size of cache in bytes."""
     total_size = 0
     
-    if not os.path.exists(CACHE_DIR):
+    if not os.path.exists(_get_cache_dir()):
         return 0
     
-    for dirpath, _, filenames in os.walk(CACHE_DIR):
+    for dirpath, _, filenames in os.walk(_get_cache_dir()):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
             try:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ _DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL"
 def _dataflows() -> Dict[str, Dict[str, Any]]:
     """Fetch OECD dataflows catalog."""
     try:
-        data = http_json("GET", _DATAFLOW)
+        data = http_json("oecd", "GET", _DATAFLOW)
         
         # Shape varies; normalize
         if "data" in data and "dataflows" in data["data"]:

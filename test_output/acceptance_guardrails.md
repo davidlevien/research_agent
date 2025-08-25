@@ -1,7 +1,7 @@
 # Acceptance Guardrails
 
-**Topic**: World Bank GDP indicators 2024
-**Execution Time**: 2025-08-25T02:37:25.668668Z
+**Topic**: global tourism recovery 2025
+**Execution Time**: 2025-08-25T03:56:52.188526Z
 
 ## Evidence Requirements (To Be Validated)
 - [ ] Minimum 3 independent sources per major claim
@@ -23,6 +23,6 @@
 - [ ] Search provider attribution
 
 ## Strict Mode Requirements
-- [ ] Strict mode disabled
-- [x] Minimum evidence threshold met
+- [x] Strict mode enabled
+- [ ] Minimum evidence threshold met
 - [x] Provider attribution complete

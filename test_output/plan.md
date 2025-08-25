@@ -1,10 +1,10 @@
 # Research Plan
 
 ## Topic
-World Bank GDP indicators 2024
+global tourism recovery 2025
 
 ## Depth
-Rapid - Quick scan of top sources (5-10 minutes)
+Deep - Comprehensive analysis with extensive sources (30-60 minutes)
 
 ## Objectives
 1. Gather evidence from multiple search providers

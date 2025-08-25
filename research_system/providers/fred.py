@@ -2,7 +2,7 @@
 
 import os
 from typing import Dict, Any, List, Optional
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def fred_series(
         if obs_start:
             params["observation_start"] = obs_start
         
-        return http_json(
+        return http_json("fred", 
             "GET", 
             "https://api.stlouisfed.org/fred/series/observations", 
             params=params
@@ -82,7 +82,7 @@ def search_series(keywords: str, api_key: Optional[str] = None) -> List[Dict[str
             "limit": 10
         }
         
-        data = http_json(
+        data = http_json("fred", 
             "GET",
             "https://api.stlouisfed.org/fred/series/search",
             params=params

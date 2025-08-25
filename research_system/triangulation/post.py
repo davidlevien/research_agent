@@ -1,6 +1,8 @@
 """Post-processing utilities for triangulation results."""
 
 from math import ceil
+from typing import List, Dict, Any
+from research_system.triangulation.indicators import to_structured_key
 
 
 def _cap_for_cluster(n_cards: int, n_domains: int, total_cards: int) -> int:
@@ -71,4 +73,47 @@ def sanitize_paraphrase_clusters(clusters, cards, max_frac=0.5):
             out.append(c)
     
     logger.info(f"Final result: {len(out)} clusters retained")
+    return out
+
+
+def structured_triangles(cards: List) -> List[Dict[str, Any]]:
+    """
+    Group cards by (indicator, period, entity) across domains for structured triangulation.
+    
+    Args:
+        cards: List of evidence cards
+        
+    Returns:
+        List of structured triangle dictionaries with keys, cards, and domains
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Group by (indicator, period, entity) across domains
+    buckets = {}
+    for i, c in enumerate(cards):
+        sk = to_structured_key(c)
+        if not sk:
+            continue
+        k = (sk.indicator, sk.period, sk.entity)
+        if k not in buckets:
+            buckets[k] = []
+        buckets[k].append((i, c))  # Store index with card
+    
+    # Keep only those with ≥2 distinct domains
+    out = []
+    for k, indexed_cards in buckets.items():
+        cs = [c for i, c in indexed_cards]
+        indices = [i for i, c in indexed_cards]
+        domains = {getattr(c, 'source_domain', '') for c in cs if getattr(c, 'source_domain', '')}
+        if len(domains) >= 2:
+            out.append({
+                "key": k,
+                "cards": cs,
+                "indices": indices,  # Add indices for union_rate calculation
+                "domains": list(domains),
+                "size": len(cs)
+            })
+            logger.info(f"Structured triangle: {k[0]} @ {k[1]} with {len(cs)} cards from {domains}")
+    
     return out

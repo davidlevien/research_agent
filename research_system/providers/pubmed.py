@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import os
 import logging
 
@@ -26,7 +26,7 @@ def pubmed_search(query: str, retmax: int = 25) -> List[Dict[str, Any]]:
             "email": contact_email
         }
         
-        s = http_json("GET", _ESEARCH, params=search_params)
+        s = http_json("pubmed", "GET", _ESEARCH, params=search_params)
         ids = (s.get("esearchresult", {}).get("idlist")) or []
         
         if not ids:
@@ -41,7 +41,7 @@ def pubmed_search(query: str, retmax: int = 25) -> List[Dict[str, Any]]:
             "email": contact_email
         }
         
-        sumry = http_json("GET", _ESUMMARY, params=summary_params)
+        sumry = http_json("pubmed", "GET", _ESUMMARY, params=summary_params)
         res = sumry.get("result", {})
         items = []
         

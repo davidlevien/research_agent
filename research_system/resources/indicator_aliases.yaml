@@ -1,0 +1,81 @@
+gdp_current_usd:
+  worldbank:
+    - NY.GDP.MKTP.CD
+  imf:
+    - NGDPD
+  oecd:
+    - GDPV
+    - B1GQ
+  eurostat:
+    - nama_10_gdp
+  aliases:
+    - gdp (current us$)
+    - nominal gdp
+    - gdp current usd
+    - gdp (current prices)
+    - gross domestic product
+    - gdp at current prices
+
+inflation_cpi_yoy:
+  worldbank:
+    - FP.CPI.TOTL.ZG
+  imf:
+    - PCPIPCH
+    - PCPIPCH_SA
+  oecd:
+    - PRC_CPI_ANNUAL_GROWTH
+    - CPI
+  eurostat:
+    - prc_hicp_aind
+  aliases:
+    - cpi inflation
+    - inflation yoy
+    - consumer prices (yoy)
+    - inflation rate
+    - consumer price index
+    - annual inflation
+
+unemployment_rate:
+  worldbank:
+    - SL.UEM.TOTL.ZS
+  imf:
+    - LUR
+  oecd:
+    - HUR
+    - UNEMP
+  eurostat:
+    - une_rt_a
+  aliases:
+    - unemployment rate
+    - jobless rate
+    - unemployment %
+
+interest_rate:
+  worldbank:
+    - FR.INR.RINR
+  imf:
+    - FPOLM
+  oecd:
+    - STINT
+  ecb:
+    - MRO
+  aliases:
+    - interest rate
+    - policy rate
+    - central bank rate
+    - key rate
+
+gdp_growth:
+  worldbank:
+    - NY.GDP.MKTP.KD.ZG
+  imf:
+    - NGDP_RPCH
+  oecd:
+    - B1GQ_GR
+  eurostat:
+    - nama_10_gdp
+  aliases:
+    - gdp growth
+    - economic growth
+    - real gdp growth
+    - growth rate

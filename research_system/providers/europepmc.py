@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ _BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 def europepmc_search(query: str, page_size: int = 25) -> List[Dict[str, Any]]:
     """Search Europe PMC for biomedical literature."""
     try:
-        data = http_json(
+        data = http_json("europepmc", 
             "GET", 
             _BASE, 
             params={

@@ -1,7 +1,7 @@
 """Crossref provider for DOI resolution and scholarly metadata."""
 
 from typing import List, Dict, Any, Optional
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def crossref_query(
         if filt:
             params["filter"] = ",".join(filt)
         
-        data = http_json("GET", BASE, params=params)
+        data = http_json("crossref", "GET", BASE, params=params)
         return data.get("message", {}).get("items", [])
     except Exception as e:
         logger.warning(f"Crossref query failed: {e}")

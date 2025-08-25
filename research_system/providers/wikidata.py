@@ -1,7 +1,7 @@
 """Wikidata provider for entity resolution and knowledge graph."""
 
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def wikidata_labels(qids: List[str]) -> Dict[str, str]:
         """
         
         headers = {"Accept": "application/sparql-results+json"}
-        data = http_json("GET", SPARQL, params={"query": query}, headers=headers)
+        data = http_json("wikidata", "GET", SPARQL, params={"query": query}, headers=headers)
         
         # Extract results
         bindings = data.get("results", {}).get("bindings", [])
@@ -51,7 +51,7 @@ def entity_search(query: str, limit: int = 5) -> List[Dict[str, Any]]:
             "limit": limit,
             "format": "json"
         }
-        data = http_json("GET", url, params=params)
+        data = http_json("wikidata", "GET", url, params=params)
         return data.get("search", [])
     except Exception as e:
         logger.debug(f"Wikidata entity search failed: {e}")

@@ -109,9 +109,11 @@ where = ["."]
 include = ["research_system*"]
 
 [tool.setuptools.package-data]
+"research_system.resources" = ["*.yaml", "*.json"]
 "research_system.resources.schemas" = ["*.json"]
 "research_system.resources.config" = ["*.yaml"]
 research_system = [
+    "resources/*.yaml",
     "resources/schemas/*.json",
     "resources/config/*.yaml",
 ]

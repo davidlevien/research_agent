@@ -577,7 +577,7 @@ If core requirements fail:
             content += f"- Citation rate below 80% ({citation_rate:.1f}%)\n"
         
         if checklist["primary_sources"] < 5:
-            content += f"- Low number of primary sources ({checklist["primary_sources"]})\n"
+            content += f"- Low number of primary sources ({checklist['primary_sources']})\n"
         
         content += f"""
 ## Recommendations

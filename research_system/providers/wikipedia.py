@@ -1,7 +1,7 @@
 """Wikipedia provider for encyclopedia content."""
 
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 from urllib.parse import quote
 import logging
 
@@ -12,7 +12,7 @@ def wiki_search(query: str, limit: int = 10) -> List[Dict[str, Any]]:
     try:
         # Wikipedia REST API 1.0: title search
         url = "https://en.wikipedia.org/w/rest.php/v1/search/title"
-        data = http_json("GET", url, params={"q": query, "limit": limit})
+        data = http_json("wikipedia", "GET", url, params={"q": query, "limit": limit})
         return data.get("pages", [])
     except Exception as e:
         logger.warning(f"Wikipedia search failed: {e}")

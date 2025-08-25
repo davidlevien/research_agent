@@ -1,7 +1,7 @@
 """Unpaywall provider for finding free full-text versions of papers."""
 
 from typing import Optional, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def lookup_fulltext(doi: str) -> Optional[Dict[str, Any]]:
             doi = doi.split("doi.org/")[-1]
         
         url = BASE + doi
-        data = http_json("GET", url, params={"email": MAILTO})
+        data = http_json("unpaywall", "GET", url, params={"email": MAILTO})
         
         # Extract best OA location
         best_oa = data.get("best_oa_location")

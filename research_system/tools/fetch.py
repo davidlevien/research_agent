@@ -31,15 +31,16 @@ from .cache import get as cached_get, get_binary as cached_get_binary
 from .warc_dump import warc_capture
 from .langpipe import to_english, detect_language
 from .pdf_tables import find_numeric_cells
-from ..config import Settings
+from ..config import get_settings
 
-settings = Settings()
-
-UA = {"User-Agent": "Mozilla/5.0 (ResearchAgent/1.0)"}
+# Lazy load UA to avoid import-time Settings instantiation
+def _get_ua():
+    return {"User-Agent": "Mozilla/5.0 (ResearchAgent/1.0)"}
 
 def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
     """Fetch HTML with caching, politeness, and paywall detection."""
     try:
+        settings = get_settings()
         # Check robots.txt if enabled
         if settings.ENABLE_POLITENESS:
             if not allowed(url):
@@ -48,7 +49,7 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
         
         # Use cache if enabled
         if settings.ENABLE_HTTP_CACHE:
-            status, headers, content = cached_get(url, headers=UA, timeout=25)
+            status, headers, content = cached_get(url, headers=_get_ua(), timeout=25)
             if 200 <= status < 400:
                 # Check for paywalls
                 url_str = headers.get("location", url)
@@ -59,7 +60,7 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
                 return content, (headers.get("content-type") or "").lower()
         else:
             # Direct fetch without cache
-            r = httpx.get(url, timeout=25, headers=UA, follow_redirects=True)
+            r = httpx.get(url, timeout=25, headers=_get_ua(), follow_redirects=True)
             if 200 <= r.status_code < 400:
                 url_str = str(r.url or "")
                 if "statista.com/sso" in url_str or "statista.com/login" in url_str:
@@ -111,7 +112,7 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
             # Fetch with GET request (not HEAD) for better content
             try:
                 timeout = get_timeout(30)
-                r = httpx.get(url, timeout=timeout, headers=UA, follow_redirects=True)
+                r = httpx.get(url, timeout=timeout, headers=_get_ua(), follow_redirects=True)
                 
                 # Cache successful responses
                 if 200 <= r.status_code < 300:
@@ -134,7 +135,7 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
                     mu = get_unwto_mirror_url(url)
                     if mu:
                         try:
-                            mr = httpx.get(mu, headers=UA, timeout=30)
+                            mr = httpx.get(mu, headers=_get_ua(), timeout=30)
                             if mr.status_code == 200 and len((mr.text or "")) > 500:
                                 return {"title": None, "text": mr.text, "quotes": None, "source": "mirror", "mirror_url": mu}
                         except Exception:
@@ -173,7 +174,7 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
             
             # WARC capture if enabled
             if settings.ENABLE_WARC:
-                warc_capture(url, headers=UA)
+                warc_capture(url, headers=_get_ua())
             
             # Extract PDF text with page limit
             max_pages = int(os.getenv("PDF_MAX_PAGES", "6"))

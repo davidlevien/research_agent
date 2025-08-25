@@ -390,6 +390,32 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         
         return guardrails
 
+    def _generate_final_report_with_appendix(self, cards: List[EvidenceCard], appendix_cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
+        """Generate final report with balanced cards in body and appendix for trimmed cards."""
+        # Start with standard report generation
+        report = self._generate_final_report(cards, detector)
+        
+        # Add appendix if there are trimmed cards
+        if appendix_cards:
+            report += "\n\n## Evidence Appendix (Additional Sources)\n\n"
+            report += "_The following sources were collected but excluded from the main analysis due to domain balancing:_\n\n"
+            
+            # Group appendix by domain for clarity
+            from collections import defaultdict
+            by_domain = defaultdict(list)
+            for c in appendix_cards:
+                by_domain[c.source_domain].append(c)
+            
+            for domain in sorted(by_domain.keys()):
+                report += f"\n### {domain}\n"
+                for c in by_domain[domain][:5]:  # Limit to 5 per domain in appendix
+                    title = c.title or c.source_title or "Untitled"
+                    if len(title) > 80:
+                        title = title[:77] + "..."
+                    report += f"- [{title}]({c.url})\n"
+        
+        return report
+    
     def _generate_final_report(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
         """Generate final report using new composition module."""
         from research_system.report.compose import compose_final_report
@@ -731,6 +757,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         all_results = {}
         anchors, discipline, policy = build_anchors(self.s.topic)
         self.discipline, self.policy = discipline, policy
+        
+        # Use provider router to select appropriate providers
+        decision = choose_providers(self.s.topic)
+        logger.info(f"Routing: categories={decision.categories}, providers={decision.providers[:10]}")
+        selected_providers = [p for p in decision.providers if p in settings.enabled_providers()]
+        
         if anchors and self.s.depth in ["standard", "deep"]:
             # Run discipline-aware anchor queries
             for anchor_query in anchors[:6]:
@@ -902,6 +934,58 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         from research_system.collect.ranker import rerank_cards
         cards = rerank_cards(cards)
         
+        # MINIMUM CARDS FLOOR - Ensure we have enough cards for stable metrics
+        MIN_CARDS = 24
+        if len(cards) < MIN_CARDS:
+            logger.info(f"Low volume ({len(cards)}) — expanding providers for diversity")
+            from research_system.providers.registry import PROVIDERS
+            
+            extra_provs = ["oecd", "imf", "eurostat", "ec", "wto", "unctad", "bis"]
+            for p in extra_provs:
+                if p not in PROVIDERS:
+                    continue
+                impl = PROVIDERS[p]
+                if "search" not in impl:
+                    continue
+                    
+                try:
+                    # Search for topic with this provider
+                    results = impl["search"](self.s.topic)
+                    if impl.get("to_cards"):
+                        new_cards = impl["to_cards"](results)
+                    else:
+                        new_cards = results
+                    
+                    # Convert to EvidenceCards
+                    for nc in new_cards[:5]:  # Take up to 5 from each provider
+                        cards.append(EvidenceCard(
+                            id=str(uuid.uuid4()),
+                            title=nc.get("title", ""),
+                            url=nc.get("url", ""),
+                            snippet=nc.get("snippet", ""),
+                            provider=p,
+                            credibility_score=nc.get("credibility_score", 0.8),
+                            relevance_score=nc.get("relevance_score", 0.7),
+                            confidence=nc.get("confidence", 0.5),
+                            source_domain=canonical_domain(nc.get("source_domain", nc.get("url", ""))),
+                            collected_at=datetime.utcnow().isoformat() + "Z",
+                            is_primary_source=True,
+                            claim=nc.get("claim", nc.get("title", "")),
+                            supporting_text=nc.get("supporting_text", nc.get("snippet", "")),
+                            subtopic_name="Research Findings",
+                            stance="neutral",
+                            claim_id=None,
+                            disputed_by=[],
+                            controversy_score=0.0
+                        ))
+                        
+                    cards = self._dedup(cards)
+                    if len(cards) >= MIN_CARDS:
+                        break
+                except Exception as e:
+                    logger.warning(f"Failed to expand with {p}: {e}")
+                    continue
+        
         # Apply domain diversity enforcement
         from research_system.select.diversity import enforce_domain_cap, calculate_domain_share
         
@@ -955,7 +1039,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         from research_system.triangulation.paraphrase_cluster import cluster_paraphrases
         from research_system.triangulation.compute import compute_structured_triangles, union_rate
         from research_system.metrics_compute import primary_share_in_triangulated as primary_share_in_union
-        from research_system.triangulation.post import sanitize_paraphrase_clusters
+        from research_system.triangulation.post import sanitize_paraphrase_clusters, structured_triangles
         
         # Paraphrase clustering with SBERT
         para_clusters = cluster_paraphrases(cards)
@@ -963,8 +1047,17 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Sanitize paraphrase clusters to prevent over-merging
         para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
         
-        # Structured triangulation
-        structured_matches = compute_structured_triangles(cards)
+        # Structured triangulation - NEW PE-grade indicator matching
+        structured_matches = structured_triangles(cards)
+        
+        # Also compute legacy structured triangles if available
+        try:
+            legacy_structured = compute_structured_triangles(cards)
+            # Merge both structured triangle sources
+            if legacy_structured:
+                structured_matches.extend(legacy_structured)
+        except:
+            pass  # Use only new structured triangles
         
         # Calculate union rate for strict mode
         tri_union = union_rate(para_clusters, structured_matches, len(cards))
@@ -1225,7 +1318,60 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 if not isinstance(c.date, str):
                     c.date = c.date.isoformat() if hasattr(c.date, 'isoformat') else str(c.date)
         
-        # Apply final domain cap enforcement before writing cards
+        # PE-GRADE DOMAIN BALANCING - Apply after all expansion but before final metrics
+        from research_system.selection.domain_balance import BalanceConfig, enforce_cap, need_backfill, backfill
+        from research_system.providers.registry import PROVIDERS
+        
+        # Store raw cards before balancing for appendix
+        raw_cards = list(cards)
+        
+        # Domain balance configuration for strict mode pass
+        bal_cfg = BalanceConfig(cap=0.24, min_cards=24, prefer_primary=True)
+        
+        # First pass: enforce cap to ensure no domain exceeds 24%
+        balanced_cards, kept = enforce_cap(cards, bal_cfg)
+        logger.info(f"DomainBalance: cap=0.24 kept={len(balanced_cards)} total={len(cards)} (domains: {kept})")
+        
+        # Check if we need to backfill from primary sources
+        if need_backfill(balanced_cards, bal_cfg):
+            logger.info(f"Backfilling from primary sources (have {len(balanced_cards)}, need {bal_cfg.min_cards})")
+            # Use primary providers for backfill
+            for prov in ("oecd", "ec", "eurostat", "imf", "worldbank"):
+                impl = PROVIDERS.get(prov, {})
+                if "search" not in impl:
+                    continue
+                try:
+                    seeds = backfill(balanced_cards, self.s.topic, impl["search"], impl.get("to_cards"), bal_cfg)
+                    for s in seeds[:5]:  # Limit per provider
+                        balanced_cards.append(EvidenceCard(
+                            id=str(uuid.uuid4()),
+                            title=s.get("title", ""),
+                            url=s.get("url", ""),
+                            snippet=s.get("snippet", ""),
+                            provider=prov,
+                            source_domain=canonical_domain(s.get("source_domain", s.get("url", ""))),
+                            credibility_score=0.85,
+                            relevance_score=0.75,
+                            confidence=0.64,
+                            is_primary_source=True,
+                            collected_at=datetime.utcnow().isoformat() + "Z",
+                            claim=s.get("claim", s.get("title", "")),
+                            supporting_text=s.get("supporting_text", s.get("snippet", "")),
+                            subtopic_name="Research Findings"
+                        ))
+                    balanced_cards = self._dedup(balanced_cards)
+                    # Re-enforce cap after adding
+                    balanced_cards, kept = enforce_cap(balanced_cards, bal_cfg)
+                    if not need_backfill(balanced_cards, bal_cfg):
+                        break
+                except Exception as e:
+                    logger.warning(f"Backfill from {prov} failed: {e}")
+            logger.info(f"After backfill: {len(balanced_cards)} cards")
+        
+        # Use balanced cards for everything downstream
+        cards = balanced_cards
+        
+        # Apply final domain cap enforcement as safety measure
         cards = enforce_domain_cap(cards, cap=0.24)  # Final safety buffer below 0.25 threshold
         
         # FINAL METRICS CALCULATION - Single source of truth after ALL processing
@@ -1261,7 +1407,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
         # SYNTHESIZE - write defensively to ensure output even on failures
         try:
-            report = self._generate_final_report(cards, detector)
+            # Calculate appendix: raw cards minus balanced cards
+            balanced_ids = {c.id for c in cards}
+            appendix_cards = [c for c in raw_cards if c.id not in balanced_ids]
+            
+            # Generate report with balanced cards in body, appendix for transparency
+            report = self._generate_final_report_with_appendix(cards, appendix_cards, detector)
             self._write("final_report.md", report)
         except Exception as e:
             self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")

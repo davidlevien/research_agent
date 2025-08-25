@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ _DATAFLOW = "https://dataservices.imf.org/REST/SDMX_JSON.svc/Dataflow"
 def _dataflows() -> List[Dict[str, Any]]:
     """Fetch IMF dataflows catalog."""
     try:
-        data = http_json("GET", _DATAFLOW)
+        data = http_json("imf", "GET", _DATAFLOW)
         # Typically {"Structure":{"Dataflows":{"Dataflow":[...]}}}
         flows = (((data.get("Structure") or {}).get("Dataflows") or {}).get("Dataflow")) or []
         out = []

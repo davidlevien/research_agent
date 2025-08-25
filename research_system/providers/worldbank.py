@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ _INDICATORS = "https://api.worldbank.org/v2/indicator"
 def _indicators_page(per_page: int = 1000, page: int = 1) -> List[Dict[str, Any]]:
     """Fetch a page of World Bank indicators."""
     try:
-        data = http_json("GET", _INDICATORS, params={"format": "json", "per_page": per_page, "page": page})
+        data = http_json("worldbank", "GET", _INDICATORS, params={"format": "json", "per_page": per_page, "page": page})
         # data[0] is paging/meta, data[1] is list
         return (data[1] if isinstance(data, list) and len(data) > 1 else []) or []
     except Exception as e:

@@ -1,7 +1,7 @@
 """OpenAlex provider for scholarly search and metadata."""
 
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ def search_openalex(query: str, per_page: int = 25) -> List[Dict[str, Any]]:
             "per_page": per_page, 
             "mailto": "research@example.com"  # Polite crawling
         }
-        data = http_json("GET", BASE, params=params)
+        data = http_json("openalex", "GET", BASE, params=params)
         return data.get("results", [])
     except Exception as e:
         logger.warning(f"OpenAlex search failed: {e}")

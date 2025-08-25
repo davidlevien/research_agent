@@ -101,21 +101,32 @@ class EvidenceCard(BaseModel):
     
     @classmethod
     def from_seed(cls, d: dict, provider: str):
-        """Create EvidenceCard from seed dictionary."""
+        """Create EvidenceCard from seed dictionary with domain normalization."""
+        from research_system.tools.domain_norm import canonical_domain
+        
+        # Normalize domain
+        domain = d.get("source_domain", "")
+        if not domain and d.get("url"):
+            from urllib.parse import urlparse
+            domain = urlparse(d.get("url", "")).netloc
+        domain = canonical_domain(domain)
+        
         return cls(
             id=d.get("id") or str(uuid.uuid4()),
             url=d.get("url", ""),
             title=d.get("title", ""),
             snippet=d.get("snippet", ""),
-            source_domain=d.get("source_domain", ""),
+            source_domain=domain,
             claim=d.get("claim", d.get("title", "")),
             supporting_text=d.get("supporting_text", d.get("snippet", "")),
             provider=provider,
-            date=d.get("published_at"),
+            date=d.get("published_at") or d.get("date"),
             metadata=d.get("metadata", {}),
             credibility_score=d.get("credibility_score", 0.7),
             relevance_score=d.get("relevance_score", 0.7),
-            confidence=d.get("confidence", 0.5)
+            confidence=d.get("confidence", 0.5),
+            retrieved_at=d.get("retrieved_at"),
+            is_primary_source=d.get("is_primary_source", False)
         )
     
     def to_jsonl_dict(self) -> dict:

@@ -1,10 +1,13 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
 from typing import Literal, Optional, List
+from functools import lru_cache
+
+DEFAULT_LLM: str = "disabled"  # CI-safe default, no secrets required
 
 class Settings(BaseSettings):
     # ==== LLM provider (blueprint: choose one, gated) ====
-    LLM_PROVIDER: Literal["openai", "anthropic", "azure_openai"] = "openai"
+    LLM_PROVIDER: Literal["disabled", "openai", "anthropic", "azure_openai"] = DEFAULT_LLM
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_API_BASE: Optional[str] = None
     OPENAI_ORG_ID: Optional[str] = None
@@ -102,8 +105,10 @@ class Settings(BaseSettings):
 
     def model_post_init(self, __context):
         """Validate provider configurations after all fields are set"""
-        # Validate LLM provider
-        if self.LLM_PROVIDER == "openai":
+        # Validate LLM provider (skip for disabled)
+        if self.LLM_PROVIDER == "disabled":
+            pass  # No validation needed for disabled provider
+        elif self.LLM_PROVIDER == "openai":
             assert self.OPENAI_API_KEY, "OPENAI_API_KEY required for LLM_PROVIDER=openai"
         elif self.LLM_PROVIDER == "anthropic":
             assert self.ANTHROPIC_API_KEY, "ANTHROPIC_API_KEY required for LLM_PROVIDER=anthropic"
@@ -140,3 +145,12 @@ class Settings(BaseSettings):
 
     def enabled_providers(self) -> List[str]:
         return [s.strip() for s in self.SEARCH_PROVIDERS.split(",") if s.strip()]
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Get cached settings instance"""
+    return Settings()
+
+# Export aliases for backward compatibility
+settings = get_settings()
+config = settings  # Provides the symbol modules expect: from ..config import config

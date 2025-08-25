@@ -1,7 +1,7 @@
 """Wayback Machine provider for archived content."""
 
 from typing import Optional, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def wayback_latest(url: str) -> Optional[Dict[str, Any]]:
             "limit": 1,
             "from": "2016"
         }
-        data = http_json("GET", CDX, params=params)
+        data = http_json("wayback", "GET", CDX, params=params)
         
         if isinstance(data, list) and len(data) > 1:
             # First row is headers, second is data

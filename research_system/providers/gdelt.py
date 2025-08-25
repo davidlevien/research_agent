@@ -1,7 +1,7 @@
 """GDELT provider for global news and events."""
 
 from typing import List, Dict, Any
-from .http import http_json
+from .http import http_json_with_policy as http_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ def gdelt_events(query: str, timespan: str = "1w") -> List[Dict[str, Any]]:
             "timespan": timespan,
             "format": "json"
         }
-        data = http_json("GET", BASE, params=params)
+        data = http_json("gdelt", "GET", BASE, params=params)
         return data.get("events", [])
     except Exception as e:
         logger.warning(f"GDELT search failed: {e}")

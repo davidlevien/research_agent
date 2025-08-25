@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import List, Dict, Any, Optional
-from .http import http_json
+from .http import http_json_with_policy as http_json
 from urllib.parse import quote
 import logging
 
@@ -22,7 +22,7 @@ def ec_search(query: str, limit: int = 25, publisher: Optional[str] = None) -> L
         if publisher:
             params["publisher"] = publisher
         
-        data = http_json("GET", _BASE, params=params)
+        data = http_json("ec", "GET", _BASE, params=params)
         items = (data.get("result") or {}).get("items") or []
         out = []
         
