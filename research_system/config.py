@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     FRESHNESS_WINDOW: str = "24 months"
     REGIONS: str = "US,EU"  # CSV of priority regions
     SOURCE_WHITELIST: str = '[".gov",".edu",".ac.uk",".who.int",".un.org"]'  # JSON list as str
+    ENABLE_FREE_APIS: bool = Field(True, description="Enable collection from free API providers")
 
     # ==== HTTP & retries ====
     HTTP_TIMEOUT_SECONDS: int = 30
