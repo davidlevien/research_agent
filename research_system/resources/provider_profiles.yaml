@@ -1,0 +1,74 @@
+# Provider profiles for topic-based routing
+# Extend/adjust anytime without code changes
+
+general:
+  - wikipedia
+  - wikidata
+  - openalex
+  - crossref
+  - unpaywall
+  - wayback
+
+news:
+  - gdelt
+  - wikipedia
+  - wayback
+
+biomed:
+  - pubmed
+  - europepmc
+  - crossref
+  - unpaywall
+  - openalex
+  - wayback
+
+macro:
+  - worldbank
+  - oecd
+  - eurostat
+  - imf
+  - fred
+  - wikidata
+  - wikipedia
+  - wayback
+
+science:
+  - openalex
+  - crossref
+  - unpaywall
+  - arxiv
+  - wikidata
+  - wikipedia
+  - wayback
+
+tech:
+  - openalex
+  - arxiv
+  - crossref
+  - unpaywall
+  - wikidata
+  - wikipedia
+  - wayback
+
+climate:
+  - oecd
+  - worldbank
+  - eurostat
+  - openalex
+  - crossref
+  - unpaywall
+  - wayback
+
+geospatial:
+  - overpass
+  - wikipedia
+  - wikidata
+  - wayback
+
+policy:
+  - oecd
+  - ec       # European Commission (EC/Eurostat sites)
+  - worldbank
+  - openalex
+  - crossref
+  - wayback

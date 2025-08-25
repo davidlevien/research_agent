@@ -42,7 +42,7 @@ class EvidenceCard(BaseModel):
     url: str  # Canonical URL (required)
     title: str  # Article title (required)
     snippet: str  # Non-empty extract (required)
-    provider: Literal["tavily", "brave", "serper", "serpapi", "nps"]  # Required provider stamp
+    provider: str  # Required provider stamp (tavily, brave, serper, serpapi, nps, openalex, crossref, etc.)
     date: Optional[str] = None  # Publication date if available
     
     # Controversy tracking fields
@@ -98,20 +98,25 @@ class EvidenceCard(BaseModel):
             self.claim = self.title[:200]  # Use title as claim if missing
         if not self.source_url and self.url:
             self.source_url = self.url
-        if not self.source_title and self.title:
-            self.source_title = self.title
-        if not self.publication_date and self.date:
-            self.publication_date = self.date
-        if not self.supporting_text and self.snippet:
-            self.supporting_text = self.snippet
-        if not self.search_provider and self.provider:
-            self.search_provider = self.provider
-            
-        # Enforce non-empty snippet and valid provider
-        assert self.snippet and self.snippet.strip(), "snippet must be non-empty"
-        assert self.provider in {"tavily", "brave", "serper", "serpapi", "nps"}, f"invalid provider: {self.provider}"
-        
-        return self
+    
+    @classmethod
+    def from_seed(cls, d: dict, provider: str):
+        """Create EvidenceCard from seed dictionary."""
+        return cls(
+            id=d.get("id") or str(uuid.uuid4()),
+            url=d.get("url", ""),
+            title=d.get("title", ""),
+            snippet=d.get("snippet", ""),
+            source_domain=d.get("source_domain", ""),
+            claim=d.get("claim", d.get("title", "")),
+            supporting_text=d.get("supporting_text", d.get("snippet", "")),
+            provider=provider,
+            date=d.get("published_at"),
+            metadata=d.get("metadata", {}),
+            credibility_score=d.get("credibility_score", 0.7),
+            relevance_score=d.get("relevance_score", 0.7),
+            confidence=d.get("confidence", 0.5)
+        )
     
     def to_jsonl_dict(self) -> dict:
         """Return canonical fields for JSONL output"""

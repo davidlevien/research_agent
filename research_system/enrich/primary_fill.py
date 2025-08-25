@@ -1,46 +1,40 @@
-"""Primary source backfill for triangulated families."""
+"""Primary source corroboration backfill for triangulated families."""
 
 from __future__ import annotations
-from typing import Iterable, List, Dict, Any, Optional, Callable
+from typing import Iterable, List, Dict, Any, Callable, Optional
+from research_system.tools.domain_norm import PRIMARY_CANONICALS, canonical_domain
 import logging
-from research_system.tools.domain_norm import PRIMARY_CANONICALS, canonical_domain, get_primary_search_sites
 
 logger = logging.getLogger(__name__)
 
+PRIMARY_SITES = [
+    "site:unwto.org", "site:unwto-ap.org", "site:e-unwto.org",
+    "site:wttc.org", "site:iata.org", "site:oecd.org",
+    "site:imf.org", "site:worldbank.org", "site:ec.europa.eu",
+    "site:who.int", "site:un.org"
+]
 
-def _queries_for_family(fam: Dict, topic: str) -> List[str]:
-    """Build targeted queries for finding primary sources for a family."""
-    queries = []
-    
-    # Extract key information from the family
-    key = fam.get("key", "")
-    rep_claim = fam.get("representative_claim", "")
-    
-    # Use the most specific information available
+def _queries_for_family(fam: Dict) -> List[str]:
+    """Build tight queries from the representative claim/key if present."""
+    key = fam.get("key") or fam.get("rep_claim") or ""
+    parts = []
+    # include numbers/period tokens if available
     if key:
-        # Structured key like "global|tourist_arrivals|2024"
-        parts = key.split("|")
-        if len(parts) >= 3:
-            entity, metric, period = parts[:3]
-            # Build query from components
-            query_base = f"{entity} {metric.replace('_', ' ')} {period}"
-        else:
-            query_base = key
-    elif rep_claim:
-        # Use first 100 chars of representative claim
-        query_base = rep_claim[:100]
-    else:
-        # Fallback to topic
-        query_base = topic
+        parts.append(key[:140])
     
-    # Add site restrictions for primary sources
-    primary_sites = get_primary_search_sites()[:6]  # Top 6 primary site operators
+    # Also try to use any specific metric patterns found
+    import re
+    metric_pattern = re.compile(r'\b(?:\d{1,3}(?:\.\d+)?%|Q[1-4]\s*\d{4}|\b20\d{2}\b|\bmillion\b|\bbillion\b)')
+    metrics = metric_pattern.findall(key)
+    if metrics:
+        parts.extend(metrics[:2])  # Use first couple metrics
     
-    for site in primary_sites:
-        queries.append(f"{query_base} {site}")
-    
+    queries = []
+    for site in PRIMARY_SITES:
+        for q in parts:
+            if q.strip():
+                queries.append(f"{q.strip()} {site}")
     return queries
-
 
 def primary_fill_for_families(
     families: Iterable[Dict],
@@ -50,94 +44,94 @@ def primary_fill_for_families(
     k_per_family: int = 2
 ) -> List[Any]:
     """
-    Add primary source cards for families that lack them.
+    Fill triangulated families with primary sources where missing.
     
     Args:
-        families: Triangulated paraphrase clusters or structured triangles (post-filter)
-        topic: Research topic for fallback queries
-        search_fn: Function (query, n) -> list[SearchResult(url, title)]
-        extract_fn: Function (url) -> Optional[EvidenceCard]
-        k_per_family: Max new cards to add per family
+        families: triangulated paraphrase clusters or structured triangles (post-filter)
+        topic: Research topic for context
+        search_fn: (query, n) -> list[SearchResult(url,title)]
+        extract_fn: (url) -> Optional[EvidenceCard]
+        k_per_family: Max cards to add per family
         
     Returns:
-        List of new evidence cards from primary sources
+        list[EvidenceCard] (new primary source cards)
     """
     new_cards = []
-    processed_urls = set()
+    families_needing_primary = []
     
-    for i, fam in enumerate(families):
-        # Check if family already has a primary source
+    # First identify families without primary sources
+    for fam in families:
         fam_domains = {canonical_domain(d) for d in fam.get("domains", []) if d}
+        if not (fam_domains & PRIMARY_CANONICALS):
+            families_needing_primary.append(fam)
+    
+    if not families_needing_primary:
+        logger.info("All triangulated families already have primary sources")
+        return new_cards
+    
+    logger.info(f"Found {len(families_needing_primary)} families needing primary sources")
+    
+    for fam in families_needing_primary:
+        family_cards_added = 0
+        queries = _queries_for_family(fam)
         
-        if fam_domains & PRIMARY_CANONICALS:
-            logger.debug(f"Family {i} already has primary source(s): {fam_domains & PRIMARY_CANONICALS}")
-            continue
-        
-        logger.info(f"Family {i} needs primary source. Current domains: {fam_domains}")
-        
-        # Try targeted queries
-        queries = _queries_for_family(fam, topic)
-        cards_added = 0
-        
-        for query in queries:
-            if cards_added >= k_per_family:
+        for q in queries[:5]:  # Limit queries per family
+            if family_cards_added >= k_per_family:
                 break
                 
             try:
-                logger.debug(f"Searching: {query}")
-                results = search_fn(query, n=3)
+                results = search_fn(q, n=3)
             except Exception as e:
-                logger.warning(f"Search failed for '{query}': {e}")
+                logger.debug(f"Search error for query '{q}': {e}")
                 continue
             
-            for result in results:
-                if cards_added >= k_per_family:
+            for r in results:
+                if family_cards_added >= k_per_family:
                     break
                     
                 # Check if URL is from a primary domain
-                url_domain = canonical_domain(result.url)
-                if url_domain not in PRIMARY_CANONICALS:
+                if not r.url or canonical_domain(r.url) not in PRIMARY_CANONICALS:
                     continue
-                
-                # Skip already processed URLs
-                if result.url in processed_urls:
-                    continue
-                    
-                processed_urls.add(result.url)
                 
                 try:
-                    # Extract evidence from the URL
-                    card = extract_fn(result.url)
-                    
+                    card = extract_fn(r.url)
                     if not card:
-                        logger.debug(f"No content extracted from {result.url}")
                         continue
                     
-                    # Ensure canonical domain is stored
-                    card.source_domain = canonical_domain(card.source_domain)
-                    card.is_primary_source = True
-                    
-                    # Add relevance context
-                    if not hasattr(card, 'related_reason'):
-                        card.related_reason = f"primary_backfill_family_{i}"
+                    # Ensure canonical domain stored
+                    card.source_domain = canonical_domain(card.source_domain or r.url)
+                    card.metadata = card.metadata or {}
+                    card.metadata["primary_fill"] = True
+                    card.metadata["family_key"] = fam.get("key", "")[:100]
                     
                     new_cards.append(card)
-                    cards_added += 1
-                    
-                    logger.info(f"Added primary source card from {url_domain} for family {i}")
+                    family_cards_added += 1
+                    logger.debug(f"Added primary source: {card.source_domain}")
                     
                 except Exception as e:
-                    logger.warning(f"Failed to extract from {result.url}: {e}")
+                    logger.debug(f"Extraction error for {r.url}: {e}")
                     continue
-        
-        if cards_added == 0:
-            logger.warning(f"Could not find primary source for family {i}")
     
-    logger.info(f"Primary backfill complete: added {len(new_cards)} cards")
+    logger.info(f"Added {len(new_cards)} primary source cards across families")
     return new_cards
 
-
-def needs_primary_backfill(metrics: Dict[str, float], threshold: float = 0.50) -> bool:
-    """Check if primary backfill is needed based on metrics."""
-    current = metrics.get("primary_share_in_union", 0.0)
-    return current < threshold
+def dedup_merge(existing: List[Any], new: List[Any]) -> List[Any]:
+    """
+    Merge new cards into existing list, deduplicating by URL.
+    
+    Args:
+        existing: Existing list of cards
+        new: New cards to merge
+        
+    Returns:
+        Merged list with duplicates removed
+    """
+    seen_urls = {c.url for c in existing if hasattr(c, 'url')}
+    merged = list(existing)
+    
+    for card in new:
+        if hasattr(card, 'url') and card.url not in seen_urls:
+            merged.append(card)
+            seen_urls.add(card.url)
+    
+    return merged
