@@ -22,4 +22,8 @@ jobs:
             print(f"✗ Failed to load schema: {e}")
             exit(1)
         PY
-    - run: pytest -q
+    - name: Run tests
+      env:
+        SEARCH_PROVIDERS: ""  # Disable search providers for unit tests
+        ENABLE_FREE_APIS: "true"  # Use free APIs for testing
+      run: pytest -q

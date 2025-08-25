@@ -30,15 +30,15 @@ setup: check-python ## Install all dependencies
 
 .PHONY: test
 test: check-python ## Run all tests
-	PYTHONPATH=. $(PYTHON) -m pytest tests/ -v
+	SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true PYTHONPATH=. $(PYTHON) -m pytest tests/ -v
 
 .PHONY: test-fast
 test-fast: check-python ## Run fast tests (no external deps)
-	PYTHONPATH=. $(PYTHON) -m pytest tests/test_api_compliance.py tests/test_dedup.py tests/test_entity_norm.py tests/test_normalizations.py tests/test_url_norm_s3.py -v
+	SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true PYTHONPATH=. $(PYTHON) -m pytest tests/test_api_compliance.py tests/test_dedup.py tests/test_entity_norm.py tests/test_normalizations.py tests/test_url_norm_s3.py -v
 
 .PHONY: test-ci
 test-ci: check-python ## Run tests as CI would
-	PYTHONPATH=. $(PYTHON) -m pytest -q
+	SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true PYTHONPATH=. $(PYTHON) -m pytest -q
 
 .PHONY: lint
 lint: check-python ## Run linting
