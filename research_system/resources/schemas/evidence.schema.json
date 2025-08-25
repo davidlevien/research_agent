@@ -39,7 +39,11 @@
     },
     "provider": {
       "type": "string",
-      "enum": ["tavily", "brave", "serper", "serpapi", "nps"]
+      "enum": ["tavily", "brave", "serper", "serpapi", "nps", 
+               "worldbank", "oecd", "imf", "arxiv", "pubmed", 
+               "europepmc", "eurostat", "ec", "openalex", "crossref",
+               "wikipedia", "wikidata", "gdelt", "osmtags", "overpass",
+               "wayback", "commoncrawl", "fred", "cdc", "epa"]
     },
     "date": {
       "type": ["string", "null"],
