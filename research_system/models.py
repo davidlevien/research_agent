@@ -119,8 +119,29 @@ class EvidenceCard(BaseModel):
         )
     
     def to_jsonl_dict(self) -> dict:
-        """Return canonical fields for JSONL output"""
+        """Return canonical fields for JSONL output with licensing info"""
         d = self.model_dump()
+        
+        # Add licensing information based on provider
+        meta = d.get("metadata") or {}
+        
+        # Set default licenses for known providers
+        if self.provider == "wikipedia":
+            meta.setdefault("license", "CC BY-SA 3.0")
+        elif self.provider in {"wikidata", "openalex"}:
+            meta.setdefault("license", "CC0")
+        elif self.provider == "worldbank":
+            meta.setdefault("license", "CC BY-4.0")
+        elif self.provider == "arxiv":
+            meta.setdefault("license", "arXiv License")
+        elif self.provider in {"pubmed", "europepmc"}:
+            meta.setdefault("license", "Public Domain/Open Access where applicable")
+        elif self.provider == "overpass":
+            meta.setdefault("license", "ODbL 1.0")
+        
+        if meta:
+            d["metadata"] = meta
+        
         # Output all required fields plus extras (including PE-grade fields for clustering)
         keys = ["id", "title", "url", "snippet", "provider", "date",
                 "credibility_score", "relevance_score", "confidence",
@@ -128,7 +149,7 @@ class EvidenceCard(BaseModel):
                 "disputed_by", "controversy_score", "subtopic_name",
                 "claim", "supporting_text", "is_primary_source",
                 "quote_span", "content_hash", "author", "source_title", 
-                "source_url", "search_provider", "publication_date"]
+                "source_url", "search_provider", "publication_date", "metadata"]
         return {k: d.get(k) for k in keys if k in d}
 
 class ReportSection(BaseModel):
