@@ -24,6 +24,7 @@ from research_system.tools.dedup import minhash_near_dupes
 from research_system.tools.fetch import extract_article
 from research_system.tools.snapshot import save_wayback
 from research_system.tools.url_norm import canonicalize_url, domain_of, normalized_hash
+from research_system.tools.domain_norm import canonical_domain, is_primary_domain, PRIMARY_CANONICALS
 from research_system.tools.anchor import build_anchors
 from research_system.router import route_topic
 from research_system.policy import POLICIES
@@ -803,7 +804,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     # Legacy fields for compatibility
                     source_title=h.title,
                     source_url=h.url,
-                    source_domain=domain,
+                    source_domain=canonical_domain(domain),
                     claim=h.title,
                     supporting_text=snippet_text,
                     search_provider=provider,
@@ -853,7 +854,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             c.content_hash = getattr(c, 'content_hash', None) or normalized_hash(basis)
         
         # Ensure quotes for primary sources via fallback mechanisms
-        asyncio.run(ensure_quotes_for_primaries(cards))
+        ensure_quotes_for_primaries(cards)
         
         # DEDUPLICATE near-duplicates across domains (syndication control) BEFORE clustering
         if getattr(settings, "ENABLE_MINHASH_DEDUP", True):
@@ -876,10 +877,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Apply domain diversity enforcement
         from research_system.select.diversity import enforce_domain_cap, calculate_domain_share
         
-        # Enforce domain cap before final selection
-        cards = enforce_domain_cap(cards, cap=0.25)
-        
-        # Check if unwto.org is over-represented and add diversity
+        # Check if unwto.org is over-represented BEFORE capping and add diversity
         if calculate_domain_share(cards, "unwto.org") > 0.25:
             # Import additional primary search capability
             from research_system.select.diversity import fetch_diversity_fill
@@ -916,7 +914,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                 credibility_score=0.8,
                                 relevance_score=0.7,
                                 is_primary_source=True,
-                                source_domain=domain,
+                                source_domain=canonical_domain(domain),
                                 collected_at=datetime.utcnow().isoformat() + "Z"
                             ))
         
@@ -927,7 +925,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
         # BUILD TRIANGULATION using enhanced paraphrase clustering
         from research_system.triangulation.paraphrase_cluster import cluster_paraphrases
-        from research_system.triangulation.compute import compute_structured_triangles, union_rate, primary_share_in_union
+        from research_system.triangulation.compute import compute_structured_triangles, union_rate
+        from research_system.metrics_compute import primary_share_in_triangulated as primary_share_in_union
         from research_system.triangulation.post import sanitize_paraphrase_clusters
         
         # Paraphrase clustering with SBERT
@@ -953,21 +952,91 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         from collections import Counter
         import math
         N = len(cards)
-        dom_ct = Counter(c.source_domain for c in cards)
+        # Use canonical domains for accurate metric calculation
+        dom_ct = Counter(canonical_domain(c.source_domain) for c in cards)
         top_share = (dom_ct.most_common(1)[0][1]/N) if N and dom_ct else 0.0
         prov_ct = Counter(getattr(c, "provider", None) for c in cards if getattr(c, "provider", None))
         H = -sum((n/N)*math.log((n/N)+1e-12) for n in prov_ct.values()) if N and prov_ct else 0.0
         H_norm = H / math.log(max(1, len(prov_ct))) if prov_ct else 0.0
         
-        metrics = {
-            "cards": N,
-            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, N),
-            "union_triangulation": tri_union,
-            "primary_share_in_union": primary_share_in_union(artifact),
-            "top_domain_share": top_share,
-            "provider_entropy": H_norm
-        }
-        self._write("metrics.json", json.dumps(metrics, indent=2))
+        # Calculate initial metrics for decision making (not final output)
+        primary_share = primary_share_in_union(cards, para_clusters, structured_matches)
+        
+        # Store values we'll need later for final metrics
+        initial_H_norm = H_norm
+        
+        # PRIMARY BACKFILL if needed
+        if primary_share < 0.50:
+            logger.info(f"Primary share {primary_share:.2%} < 50%, running backfill")
+            from research_system.enrich.primary_fill import primary_fill_for_families
+            
+            # Get families that need primaries
+            families = para_clusters + structured_matches
+            families = [f for f in families if len(set(f.get("domains", []))) >= 2]
+            
+            # Simple search wrapper
+            def search_wrapper(query, n):
+                try:
+                    results = asyncio.run(parallel_provider_search(self.registry, query, n, None, None))
+                    # Flatten results from all providers
+                    all_results = []
+                    for provider, hits in results.items():
+                        all_results.extend(hits)
+                    return all_results[:n]
+                except:
+                    return []
+            
+            # Extract wrapper  
+            def extract_wrapper(url):
+                try:
+                    content = extract_article(url, timeout=20)
+                    if content and content.text:
+                        # Create minimal card
+                        from research_system.models import EvidenceCard
+                        return EvidenceCard(
+                            id=str(uuid.uuid4()),
+                            title=content.title or url,
+                            url=url,
+                            snippet=content.text[:500],
+                            provider="primary_backfill",
+                            credibility_score=0.85,
+                            relevance_score=0.75,
+                            confidence=0.80,
+                            is_primary_source=True,
+                            source_domain=canonical_domain(domain_of(url)),
+                            claim=content.title or "",
+                            supporting_text=content.text[:1000],
+                            subtopic_name=self.s.topic,
+                            collected_at=datetime.utcnow().isoformat() + "Z"
+                        )
+                except:
+                    return None
+                    
+            # Run primary backfill
+            new_cards = primary_fill_for_families(
+                families=families,
+                topic=self.s.topic,
+                search_fn=search_wrapper,
+                extract_fn=extract_wrapper,
+                k_per_family=2
+            )
+            
+            if new_cards:
+                logger.info(f"Added {len(new_cards)} primary source cards")
+                # Merge and re-triangulate
+                cards = self._dedup(cards + new_cards)
+                
+                # Re-run quote rescue on new cards
+                ensure_quotes_for_primaries(cards, only=new_cards)
+                
+                # Re-compute triangulation with new cards
+                para_clusters = cluster_paraphrases(cards)
+                para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
+                structured_matches = compute_structured_triangles(cards)
+                tri_union = union_rate(para_clusters, structured_matches, len(cards))
+                
+                # Recalculate values needed for final metrics
+                primary_share = primary_share_in_union(cards, para_clusters, structured_matches)
         
         # CONTRADICTION DETECTION
         claim_texts = [
@@ -1073,9 +1142,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         credibility_score=credibility,
                                         relevance_score=0.75,  # Higher relevance for filtered AREX
                                         confidence=credibility * 0.75,
-                                        is_primary_source=(domain in pol.domain_priors),
+                                        is_primary_source=is_primary_domain(domain),
                                         search_provider=provider,
-                                        source_domain=domain,
+                                        source_domain=canonical_domain(domain),
                                         collected_at=datetime.utcnow().isoformat() + "Z",
                                         related_reason=f"arex_targeted_{metric}"
                                     ))
@@ -1128,6 +1197,32 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 if not isinstance(c.date, str):
                     c.date = c.date.isoformat() if hasattr(c.date, 'isoformat') else str(c.date)
         
+        # Apply final domain cap enforcement before writing cards
+        cards = enforce_domain_cap(cards, cap=0.24)  # Final safety buffer below 0.25 threshold
+        
+        # FINAL METRICS CALCULATION - Single source of truth after ALL processing
+        N_final = len(cards)
+        dom_ct_final = Counter(canonical_domain(c.source_domain) for c in cards)
+        top_share_final = (dom_ct_final.most_common(1)[0][1]/N_final) if N_final and dom_ct_final else 0.0
+        
+        # Recalculate provider entropy on final set
+        prov_ct_final = Counter(getattr(c, "provider", None) for c in cards if getattr(c, "provider", None))
+        H_final = -sum((n/N_final)*math.log((n/N_final)+1e-12) for n in prov_ct_final.values()) if N_final and prov_ct_final else 0.0
+        H_norm_final = H_final / math.log(max(1, len(prov_ct_final))) if prov_ct_final else 0.0
+        
+        # Final comprehensive metrics
+        metrics = {
+            "cards": N_final,
+            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, N_final),
+            "union_triangulation": tri_union,
+            "primary_share_in_union": primary_share,  # Use last calculated value
+            "top_domain_share": top_share_final,
+            "provider_entropy": H_norm_final
+        }
+        
+        # Write metrics ONCE
+        self._write("metrics.json", json.dumps(metrics, indent=2))
+        
         # Always write evidence cards, even if there might be failures later
         write_jsonl(str(self.s.output_dir / "evidence_cards.jsonl"), cards)
 
@@ -1151,9 +1246,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             from research_system.strict.guard import strict_check
             errs = strict_check(self.s.output_dir)
             if errs:
-                # Re-write metrics and triangulation to ensure they exist
-                self._write("metrics.json", json.dumps(metrics, indent=2))
-                self._write("triangulation.json", json.dumps(artifact, indent=2))
+                # Write gaps and risks, then fail (metrics and triangulation already written)
                 self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
                 raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         

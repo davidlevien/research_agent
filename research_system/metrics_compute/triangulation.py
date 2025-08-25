@@ -3,6 +3,7 @@
 from collections import Counter
 from math import log
 from typing import List, Dict, Any
+from research_system.tools.domain_norm import canonical_domain, PRIMARY_CANONICALS
 
 
 def compute_union_triangulation(filtered_para: List[Dict], structured: List[Dict], n_cards: int) -> float:
@@ -21,8 +22,9 @@ def compute_union_triangulation(filtered_para: List[Dict], structured: List[Dict
         Union triangulation rate [0, 1]
     """
     def accept(item):
-        """Accept only multi-domain clusters."""
-        return len(set(item.get("domains", []))) >= 2
+        """Accept only multi-domain clusters (using canonical domains)."""
+        canonical_doms = {canonical_domain(d) for d in item.get("domains", []) if d}
+        return len(canonical_doms) >= 2
     
     union = set()
     
@@ -74,7 +76,7 @@ def provider_entropy(cards: List[Any]) -> float:
 
 
 def primary_share_in_triangulated(cards: List[Any], filtered_para: List[Dict], structured: List[Dict], 
-                                  primary_domains: set) -> float:
+                                  primary_domains: set = None) -> float:
     """
     Calculate the share of primary sources in triangulated evidence.
     
@@ -82,20 +84,26 @@ def primary_share_in_triangulated(cards: List[Any], filtered_para: List[Dict], s
         cards: List of evidence cards
         filtered_para: Filtered paraphrase clusters
         structured: Structured triangulation results
-        primary_domains: Set of primary source domains
+        primary_domains: Set of primary source domains (defaults to PRIMARY_CANONICALS)
         
     Returns:
         Primary share in triangulated evidence [0, 1]
     """
-    # Get all triangulated indices (multi-domain only)
+    # Use canonical primary domains if not specified
+    if primary_domains is None:
+        primary_domains = PRIMARY_CANONICALS
+    
+    # Get all triangulated indices (multi-domain only, using canonical domains)
     tri_indices = set()
     
     for c in (filtered_para or []):
-        if len(set(c.get("domains", []))) >= 2:
+        canonical_doms = {canonical_domain(d) for d in c.get("domains", []) if d}
+        if len(canonical_doms) >= 2:
             tri_indices.update(c.get("indices", []))
     
     for t in (structured or []):
-        if len(set(t.get("domains", []))) >= 2:
+        canonical_doms = {canonical_domain(d) for d in t.get("domains", []) if d}
+        if len(canonical_doms) >= 2:
             tri_indices.update(t.get("indices", []))
     
     if not tri_indices:
@@ -106,8 +114,8 @@ def primary_share_in_triangulated(cards: List[Any], filtered_para: List[Dict], s
     for idx in tri_indices:
         if idx < len(cards):
             card = cards[idx]
-            domain = getattr(card, "source_domain", None) or card.get("source_domain", "")
-            if domain.lower() in {p.lower() for p in primary_domains}:
+            domain = canonical_domain(getattr(card, "source_domain", None) or card.get("source_domain", ""))
+            if domain in primary_domains:
                 primary_count += 1
     
     return primary_count / len(tri_indices)

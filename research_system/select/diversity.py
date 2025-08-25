@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from typing import List, Any, Dict
+from research_system.tools.domain_norm import canonical_domain
 
 
 def enforce_domain_cap(cards: List[Any], cap: float = 0.25) -> List[Any]:
@@ -22,9 +23,10 @@ def enforce_domain_cap(cards: List[Any], cap: float = 0.25) -> List[Any]:
     keep = []
     by_domain = defaultdict(list)
     
-    # Group cards by domain
+    # Group cards by canonical domain
     for c in cards:
-        by_domain[c.source_domain].append(c)
+        canon = canonical_domain(c.source_domain)
+        by_domain[canon].append(c)
     
     # Calculate limit per domain
     limit = {}
@@ -37,7 +39,8 @@ def enforce_domain_cap(cards: List[Any], cap: float = 0.25) -> List[Any]:
         # Sort by rank (or credibility if rank not available)
         sorted_cards = sorted(
             arr, 
-            key=lambda x: -getattr(x, "rank", getattr(x, "credibility_score", 0))
+            key=lambda x: -(getattr(x, "rank", None) or getattr(x, "credibility_score", 0)),
+            reverse=False  # Higher scores first (we're negating)
         )
         keep.extend(sorted_cards[:limit[domain]])
     
