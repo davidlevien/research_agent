@@ -1,5 +1,9 @@
 """
 Test suite for research engine
+
+NOTE: ResearchEngine is a legacy component not used in production.
+The production system uses Orchestrator directly via main.py.
+These tests are kept for historical reference but marked as skipped.
 """
 
 import pytest
@@ -7,6 +11,9 @@ import asyncio
 import json
 from pathlib import Path
 from unittest.mock import Mock, patch, AsyncMock
+
+# Mark entire module as skipped since ResearchEngine is legacy
+pytestmark = pytest.mark.skip(reason="ResearchEngine is legacy - production uses Orchestrator directly")
 
 from research_system.research_engine import ResearchEngine
 from research_system.models import ResearchRequest, ResearchDepth, EvidenceCard

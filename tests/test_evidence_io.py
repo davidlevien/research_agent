@@ -6,10 +6,19 @@ def test_evidence_roundtrip(tmp_path: Path):
     p = tmp_path/"ev.jsonl"
     card = EvidenceCard(
         id="00000000-0000-4000-8000-000000000001",
-        subtopic_name="Overview", claim="claim", supporting_text="support",
-        source_url="https://example.org/x", source_title="Title", source_domain="example.org",
-        credibility_score=0.9, is_primary_source=True, relevance_score=0.9, confidence=0.8,
-        collected_at="2025-01-01T00:00:00Z", search_provider="demo"
+        url="https://example.org/x",
+        title="Title",
+        snippet="support",
+        provider="tavily",
+        subtopic_name="Overview",
+        claim="claim",
+        supporting_text="support",
+        source_domain="example.org",
+        credibility_score=0.9,
+        is_primary_source=True,
+        relevance_score=0.9,
+        confidence=0.8,
+        collected_at="2025-01-01T00:00:00Z"
     )
     write_jsonl(str(p), [card])
     out = read_jsonl(str(p))
