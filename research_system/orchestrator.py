@@ -5,6 +5,7 @@ import asyncio
 import uuid
 import logging
 import os
+import re
 from datetime import datetime
 from collections import defaultdict
 from urllib.parse import urlparse
@@ -90,6 +91,18 @@ class Orchestrator:
         """Remove duplicate evidence cards using enhanced deduplication"""
         from research_system.collect.dedup import dedup_cards
         return dedup_cards(cards, title_threshold=0.9)
+    
+    def _filter_providers_by_topic(self, providers: List[str], topic: str) -> List[str]:
+        """
+        Guardrail: avoid domain-specific providers (e.g., NPS) unless the topic is clearly relevant.
+        Keeps things general and reduces off-topic noise.
+        """
+        # NPS is only relevant for national parks topics
+        parks_kw = re.compile(r'\b(national park|nps|campground|trail|yosemite|yellowstone|zion|grand canyon|glacier)\b', re.I)
+        if "nps" in providers and not parks_kw.search(topic or ""):
+            providers = [p for p in providers if p != "nps"]
+            logger.info(f"Filtered out NPS provider for non-parks topic: {topic}")
+        return providers
     
     def _extract_related_topics(self, cards: List[EvidenceCard], k: int = 5) -> List[Dict]:
         """Extract related topics from evidence using phrase-level extraction"""
@@ -411,40 +424,39 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
                 for c in by_domain[domain][:5]:  # Limit to 5 per domain in appendix
                     title = c.title or c.source_title or "Untitled"
                     if len(title) > 80:
-                        title = title[:77] + "..."
+                        title = title[:80]  # Clean truncation without ellipses
                     report += f"- [{title}]({c.url})\n"
         
         return report
     
     def _generate_final_report(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
-        """Generate final report using new composition module."""
-        from research_system.report.compose import compose_final_report
+        """Generate final report using deterministic composer with sections and budgets."""
+        from research_system.report.composer import compose_report
+        import re
         
-        # Combine all triangulated clusters
+        # Ensure per-card best_quote exists for composition
+        for c in cards:
+            if not getattr(c, "best_quote", None):
+                txt = (c.supporting_text or c.snippet or c.claim or c.title or "")
+                # pick a numeric/date-bearing sentence if possible
+                sents = re.split(r"(?<=[.!?])\s+", txt)
+                picked = next((s.strip() for s in sents if 60 <= len(s) <= 400 and re.search(r"\d|(?:19|20)\d{2}", s)), "")
+                c.best_quote = picked or (sents[0].strip() if sents else "")
+        
+        # Load triangulation data
+        tri = {}
         tri_path = self.s.output_dir / "triangulation.json"
         if tri_path.exists():
-            tri_data = json.loads(tri_path.read_text())
-            para_clusters = tri_data.get("paraphrase_clusters", [])
-            struct_tris = tri_data.get("structured_triangles", [])
-            
-            # Combine for report
-            all_clusters = para_clusters + struct_tris
-            
-            # Get primary cards
-            pol = getattr(self, "policy", POLICIES[route_topic(self.s.topic)])
-            primary_domains = set(pol.domain_priors.keys())
-            primary_cards = [c for c in cards if c.source_domain in primary_domains]
-            
-            # Use new composition
-            return compose_final_report(
-                triangulated_clusters=all_clusters,
-                primary_cards=primary_cards,
-                all_cards=cards,
-                topic=self.s.topic
-            )
+            tri = json.loads(tri_path.read_text())
         
-        # Fallback to original implementation
-        return self._generate_final_report_original(cards, detector)
+        # Get metrics
+        metrics_path = self.s.output_dir / "metrics.json"
+        metrics = {}
+        if metrics_path.exists():
+            metrics = json.loads(metrics_path.read_text())
+        
+        # Use new deterministic composer
+        return compose_report(self.s.topic, cards, tri, metrics, max_findings=10)
     
     def _generate_final_report_original(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
         """Generate final report using enhanced composition module"""
@@ -761,7 +773,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Use provider router to select appropriate providers
         decision = choose_providers(self.s.topic)
         logger.info(f"Routing: categories={decision.categories}, providers={decision.providers[:10]}")
-        selected_providers = [p for p in decision.providers if p in settings.enabled_providers()]
+        enabled = settings.enabled_providers()
+        # Filter providers by topic relevance to prevent off-topic noise
+        filtered_providers = self._filter_providers_by_topic(enabled, self.s.topic)
+        selected_providers = [p for p in decision.providers if p in filtered_providers]
         
         if anchors and self.s.depth in ["standard", "deep"]:
             # Run discipline-aware anchor queries
@@ -884,6 +899,18 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
         # ENRICH: Extract metadata + sentences + snapshot (optional)
         logger.info(f"Enriching {len(cards)} cards with ENABLE_EXTRACT={getattr(settings, 'ENABLE_EXTRACT', True)}")
+        
+        # Light HTML enrichment first (fast, safe)
+        from research_system.tools.fetch_simple import fetch_excerpt
+        for c in cards:
+            url = c.url or c.source_url or ""
+            if url:
+                excerpt = fetch_excerpt(url, max_chars=800)
+                if excerpt and len(excerpt) > len(c.supporting_text or ""):
+                    c.supporting_text = excerpt
+                    # Also update snippet if it's still the placeholder
+                    if c.snippet and "Content from" in c.snippet:
+                        c.snippet = excerpt[:200]
         
         # Import quote rescue for primary sources
         from research_system.enrich.ensure_quotes import ensure_quotes_for_primaries
@@ -1387,6 +1414,22 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         # Apply final domain cap enforcement as safety measure
         cards = enforce_domain_cap(cards, cap=0.24)  # Final safety buffer below 0.25 threshold
+        
+        # ========== CREDIBILITY FLOOR FILTERING ==========
+        # Drop weak sources unless corroborated (PE-grade quality enforcement)
+        MIN_CRED = 0.60
+        domain_counts = defaultdict(int)
+        for c in cards:
+            domain_counts[c.source_domain] += 1
+        
+        def keep_card(c):
+            """Keep if credible or corroborated by multiple cards from same domain."""
+            return (c.credibility_score or 0.0) >= MIN_CRED or domain_counts[c.source_domain] > 1
+        
+        pre_filter_count = len(cards)
+        cards = [c for c in cards if keep_card(c)]
+        if pre_filter_count > len(cards):
+            logger.info(f"Credibility floor: filtered {pre_filter_count - len(cards)} low-cred singleton sources")
         
         # ========== ITERATIVE BACKFILL LOOP FOR QUALITY GATES ==========
         # Recompute triangulation on balanced cards for quality assessment

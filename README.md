@@ -1,6 +1,6 @@
-# Research System v8.4 - PE-Grade Decision Intelligence Platform
+# Research System v8.4.1 - PE-Grade Decision Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with guaranteed quality thresholds. Built with v8.4 enhancements for comprehensive, multi-source research with automatic quality enforcement and intelligent query planning.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with guaranteed quality thresholds. Built with v8.4.1 enhancements for comprehensive, multi-source research with automatic quality enforcement, intelligent query planning, and deterministic report composition.
 
 ## 🚀 Quick Start
 
@@ -33,9 +33,19 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
   --topic "your topic" --strict --output-dir outputs
 ```
 
-## Latest PE-Grade Enhancements (v8.4)
+## Latest PE-Grade Enhancements (v8.4.1)
 
-### Intelligent Query Planning & Execution (v8.4 - Latest)
+### Evidence Quality & Primary Source Enhancement (v8.4.1 - Latest)
+- ✅ **Topic-Aware Provider Filtering**: Prevents off-topic providers (e.g., NPS for non-park queries)
+- ✅ **Light HTML Enrichment**: Safe, time-bounded extraction of actual article text vs snippets
+- ✅ **Primary Source Boosting**: 10% multiplicative boost for UNWTO/WTTC/OECD/IMF/etc.
+- ✅ **Credibility Floor Filtering**: Drops sources <60% credibility unless corroborated
+- ✅ **Deterministic Report Composer**: Guaranteed 800-1,500 word reports with sections
+- ✅ **Inline Citation System**: Numbered references [1][2][3] with full source list
+- ✅ **Quote Prioritization**: Prefers numeric/date-bearing sentences for auditability
+- ✅ **Contradiction Detection**: Automatic identification of conflicting evidence
+
+### Intelligent Query Planning & Execution (v8.4)
 - ✅ **Query Planner**: Automatic time/geo/entity extraction with constraint handling
 - ✅ **Provider-Specific Templates**: Optimized queries per provider (PDF, site:, date ranges)
 - ✅ **Related Topics Axes**: Structured exploration (upstream/downstream/risks/counter)
@@ -93,6 +103,7 @@ Strict mode enforces these quality bars:
 - **Union Triangulation**: ≥35% multi-source verification
 - **Top Domain Share**: <24% prevents single-domain dominance
 - **Provider Entropy**: ≥0.60 ensures search diversity
+- **Credibility Floor**: ≥60% credibility unless corroborated
 
 Latest test results:
 - Quote Coverage: **89.6%** ✅
@@ -100,6 +111,39 @@ Latest test results:
 - Union Triangulation: **35%** ✅
 - Top Domain Share: **<24%** ✅ (with epsilon adjustment)
 - Provider Entropy: **0.89** ✅
+
+### Report Structure (v8.4.1)
+Every report now includes these guaranteed sections:
+
+1. **Executive Summary** (3-5 bullets)
+   - Evidence base metrics
+   - Triangulation and primary share percentages
+   - Topic scope and synthesis approach
+
+2. **Key Findings** (6-10 bullets)
+   - Multi-sentence findings with inline citations [1][2][3]
+   - Quote-based evidence with numeric/date content
+   - Domain-diverse corroboration
+
+3. **Key Numbers**
+   - Top 8+ numeric claims with citations
+   - Prioritizes percentages, dates, and metrics
+   - Extracted from actual article content
+
+4. **Contradictions & Uncertainties**
+   - Auto-detected conflicting evidence
+   - Methodology and time period considerations
+   - Clear indication of disagreement sources
+
+5. **Outlook (Next 4-6 weeks)**
+   - Evidence-based extrapolations
+   - Primary source indicators
+   - Reassessment timelines
+
+6. **Methodology & Sources**
+   - Complete numbered reference list
+   - Full titles and URLs for all citations
+   - Metrics transparency
 
 ## API Providers & Compliance
 
