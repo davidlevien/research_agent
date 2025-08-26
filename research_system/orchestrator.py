@@ -1601,26 +1601,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         H_final = -sum((n/N_final)*math.log((n/N_final)+1e-12) for n in prov_ct_final.values()) if N_final and prov_ct_final else 0.0
         H_norm_final = H_final / math.log(max(1, len(prov_ct_final))) if prov_ct_final else 0.0
         
-        # Final comprehensive metrics
-        metrics = {
-            "cards": N_final,
-            "quote_coverage": sum(1 for c in cards if (
-                getattr(c, 'best_quote', None) or 
-                getattr(c, 'quote_span', None) or 
-                (getattr(c, 'quotes', None) and c.quotes) or
-                getattr(c, 'supporting_text', None) or
-                getattr(c, 'snippet', None)
-            ))/max(1, N_final),
-            "union_triangulation": tri_union,
-            "primary_share_in_union": primary_share,  # Use last calculated value
-            "top_domain_share": top_share_final,
-            "provider_entropy": H_norm_final
-        }
-        
-        # Write metrics ONCE
-        self._write("metrics.json", json.dumps(metrics, indent=2))
-        
-        # Always write evidence cards; skip invalid ones instead of crashing
+        # Write evidence cards FIRST; skip invalid ones instead of crashing
         ok, bad = write_jsonl(
             str(self.s.output_dir / "evidence_cards.jsonl"),
             cards,
@@ -1629,10 +1610,46 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         )
         logger.info(f"Evidence write: ok={ok} bad={bad}")
         
-        # Trim in-memory set as well to keep metrics/report consistent
+        # Trim in-memory set to match what was actually written
         if bad:
             from research_system.tools.evidence_io import read_jsonl
             cards = read_jsonl(str(self.s.output_dir / "evidence_cards.jsonl"))
+            logger.info(f"Trimmed cards from {N_final} to {len(cards)} after filtering invalid")
+            
+            # Recalculate metrics with actual valid cards
+            N_final = len(cards)
+            prov_ct_final = Counter(getattr(c, "provider", None) for c in cards if getattr(c, "provider", None))
+            H_final = -sum((n/N_final)*math.log((n/N_final)+1e-12) for n in prov_ct_final.values()) if N_final and prov_ct_final else 0.0
+            H_norm_final = H_final / math.log(max(1, len(prov_ct_final))) if prov_ct_final else 0.0
+            dom_final = Counter(c.source_domain for c in cards)
+            top_share_final = max(dom_final.values()) / max(1, N_final) if dom_final else 0.0
+        
+        # Calculate metrics with ACTUAL written cards (after filtering)
+        metrics = {
+            "cards": len(cards),  # Use actual count after filtering
+            "quote_coverage": sum(1 for c in cards if (
+                getattr(c, 'best_quote', None) or 
+                getattr(c, 'quote_span', None) or 
+                (getattr(c, 'quotes', None) and c.quotes) or
+                getattr(c, 'supporting_text', None) or
+                getattr(c, 'snippet', None)
+            ))/max(1, len(cards)),
+            "union_triangulation": tri_union,
+            "primary_share_in_union": primary_share,  # Use last calculated value
+            "top_domain_share": top_share_final,
+            "provider_entropy": H_norm_final
+        }
+        
+        # Write metrics AFTER filtering
+        self._write("metrics.json", json.dumps(metrics, indent=2))
+        
+        # Validate consistency between metrics and actual evidence
+        evidence_count = len(cards)
+        if metrics["cards"] != evidence_count:
+            logger.error(f"CONSISTENCY ERROR: metrics shows {metrics['cards']} cards but have {evidence_count} in memory")
+            # Fix the metrics to match reality
+            metrics["cards"] = evidence_count
+            self._write("metrics.json", json.dumps(metrics, indent=2))
 
         # CONSOLIDATE / QUALITY - derive from written JSONL
         evidence_path = self.s.output_dir / "evidence_cards.jsonl"
