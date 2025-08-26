@@ -9,15 +9,31 @@ logger = logging.getLogger(__name__)
 BASE = "https://api.openalex.org/works"
 
 def search_openalex(query: str, per_page: int = 25) -> List[Dict[str, Any]]:
-    """Search OpenAlex for scholarly works."""
+    """Search OpenAlex for scholarly works with fallback to filter API."""
     try:
         params = {
             "search": query, 
             "per_page": per_page, 
             "mailto": "research@example.com"  # Polite crawling
         }
-        data = http_json("openalex", "GET", BASE, params=params)
-        return data.get("results", [])
+        
+        try:
+            # Try search parameter first (preferred)
+            data = http_json("openalex", "GET", BASE, params=params)
+            return data.get("results", [])
+        except Exception as e:
+            if "400" in str(e):
+                # Fallback to filter API on 400 error
+                logger.info(f"OpenAlex search failed with 400, trying filter fallback")
+                params = {
+                    "filter": f"title.search:{query}",
+                    "per_page": per_page, 
+                    "mailto": "research@example.com"
+                }
+                data = http_json("openalex", "GET", BASE, params=params)
+                return data.get("results", [])
+            raise
+            
     except Exception as e:
         logger.warning(f"OpenAlex search failed: {e}")
         return []

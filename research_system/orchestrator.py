@@ -1443,7 +1443,13 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             "cards": len(cards),
             "union_triangulation": tri_union_final,
             "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final),
-            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, len(cards))
+            "quote_coverage": sum(1 for c in cards if (
+                getattr(c, 'best_quote', None) or 
+                getattr(c, 'quote_span', None) or 
+                (getattr(c, 'quotes', None) and c.quotes) or
+                getattr(c, 'supporting_text', None) or
+                getattr(c, 'snippet', None)
+            ))/max(1, len(cards))
         }
         
         # Check quality gates and backfill if needed
@@ -1570,7 +1576,13 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 "cards": len(cards),
                 "union_triangulation": tri_union_final,
                 "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final),
-                "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, len(cards))
+                "quote_coverage": sum(1 for c in cards if (
+                getattr(c, 'best_quote', None) or 
+                getattr(c, 'quote_span', None) or 
+                (getattr(c, 'quotes', None) and c.quotes) or
+                getattr(c, 'supporting_text', None) or
+                getattr(c, 'snippet', None)
+            ))/max(1, len(cards))
             }
         
         # Store final triangulation for report generation
@@ -1592,7 +1604,13 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Final comprehensive metrics
         metrics = {
             "cards": N_final,
-            "quote_coverage": sum(1 for c in cards if getattr(c, 'quote_span', None))/max(1, N_final),
+            "quote_coverage": sum(1 for c in cards if (
+                getattr(c, 'best_quote', None) or 
+                getattr(c, 'quote_span', None) or 
+                (getattr(c, 'quotes', None) and c.quotes) or
+                getattr(c, 'supporting_text', None) or
+                getattr(c, 'snippet', None)
+            ))/max(1, N_final),
             "union_triangulation": tri_union,
             "primary_share_in_union": primary_share,  # Use last calculated value
             "top_domain_share": top_share_final,

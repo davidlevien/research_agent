@@ -7,6 +7,7 @@ import os
 from typing import Any, Dict, List, Optional
 from collections import defaultdict
 import logging
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,26 @@ def _apply_policy(provider: str, method: str, url: str, *, params=None, headers=
     """Apply provider-specific policies for headers and rate limiting."""
     pol = POLICY.get(provider, {})
     
-    # Apply provider-specific headers
+    # Check domain-specific policies for anti-bot handling
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    if domain:
+        try:
+            from research_system.tools.domain_policies import get_headers_for_domain, should_skip_domain
+            
+            # Check if we should skip this domain
+            if should_skip_domain(domain):
+                raise Exception(f"Domain {domain} requires authentication or has login wall")
+            
+            # Apply domain-specific headers
+            domain_headers = get_headers_for_domain(domain)
+            if domain_headers:
+                headers = {**(headers or {}), **domain_headers}
+                logger.debug(f"Applied domain policies for {domain}")
+        except ImportError:
+            pass  # Domain policies not available
+    
+    # Apply provider-specific headers (these take precedence)
     if "headers" in pol:
         provider_headers = pol["headers"]()
         headers = {**(headers or {}), **provider_headers}

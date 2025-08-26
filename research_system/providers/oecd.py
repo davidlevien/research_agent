@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # OECD SDMX-JSON: list dataflows (datasets) and filter by query
-_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL"
+_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"  # Trailing slash required
 
 def _dataflows() -> Dict[str, Dict[str, Any]]:
     """Fetch OECD dataflows catalog."""

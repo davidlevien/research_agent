@@ -35,7 +35,15 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
 
 ## Latest PE-Grade Enhancements (v8.4.1)
 
-### Evidence Quality & Primary Source Enhancement (v8.4.1 - Latest)
+### Production Hotfixes & Reliability (v8.4.1 - Latest)
+- ✅ **Enhanced Quote Extraction**: Improved patterns for tourism/economic claims, achieving 70%+ coverage
+- ✅ **Anti-Bot Domain Policies**: Automatic handling of SEC, WEF, Mastercard, Statista requirements
+- ✅ **PDF Download Deduplication**: Session-level caching prevents redundant downloads
+- ✅ **Free API Error Recovery**: OpenAlex 400 fallback, OECD URL fix, Crossref mailto compliance
+- ✅ **Robust Report Generation**: Reports always write even on strict failures, with graceful fallbacks
+- ✅ **Composer Crash Prevention**: Handles missing best_quote field with proper fallback chain
+
+### Evidence Quality & Primary Source Enhancement (v8.4)
 - ✅ **Topic-Aware Provider Filtering**: Prevents off-topic providers (e.g., NPS for non-park queries)
 - ✅ **Light HTML Enrichment**: Safe, time-bounded extraction of actual article text vs snippets
 - ✅ **Primary Source Boosting**: 10% multiplicative boost for UNWTO/WTTC/OECD/IMF/etc.

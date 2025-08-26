@@ -30,18 +30,22 @@ def search_crossref(query: str, rows: int = 5, filter_type: str = None) -> List[
         
         # Build API URL
         base_url = "https://api.crossref.org/works"
+        
+        # Add mailto parameter per Crossref etiquette
+        MAILTO = "research@example.com"
         params = {
             "query": query,
             "rows": min(rows, 1000),
+            "mailto": MAILTO,  # Crossref prefers this for rate limiting
             "select": "DOI,title,published-print,published-online,URL,author,publisher,subject,type,abstract"
         }
         
         if filter_type:
             params["filter"] = f"type:{filter_type}"
         
-        # Make request with proper User-Agent
+        # Make request with enhanced User-Agent per Crossref guidelines
         headers = {
-            "User-Agent": "ResearchSystem/1.0 (mailto:research@example.com)"
+            "User-Agent": f"ResearchAgent/8.4 (mailto:{MAILTO}); python-httpx"
         }
         
         logger.debug(f"Searching Crossref for: {query}")

@@ -31,3 +31,6 @@ jobs:
       run: |
         mkdir -p test_outputs
         pytest -q
+    - name: Run v8.4 sanity tests
+      run: |
+        PYTHONPATH=. pytest tests/test_v84_fixes.py -q --tb=no

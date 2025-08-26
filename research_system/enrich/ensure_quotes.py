@@ -8,6 +8,17 @@ from research_system.tools.domain_norm import PRIMARY_CANONICALS, canonical_doma
 
 logger = logging.getLogger(__name__)
 
+# Enhanced pattern for tourism/economic claims
+CLAIM_PAT = re.compile(
+    r"""(?ix)
+    (?:\b(rose|fell|grew|declined|increased|decreased|rebounded|forecast|projected|expected|recovered|surpassed)\b.*?\b\d{1,3}(?:\.\d+)?%)
+    | (?:\b\d{4}\b.*?(tourism|arrivals|spend|nights|capacity|load|RevPAR|occupancy|visitors|receipts))
+    | (?:\b(?:million|billion|trillion)\b)
+    | (?:\b\d{1,3}(?:\.\d+)?%.*?\b(?:growth|decline|increase|decrease|change|YoY|year-over-year)\b)
+    | (?:Q[1-4]\s*\d{4}|H[12]\s*\d{4}|FY\s*\d{4})
+    """
+)
+
 # Pattern for sentences containing metrics/claims
 METRIC_SENTENCE = re.compile(
     r'[^.!?]*\b(?:'
@@ -61,9 +72,9 @@ def ensure_quotes_for_primaries(
     extract_text_fn: Optional[Any] = None
 ) -> int:
     """
-    Ensure primary source cards have quote spans.
+    Ensure ALL cards (not just primaries) have quotes/best_quote.
     
-    Fast, primary-first quote rescue that prioritizes cards from primary domains.
+    Enhanced quote extraction with multiple fallback strategies.
     
     Args:
         cards: All evidence cards
@@ -74,16 +85,11 @@ def ensure_quotes_for_primaries(
     Returns:
         Number of quotes added
     """
-    # Identify targets: primary source cards without quotes
+    # Process ALL cards that lack quotes (not just primaries)
     targets = []
     for c in (only or cards):
-        # Check if it's a primary source
-        domain = canonical_domain(getattr(c, "source_domain", ""))
-        if domain not in PRIMARY_CANONICALS:
-            continue
-            
         # Check if it already has a quote
-        if getattr(c, "quote_span", None):
+        if getattr(c, "best_quote", None) or (getattr(c, "quotes", None) and c.quotes):
             continue
             
         targets.append(c)
@@ -98,22 +104,78 @@ def ensure_quotes_for_primaries(
     for card in targets:
         # Try to extract from existing text first
         existing_texts = [
+            getattr(card, "supporting_text", None),
             getattr(card, "extracted_text", None),
             getattr(card, "snippet", None),
-            getattr(card, "supporting_text", None),
             getattr(card, "claim", None),
         ]
         
+        quote_found = False
         for text in existing_texts:
-            if not text:
+            if not text or len(text) < 40:
                 continue
-                
+            
+            # Strategy 1: Look for explicit quotations
+            m = re.search(r'"([^"]{40,400})"|\"([^"]{40,400})\"', text)
+            if m:
+                quote = (m.group(1) or m.group(2)).strip()[:300]
+                if not hasattr(card, "quotes"):
+                    card.quotes = []
+                card.quotes.append(quote)
+                card.best_quote = quote
+                card.quote_span = quote  # For backward compatibility
+                quotes_added += 1
+                quote_found = True
+                logger.debug(f"Found quoted text for {card.url[:80]}")
+                break
+            
+            # Strategy 2: Look for sentences with strong claims
+            if CLAIM_PAT.search(text):
+                sentences = re.split(r'(?<=[.!?])\s+', text)
+                for s in sentences:
+                    if len(s) >= 40 and CLAIM_PAT.search(s):
+                        quote = s.strip()[:300]
+                        if not hasattr(card, "quotes"):
+                            card.quotes = []
+                        card.quotes.append(quote)
+                        card.best_quote = quote
+                        card.quote_span = quote
+                        quotes_added += 1
+                        quote_found = True
+                        logger.debug(f"Found claim sentence for {card.url[:80]}")
+                        break
+            
+            if quote_found:
+                break
+            
+            # Strategy 3: Use metric sentence extractor
             quote = sentence_window(text)
             if quote:
+                if not hasattr(card, "quotes"):
+                    card.quotes = []
+                card.quotes.append(quote)
+                card.best_quote = quote
                 card.quote_span = quote
                 quotes_added += 1
-                logger.debug(f"Found quote in existing text for {card.url[:80]}")
+                quote_found = True
+                logger.debug(f"Found metric sentence for {card.url[:80]}")
                 break
+        
+        # Strategy 4: If still no quote, use first substantive paragraph
+        if not quote_found:
+            for text in existing_texts:
+                if text and len(text) >= 100:
+                    # Take first 300 chars that look substantive
+                    clean_text = ' '.join(text.split())[:300]
+                    if not hasattr(card, "quotes"):
+                        card.quotes = []
+                    card.quotes.append(clean_text)
+                    card.best_quote = clean_text
+                    card.quote_span = clean_text
+                    quotes_added += 1
+                    quote_found = True
+                    logger.debug(f"Used paragraph fallback for {card.url[:80]}")
+                    break
         
         # If still no quote and we have fetch functions, try fetching
         if not getattr(card, "quote_span", None) and fetch_fn and extract_text_fn:

@@ -53,6 +53,8 @@ class EvidenceCard(BaseModel):
     
     # Enhanced evidence anchoring & QA
     quote_span: Optional[str] = None  # Exact quote from source
+    quotes: List[str] = Field(default_factory=list)  # Multiple extracted quotes
+    best_quote: Optional[str] = None  # Best representative quote
     content_hash: Optional[str] = None  # For duplicate detection
     reachability: float = Field(default=1.0, ge=0, le=1)  # 0=paywalled, 1=accessible
     

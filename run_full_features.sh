@@ -47,10 +47,19 @@ echo "  ✓ Domain balancing (25% cap)"
 echo "  ✓ Triangulation enforcement (35% min)"
 echo "  ✓ Strict quality gates"
 echo ""
+echo "v8.4 Fixes Applied:"
+echo "  ✓ Enhanced quote extraction (70% coverage)"
+echo "  ✓ Anti-bot handling for SEC/WEF/Mastercard"
+echo "  ✓ PDF download deduplication"
+echo "  ✓ Free API fallbacks (OpenAlex/OECD/Crossref)"
+echo "  ✓ Robust report generation"
+echo ""
 echo "Starting in 3 seconds..."
 sleep 3
 
-# Run with all features
+# Run with all features including v8.4 fixes
+# Note: v8.4 fixes (quote extraction, anti-bot, PDF dedup) are built into the code
+# and don't require environment variables - they're always active
 LOG_LEVEL=INFO \
 ENABLE_FREE_APIS=true \
 USE_LLM_CLAIMS=true \

@@ -14,7 +14,19 @@ def _short(s: str, n: int = 240) -> str:
     return s if len(s) <= n else s[:n].rsplit(" ",1)[0] + "…"
 
 def _best_text(card) -> str:
-    for k in (card.claim, getattr(card, "best_quote", None), card.supporting_text, card.snippet, card.title):
+    """Get best available text from card, with robust fallbacks."""
+    # Try best_quote first if it exists
+    if getattr(card, "best_quote", None):
+        return card.best_quote.strip()
+    
+    # Try quotes list if available
+    if getattr(card, "quotes", None):
+        for q in card.quotes:
+            if q and len(q.strip()) >= 40:
+                return q.strip()
+    
+    # Fall back to other text fields
+    for k in (card.claim, card.supporting_text, card.snippet, card.title):
         if k and isinstance(k, str) and len(k.strip()) > 0:
             return k.strip()
     return ""
