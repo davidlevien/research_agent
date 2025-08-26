@@ -6,7 +6,7 @@ from research_system.tools.domain_norm import canonical_domain
 
 @dataclass(frozen=True)
 class BalanceConfig:
-    cap: float = 0.24           # ≤ 24% per domain
+    cap: float = 0.25           # ≤ 25% per domain
     min_cards: int = 24         # target floor; triggers backfill if trimmed
     prefer_primary: bool = True # when backfilling, prefer primary institutions
 
@@ -21,8 +21,8 @@ def _domain(card) -> str:
 def enforce_cap(cards: List, cfg: BalanceConfig) -> Tuple[List, Dict[str,int]]:
     doms = [_domain(c) for c in cards]
     n = len(cards) or 1
-    # Subtract tiny epsilon to avoid rounding up to 25%
-    cap_abs = max(1, int((cfg.cap - 1e-9) * n))
+    # Calculate absolute cap: floor of 25% of total cards
+    cap_abs = max(1, int(cfg.cap * n))
     counts = Counter(doms)
     keep: List = []
     kept_per_domain = defaultdict(int)
@@ -33,6 +33,48 @@ def enforce_cap(cards: List, cfg: BalanceConfig) -> Tuple[List, Dict[str,int]]:
             keep.append(c)
             kept_per_domain[d] += 1
     return keep, dict(kept_per_domain)
+
+def enforce_domain_cap(cards: List, cap: float = 0.25) -> List:
+    """
+    Enforce a maximum percentage cap per domain to ensure diversity.
+    Uses rank/credibility-based sorting to keep best cards per domain.
+    
+    Args:
+        cards: List of evidence cards
+        cap: Maximum fraction of cards from any single domain
+        
+    Returns:
+        List of cards with domain caps enforced
+    """
+    if not cards:
+        return cards
+    
+    N = len(cards)
+    keep = []
+    by_domain = defaultdict(list)
+    
+    # Group cards by canonical domain
+    for c in cards:
+        canon = canonical_domain(getattr(c, "source_domain", ""))
+        by_domain[canon].append(c)
+    
+    # Calculate limit per domain
+    limit = {}
+    for domain, domain_cards in by_domain.items():
+        # At least 1 card per domain, but cap at percentage
+        limit[domain] = min(len(domain_cards), max(1, int(cap * N)))
+    
+    # Keep highest-ranked within each domain
+    for domain, arr in by_domain.items():
+        # Sort by rank (or credibility if rank not available)
+        sorted_cards = sorted(
+            arr, 
+            key=lambda x: -(getattr(x, "rank", None) or getattr(x, "credibility_score", 0)),
+            reverse=False  # Higher scores first (we're negating)
+        )
+        keep.extend(sorted_cards[:limit[domain]])
+    
+    return keep if keep else cards
 
 def need_backfill(cards: List, cfg: BalanceConfig) -> bool:
     return len(cards) < cfg.min_cards

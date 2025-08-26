@@ -1016,49 +1016,63 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     logger.warning(f"Failed to expand with {p}: {e}")
                     continue
         
-        # Apply domain diversity enforcement
-        from research_system.select.diversity import enforce_domain_cap, calculate_domain_share
+        # Early diversity check - if any single domain exceeds 25%, inject diversity BEFORE final balancing
+        # This ensures we have diverse sources available for the final selection
+        from research_system.selection.domain_balance import BalanceConfig, enforce_cap
+        from collections import Counter
         
-        # Check if unwto.org is over-represented BEFORE capping and add diversity
-        if calculate_domain_share(cards, "unwto.org") > 0.25:
-            # Import additional primary search capability
-            from research_system.select.diversity import fetch_diversity_fill
-            
-            # Fetch from other primary sources
-            diversity_queries = fetch_diversity_fill(
-                self.s.topic,
-                ["iata.org", "wttc.org"]
-            )
-            
-            # Execute diversity queries
-            for query_info in diversity_queries[:2]:
-                div_results = asyncio.run(
-                    parallel_provider_search(
-                        self.registry,
-                        query=query_info["query"],
-                        count=3,
-                        freshness=settings.FRESHNESS_WINDOW,
-                        region="US"
-                    )
-                )
+        # Check domain distribution
+        domain_counts = Counter(canonical_domain(c.source_domain) for c in cards)
+        total = len(cards)
+        
+        # If any domain exceeds 25%, proactively add diversity
+        for domain, count in domain_counts.items():
+            if total > 0 and count / total > 0.25:
+                logger.info(f"Domain {domain} at {count/total:.1%}, injecting diversity")
                 
-                # Add diversity results as cards
-                for provider, hits in div_results.items():
-                    for h in hits:
-                        domain = domain_of(h.url)
-                        if domain == query_info["domain"]:
-                            cards.append(EvidenceCard(
-                                id=str(uuid.uuid4()),
-                                title=h.title,
-                                url=h.url,
-                                snippet=h.snippet or "",
-                                provider=provider,
-                                credibility_score=0.8,
-                                relevance_score=0.7,
-                                is_primary_source=True,
-                                source_domain=canonical_domain(domain),
-                                collected_at=datetime.utcnow().isoformat() + "Z"
-                            ))
+                # Add targeted queries for other primary sources
+                diversity_targets = {
+                    "unwto.org": ["iata.org", "wttc.org", "oecd.org"],
+                    "oecd.org": ["worldbank.org", "imf.org", "un.org"],
+                    "worldbank.org": ["oecd.org", "imf.org", "bis.org"]
+                }.get(domain, ["oecd.org", "worldbank.org", "imf.org"])
+                
+                # Execute targeted diversity queries
+                for target_domain in diversity_targets[:2]:
+                    try:
+                        div_query = f"{self.s.topic} site:{target_domain}"
+                        div_results = asyncio.run(
+                            parallel_provider_search(
+                                self.registry,
+                                query=div_query,
+                                count=3,
+                                freshness=settings.FRESHNESS_WINDOW,
+                                region="US"
+                            )
+                        )
+                        
+                        # Add diversity results
+                        for provider, hits in div_results.items():
+                            for h in hits[:2]:  # Limit per provider
+                                if domain_of(h.url) == target_domain:
+                                    cards.append(EvidenceCard(
+                                        id=str(uuid.uuid4()),
+                                        title=h.title,
+                                        url=h.url,
+                                        snippet=h.snippet or "",
+                                        provider=provider,
+                                        credibility_score=0.85,
+                                        relevance_score=0.75,
+                                        confidence=0.64,
+                                        is_primary_source=True,
+                                        source_domain=canonical_domain(target_domain),
+                                        collected_at=datetime.utcnow().isoformat() + "Z"
+                                    ))
+                    except Exception as e:
+                        logger.debug(f"Diversity injection for {target_domain} failed: {e}")
+                        continue
+                
+                break  # Only handle the first over-represented domain
         
         # Keep top cards based on depth (but keep all for triangulation)
         max_cards = self.depth_to_count.get(self.s.depth, 20) * 3  # 3x for triangulation
@@ -1381,18 +1395,18 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     c.date = c.date.isoformat() if hasattr(c.date, 'isoformat') else str(c.date)
         
         # PE-GRADE DOMAIN BALANCING - Apply after all expansion but before final metrics
-        from research_system.selection.domain_balance import BalanceConfig, enforce_cap, need_backfill, backfill
+        from research_system.selection.domain_balance import BalanceConfig, enforce_cap, enforce_domain_cap, need_backfill, backfill
         from research_system.providers.registry import PROVIDERS
         
         # Store raw cards before balancing for appendix
         raw_cards = list(cards)
         
         # Domain balance configuration for strict mode pass
-        bal_cfg = BalanceConfig(cap=0.24, min_cards=24, prefer_primary=True)
+        bal_cfg = BalanceConfig(cap=0.25, min_cards=24, prefer_primary=True)
         
-        # First pass: enforce cap to ensure no domain exceeds 24%
+        # First pass: enforce cap to ensure no domain exceeds 25%
         balanced_cards, kept = enforce_cap(cards, bal_cfg)
-        logger.info(f"DomainBalance: cap=0.24 kept={len(balanced_cards)} total={len(cards)} (domains: {kept})")
+        logger.info(f"DomainBalance: cap=0.25 kept={len(balanced_cards)} total={len(cards)} (domains: {kept})")
         
         # Check if we need to backfill from primary sources
         if need_backfill(balanced_cards, bal_cfg):
@@ -1434,7 +1448,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         cards = balanced_cards
         
         # Apply final domain cap enforcement as safety measure
-        cards = enforce_domain_cap(cards, cap=0.24)  # Final safety buffer below 0.25 threshold
+        cards = enforce_domain_cap(cards, cap=0.25)  # Enforce 25% domain cap
         
         # ========== CREDIBILITY FLOOR FILTERING ==========
         # Drop weak sources unless corroborated (PE-grade quality enforcement)
@@ -1587,7 +1601,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             cards = self._dedup(cards + new_cards)
             
             # Re-apply domain cap to maintain balance
-            cards = enforce_domain_cap(cards, cap=0.24)
+            cards = enforce_domain_cap(cards, cap=0.25)
             
             # Recompute metrics for next iteration
             para_clusters_final = cluster_paraphrases(cards)
