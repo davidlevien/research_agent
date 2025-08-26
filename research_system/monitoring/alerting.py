@@ -71,6 +71,7 @@ class AlertManager:
         self.alert_history: List[Alert] = []
         self.notification_channels: Dict[str, Callable] = {}
         self.metrics = AlertMetrics()
+        self._bg_tasks: List[asyncio.Task] = []  # Track background tasks
         
         self._setup_default_rules()
         self._setup_notification_channels()
@@ -399,7 +400,8 @@ class AlertManager:
             alert.status = AlertStatus.SUPPRESSED
             
             # Auto-resume after duration
-            asyncio.create_task(self._resume_alert_after(rule_name, duration_hours))
+            task = asyncio.create_task(self._resume_alert_after(rule_name, duration_hours))
+            self._bg_tasks.append(task)
             
             logger.info(f"Alert suppressed: {rule_name} for {duration_hours} hours")
     
@@ -412,6 +414,18 @@ class AlertManager:
             if alert.status == AlertStatus.SUPPRESSED:
                 alert.status = AlertStatus.ACTIVE
                 logger.info(f"Alert resumed: {rule_name}")
+    
+    async def shutdown(self):
+        """Gracefully shutdown alert manager and cancel background tasks"""
+        for task in self._bg_tasks:
+            task.cancel()
+        
+        # Wait for all tasks to complete or be cancelled
+        if self._bg_tasks:
+            await asyncio.gather(*self._bg_tasks, return_exceptions=True)
+        
+        self._bg_tasks.clear()
+        logger.info("Alert manager shutdown complete")
 
 
 @dataclass

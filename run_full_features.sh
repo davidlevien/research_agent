@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run research system with ALL features enabled
 # This demonstrates the full PE-grade v8.4 capabilities
 
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
 # Check Python version
 if ! command -v python3.11 &> /dev/null; then
@@ -22,7 +23,19 @@ source .env
 
 # Default topic if not provided
 TOPIC="${1:-AI economic impact and job market transformation 2024-2025}"
-OUTPUT_DIR="${2:-outputs/full_test_$(date +%Y%m%d_%H%M%S)}"
+OUTPUT_DIR="${OUTPUT_DIR:-outputs/full_test_$(date +%Y%m%d_%H%M%S)}"
+
+# Create output directory
+mkdir -p "$OUTPUT_DIR"
+
+# Write run metadata
+{
+    echo "Run ID: $(date -Iseconds)"
+    git rev-parse HEAD 2>/dev/null || echo "Git SHA: unavailable"
+    echo "Topic: $TOPIC"
+    echo "Python: $(python3.11 --version)"
+    echo "Platform: $(uname -s)"
+} > "$OUTPUT_DIR/RUN_METADATA.txt"
 
 echo "=================================="
 echo "Research System v8.4 - FULL FEATURES"

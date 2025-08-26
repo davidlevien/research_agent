@@ -51,13 +51,27 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
         # Use cache if enabled
         if settings.ENABLE_HTTP_CACHE:
             status, headers, content = cached_get(url, headers=_get_ua(), timeout=25)
+            
+            # Handle blocked/paywalled domains
+            if status == 403:
+                blocked_domains = ("nejm.org", "politico.com", "publications.aap.org", "wsj.com", "ft.com")
+                if any(d in url for d in blocked_domains):
+                    logger.warning(f"Domain blocked (403): {url}")
+                    return None, {"unreachable": True, "reason": "blocked", "status": 403}
+            elif status == 402:
+                logger.warning(f"Payment required (402): {url}")
+                return None, {"unreachable": True, "reason": "payment_required", "status": 402}
+            elif status == 451:
+                logger.warning(f"Unavailable for legal reasons (451): {url}")
+                return None, {"unreachable": True, "reason": "legal_blocked", "status": 451}
+            
             if 200 <= status < 400:
                 # Check for paywalls
                 url_str = headers.get("location", url)
                 if "statista.com/sso" in url_str or "statista.com/login" in url_str:
-                    return None, None
+                    return None, {"unreachable": True, "reason": "paywall"}
                 if "/login?" in url_str or "/subscribe?" in url_str:
-                    return None, None
+                    return None, {"unreachable": True, "reason": "paywall"}
                 return content, (headers.get("content-type") or "").lower()
         else:
             # Direct fetch without cache
@@ -230,19 +244,65 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     base_url = get_base_url(html, url)
     meta = {}
     
-    # Try extruct if available
+    # Helper to find meta tags
+    def _find_meta(html: str, name: str) -> Optional[str]:
+        """Extract meta tag content by name or property."""
+        patterns = [
+            rf'<meta\s+name="{name}"[^>]*content="([^"]+)"',
+            rf'<meta\s+property="{name}"[^>]*content="([^"]+)"',
+            rf'<meta\s+content="([^"]+)"[^>]*name="{name}"',
+            rf'<meta\s+content="([^"]+)"[^>]*property="{name}"'
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, html, re.I)
+            if match:
+                return match.group(1)
+        return None
+    
+    # Try extruct if available for structured data
     if HAS_TRAFILATURA and extruct:
         try:
-            ld = extruct.extract(html, base_url=base_url, syntaxes=['json-ld']).get('json-ld', [])
-            for item in ld:
-                if isinstance(item, dict) and item.get("@type") in ("NewsArticle","ScholarlyArticle","Article","Report"):
-                    meta["title"] = item.get("headline") or item.get("name")
-                    meta["datePublished"] = item.get("datePublished") or item.get("dateModified")
-                    src = item.get("publisher") or {}
-                    meta["publisher"] = (src.get("name") if isinstance(src, dict) else src)
-                    break
+            extracted = extruct.extract(html, base_url=base_url, syntaxes=['json-ld', 'microdata', 'opengraph'])
+            
+            # Check JSON-LD
+            for item in extracted.get('json-ld', []):
+                if isinstance(item, dict):
+                    # Get title
+                    if not meta.get("title"):
+                        meta["title"] = item.get("headline") or item.get("name") or item.get("title")
+                    
+                    # Get date - check multiple fields
+                    if not meta.get("datePublished"):
+                        for date_field in ("datePublished", "dateCreated", "dateModified", "date"):
+                            if item.get(date_field):
+                                meta["datePublished"] = item[date_field]
+                                break
+                    
+                    # Get publisher
+                    if not meta.get("publisher"):
+                        src = item.get("publisher") or {}
+                        meta["publisher"] = (src.get("name") if isinstance(src, dict) else src)
+            
+            # Check OpenGraph
+            og_data = extracted.get('opengraph', [])
+            if og_data and isinstance(og_data, list) and og_data[0]:
+                og = og_data[0].get('properties', {})
+                if not meta.get("title"):
+                    meta["title"] = og.get('og:title')
+                if not meta.get("datePublished"):
+                    meta["datePublished"] = og.get('article:published_time') or og.get('og:updated_time')
+                    
         except Exception:
             pass
+    
+    # Fallback to meta tags if no date found
+    if not meta.get("datePublished"):
+        for meta_name in ("article:published_time", "og:updated_time", "last-modified", 
+                         "dc.date", "DC.date.created", "publishdate", "publish_date"):
+            date_val = _find_meta(html, meta_name)
+            if date_val:
+                meta["datePublished"] = date_val
+                break
     
     # Extract text with trafilatura if available, otherwise basic fallback
     if HAS_TRAFILATURA and trafilatura:

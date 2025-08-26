@@ -10,8 +10,23 @@ from datetime import datetime
 PRIMARY = {
     "unwto.org", "e-unwto.org", "iata.org", "wttc.org", 
     "oecd.org", "worldbank.org", "imf.org", "ec.europa.eu",
-    "who.int", "un.org", "unesco.org", "ilo.org"
+    "who.int", "un.org", "unesco.org", "ilo.org", "cdc.gov"
 }
+
+# CDC/Policy-specific terms for filtering
+CDC_POLICY_TERMS = (
+    "CDC", "Centers for Disease Control", "ACIP", "MMWR", 
+    "guideline", "policy", "rule", "advisory", "recommendation",
+    "regulation", "mandate", "requirement", "protocol"
+)
+
+HTML_TAG = re.compile(r"<[^>]+>")
+
+def _clean(s: str) -> str:
+    """Remove HTML tags and normalize whitespace."""
+    s = HTML_TAG.sub("", s or "")
+    s = " ".join(s.split())
+    return s
 
 def has_numeric_and_period(s: str) -> bool:
     """Check if text contains both numbers and time periods"""
@@ -40,7 +55,8 @@ def render_finding(claim: str, domains: List[str], sources: List[Any], label: st
 def compose_findings(
     cards: List[Any], 
     para_clusters: List[Dict], 
-    struct_tris: List[Dict]
+    struct_tris: List[Dict],
+    topic: str = ""
 ) -> str:
     """
     Compose findings section with triangulated claims first.
@@ -49,11 +65,19 @@ def compose_findings(
     findings = []
     used_indices = set()
     
+    # Check if this is a CDC-related topic
+    is_cdc_topic = "cdc" in topic.lower()
+    
     # 1. Triangulated structured claims (highest priority)
     for tri in struct_tris:
         if len(set(tri.get("domains", []))) < 2:
             continue
-        claim = tri.get("representative_claim", "")
+        claim = _clean(tri.get("representative_claim", ""))
+        
+        # Filter for CDC relevance if needed
+        if is_cdc_topic and not any(term.lower() in claim.lower() for term in CDC_POLICY_TERMS):
+            continue
+            
         if not has_numeric_and_period(claim):
             continue
         indices = tri.get("indices", [])
@@ -70,7 +94,12 @@ def compose_findings(
         for cluster in para_clusters:
             if len(set(cluster.get("domains", []))) < 2:
                 continue
-            claim = cluster.get("representative_claim", "")
+            claim = _clean(cluster.get("representative_claim", ""))
+            
+            # Filter for CDC relevance if needed
+            if is_cdc_topic and not any(term.lower() in claim.lower() for term in CDC_POLICY_TERMS):
+                continue
+                
             if not has_numeric_and_period(claim):
                 continue
             indices = cluster.get("indices", [])
@@ -145,7 +174,7 @@ def generate_final_report(
         report += f"- **{word}** — {count} sources (score: {score:.2f})\n"
     
     report += "\n## Key Findings (triangulated first)\n"
-    findings = compose_findings(cards, para_clusters, struct_tris)
+    findings = compose_findings(cards, para_clusters, struct_tris, topic)
     if findings:
         report += findings
     else:

@@ -208,9 +208,15 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         citation_pattern = r'\[.*?\]\(https?://.*?\)'
         citations_found = len(re.findall(citation_pattern, report_text))
         
-        # Count claims (headings in Key Findings)
-        claim_pattern = r'^### \d+\.'
+        # Count claims (findings in report - look for bolded findings)
+        claim_pattern = r'^\s*-\s+\*\*[^*]+\*\*'
         claims_found = len(re.findall(claim_pattern, report_text, re.MULTILINE))
+        
+        # If no bolded findings, fall back to counting major sections
+        if claims_found == 0:
+            claim_pattern = r'^###?\s+'
+            claims_found = len(re.findall(claim_pattern, report_text, re.MULTILINE))
+        
         citations_per_claim = citations_found / max(claims_found, 1)
         
         # Provider coverage
@@ -309,14 +315,30 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
                         f"{source['avg_credibility']:.2f} | {source['avg_relevance']:.2f} | "
                         f"{source['corroborated_rate']:.1%} | {', '.join(source['providers'][:3])} |")
         
-        # Triangulation summary
-        triangulated = sum(1 for c in triangulation_data.values() if c["is_triangulated"])
-        total_claims = len(triangulation_data)
+        # Triangulation summary - use same metric as metrics.json
+        # Load triangulation data from the JSON file for consistency
+        tri_data = {}
+        try:
+            tri_path = self.s.output_dir / "triangulation.json"
+            if tri_path.exists():
+                import json
+                tri_data = json.loads(tri_path.read_text())
+        except:
+            pass
+        
+        para_clusters = tri_data.get("paraphrase_clusters", [])
+        from research_system.tools.aggregates import triangulation_rate_from_clusters
+        triangulation_rate = triangulation_rate_from_clusters(para_clusters)
+        
+        # Count triangulated vs single-source cards
+        triangulated_cards = sum(len(c.get("indices", [])) for c in para_clusters if len(c.get("indices", [])) >= 2)
+        single_source_cards = len(cards) - triangulated_cards
         
         lines.extend(["", "## Triangulation Analysis",
-                     f"- Total unique claims: {total_claims}",
-                     f"- Triangulated (2+ sources): {triangulated} ({triangulated*100//max(total_claims,1)}%)",
-                     f"- Single-source claims: {total_claims - triangulated}",
+                     f"- Total evidence cards: {len(cards)}",
+                     f"- Triangulation rate: {triangulation_rate:.1%} (cards in multi-source clusters)",
+                     f"- Triangulated cards: {triangulated_cards}",
+                     f"- Single-source cards: {single_source_cards}",
                      "", "## Summary Statistics",
                      f"- Total unique domains: {len(quality_data)}",
                      f"- Total evidence cards: {len(cards)}",
@@ -719,37 +741,79 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         return report
 
-    def _generate_citation_checklist(self, cards: List[EvidenceCard]) -> str:
-        """Generate citation validation checklist"""
+    def _generate_citation_checklist(self, cards: List[EvidenceCard], error_file_path=None) -> str:
+        """Generate citation validation checklist with truthful validation"""
         checklist = "# Citation Validation Checklist\n\n"
         
-        # Check various criteria
+        # Date parsing helper
+        from datetime import datetime, timedelta
+        cutoff = datetime.utcnow() - timedelta(days=365)
+        def _parse_dt(s):
+            if not s: return None
+            s = str(s).strip()
+            # Try various formats
+            formats = [
+                "%Y-%m-%dT%H:%M:%SZ",
+                "%Y-%m-%dT%H:%M:%S",  
+                "%Y-%m-%d",
+                "%Y/%m/%d",
+                "%Y"
+            ]
+            for fmt in formats:
+                try:
+                    # Handle ISO format with timezone
+                    clean_s = s.split('+')[0].split('.')[0]
+                    return datetime.strptime(clean_s, fmt)
+                except:
+                    pass
+            return None
+        
+        # Check various criteria with actual implementation
         has_primary = any(c.is_primary_source for c in cards)
-        has_recent = any(c for c in cards)  # Would check dates in real impl
-        all_attributed = all(c.search_provider for c in cards)
-        high_quality = len([c for c in cards if c.credibility_score > 0.7])
+        recent_cards = [c for c in cards if (_parse_dt(getattr(c, 'publication_date', None) or getattr(c, 'date', None)) or datetime.min) >= cutoff]
+        has_recent = len(recent_cards) > 0
+        all_attributed = all(bool(getattr(c, 'provider', None)) for c in cards)
+        high_quality = len([c for c in cards if (getattr(c, 'credibility_score', 0) or 0) > 0.7])
+        
+        # Check for schema errors
+        schema_valid = True
+        schema_errors = 0
+        if error_file_path and error_file_path.exists():
+            schema_errors = sum(1 for _ in error_file_path.open() if _.strip())
+            schema_valid = schema_errors == 0
+        
+        # Check for unique IDs
+        ids = [getattr(c, 'id', None) for c in cards]
+        unique_ids = len(ids) == len(set(ids)) and None not in ids
+        
+        # Check URL formats
+        import re
+        url_pattern = re.compile(r'^https?://')
+        valid_urls = all(bool(url_pattern.match(str(getattr(c, 'url', '')))) for c in cards)
         
         checklist += f"""## Coverage
-- [{'x' if len(cards) > 0 else ' '}] Evidence collected from search providers
-- [{'x' if has_primary else ' '}] Primary sources included
-- [{'x' if len(set(c.source_domain for c in cards)) > 1 else ' '}] Multiple domains represented
+- [{'x' if len(cards) > 0 else ' '}] Evidence collected from search providers ({len(cards)} cards)
+- [{'x' if has_primary else ' '}] Primary sources included ({sum(1 for c in cards if c.is_primary_source)}/{len(cards)})
+- [{'x' if len(set(c.source_domain for c in cards)) > 1 else ' '}] Multiple domains represented ({len(set(c.source_domain for c in cards))} unique)
 
 ## Quality
-- [{'x' if high_quality > 0 else ' '}] High credibility sources (>{high_quality} found)
+- [{'x' if high_quality > 0 else ' '}] High credibility sources (>{high_quality} with score >0.7)
 - [{'x' if all_attributed else ' '}] All evidence attributed to search provider
-- [{'x' if has_recent else ' '}] Recent sources included
+- [{'x' if has_recent else ' '}] Recent sources included ({len(recent_cards)} within 365 days)
 
 ## Validation
-- [x] JSON schema validation passed
-- [x] All URLs properly formatted
-- [x] Unique evidence IDs assigned
+- [{'x' if schema_valid else ' '}] JSON schema validation passed{' (' + str(schema_errors) + ' errors)' if schema_errors else ''}
+- [{'x' if valid_urls else ' '}] All URLs properly formatted
+- [{'x' if unique_ids else ' '}] Unique evidence IDs assigned
 - [{'x' if len(cards) >= 3 else ' '}] Minimum evidence threshold met ({len(cards)}/3)
 
 ## Statistics
 - Total evidence cards: {len(cards)}
 - Unique domains: {len(set(c.source_domain for c in cards))}
-- Average credibility: {sum(c.credibility_score for c in cards)/max(len(cards), 1):.0%}
-- Average relevance: {sum(c.relevance_score for c in cards)/max(len(cards), 1):.0%}
+- Primary sources: {sum(1 for c in cards if c.is_primary_source)} ({sum(1 for c in cards if c.is_primary_source)*100//max(len(cards),1)}%)
+- Recent content: {len(recent_cards)} ({len(recent_cards)*100//max(len(cards),1)}%)
+- Average credibility: {sum(getattr(c, 'credibility_score', 0) for c in cards)/max(len(cards), 1):.0%}
+- Average relevance: {sum(getattr(c, 'relevance_score', 0) for c in cards)/max(len(cards), 1):.0%}
 """
         
         return checklist
@@ -878,6 +942,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     snippet=snippet_text,
                     provider=provider,  # Critical: stamp the provider
                     date=h.date,  # Pass through if available
+                    publication_date=getattr(h, 'publication_date', None) or h.date,  # Try both fields
                     
                     # Legacy fields for compatibility
                     source_title=h.title,

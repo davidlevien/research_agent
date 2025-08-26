@@ -8,28 +8,34 @@ from typing import List, Dict, Tuple, Optional
 NUM = re.compile(r"\b(?:[±~]?\d+(?:\.\d+)?%|\d{1,3}(?:,\d{3})+(?:\.\d+)?|\b(?:19|20)\d{2}\b)\b")
 INCR = ("increase","increased","up","rise","grew","growth","higher")
 DECR = ("decrease","decreased","down","decline","fell","lower")
+HTML_TAG = re.compile(r"<[^>]+>")
+
+def _clean(s: str) -> str:
+    """Remove HTML tags and normalize whitespace."""
+    s = HTML_TAG.sub("", s or "")
+    s = " ".join(s.split())
+    return s
 
 def _short(s: str, n: int = 240) -> str:
-    s = " ".join((s or "").split())
+    s = _clean(s or "")
     return s if len(s) <= n else s[:n].rsplit(" ",1)[0] + "…"
 
 def _best_text(card) -> str:
-    """Get best available text from card, with robust fallbacks."""
+    """Get best available text from card, with robust fallbacks and HTML cleaning."""
     # Try best_quote first if it exists
     if getattr(card, "best_quote", None):
-        return card.best_quote.strip()
+        return _clean(card.best_quote)
     
     # Try quotes list if available
     if getattr(card, "quotes", None):
         for q in card.quotes:
-            if q and len(q.strip()) >= 40:
-                return q.strip()
+            cleaned = _clean(q)
+            if cleaned and len(cleaned) >= 40:
+                return cleaned
     
     # Fall back to other text fields
-    for k in (card.claim, card.supporting_text, card.snippet, card.title):
-        if k and isinstance(k, str) and len(k.strip()) > 0:
-            return k.strip()
-    return ""
+    text = getattr(card, "claim", "") or getattr(card, "supporting_text", "") or getattr(card, "snippet", "") or getattr(card, "title", "")
+    return _clean(text)
 
 def _has_numbers(s: str) -> bool:
     return bool(NUM.search(s or ""))

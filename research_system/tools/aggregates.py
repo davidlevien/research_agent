@@ -132,6 +132,33 @@ def source_quality(cards: List) -> List[Dict]:
     return rows
 
 
+def triangulation_rate_from_clusters(clusters: List[Dict]) -> float:
+    """
+    Calculate the triangulation rate from paraphrase clusters.
+    This is the fraction of cards that belong to clusters with size >= 2.
+    
+    Args:
+        clusters: List of cluster dicts with 'size' or 'indices' field
+        
+    Returns:
+        Triangulation rate [0, 1]
+    """
+    if not clusters:
+        return 0.0
+    
+    # Count cards in multi-card clusters
+    total_cards = 0
+    triangulated_cards = 0
+    
+    for cluster in clusters:
+        size = cluster.get('size', 0) or len(cluster.get('indices', []))
+        total_cards += size
+        if size >= 2:
+            triangulated_cards += size
+    
+    return triangulated_cards / max(total_cards, 1)
+
+
 def triangulate_claims(cards: List) -> Dict[str, Dict]:
     """
     Triangulate claims across sources using semantic clustering.
