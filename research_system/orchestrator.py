@@ -13,7 +13,7 @@ from .models import Discipline
 
 from research_system.models import EvidenceCard, RelatedTopic
 from research_system.tools.evidence_io import write_jsonl
-from research_system.tools.registry import Registry
+from research_system.tools.registry import tool_registry as registry
 from research_system.tools.search_registry import register_search_tools
 from research_system.collection import parallel_provider_search
 from research_system.collection_enhanced import collect_from_free_apis
@@ -57,20 +57,23 @@ SEVEN = [
 
 @dataclass
 class OrchestratorSettings:
+    """Settings specific to a single orchestrator run."""
     topic: str
     depth: str
     output_dir: Path
-    max_cost_usd: float = 2.50
     strict: bool = False
     resume: bool = False
     verbose: bool = False
+    
+    # These are now derived from global Settings
+    # max_cost_usd removed - use Settings.MAX_COST_USD
 
 class Orchestrator:
     def __init__(self, s: OrchestratorSettings):
         self.s = s
         self.s.output_dir.mkdir(parents=True, exist_ok=True)
-        self.registry = Registry()
-        register_search_tools(self.registry)
+        # Use global registry instead of creating a new one
+        register_search_tools(registry)
 
     def _write(self, name: str, content: str):
         """Atomic write with temp file + rename."""
@@ -197,6 +200,9 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
                         resp = client.head(card.url, follow_redirects=True)
                         if 200 <= resp.status_code < 400:
                             ok_links += 1
+                        elif resp.status_code in (402, 403, 451):
+                            # Paywall/blocked - don't count as reachable
+                            logger.info(f"Paywall/blocked domain ({resp.status_code}): {card.url}")
                 except:
                     pass  # Failed to reach
         
@@ -208,8 +214,9 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         citation_pattern = r'\[.*?\]\(https?://.*?\)'
         citations_found = len(re.findall(citation_pattern, report_text))
         
-        # Count claims (findings in report - look for bolded findings)
-        claim_pattern = r'^\s*-\s+\*\*[^*]+\*\*'
+        # Count claims (findings in report - look for bolded findings, including those with HTML)
+        # Match lines starting with "- **" regardless of internal content
+        claim_pattern = r'^\s*-\s+\*\*.*?\*\*'
         claims_found = len(re.findall(claim_pattern, report_text, re.MULTILINE))
         
         # If no bolded findings, fall back to counting major sections
@@ -849,7 +856,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Run discipline-aware anchor queries
             for anchor_query in anchors[:6]:
                 anchor_results = asyncio.run(
-                    parallel_provider_search(self.registry, query=anchor_query, count=3,
+                    parallel_provider_search(registry, query=anchor_query, count=3,
                                            freshness=settings.FRESHNESS_WINDOW, region="US")
                 )
                 # Merge results by provider
@@ -861,7 +868,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Then run main query with full count
         results_count = self.depth_to_count.get(self.s.depth, 8)
         main_results = asyncio.run(
-            parallel_provider_search(self.registry, query=self.s.topic, count=results_count,
+            parallel_provider_search(registry, query=self.s.topic, count=results_count,
                                      freshness=settings.FRESHNESS_WINDOW, region="US")
         )
         
@@ -951,7 +958,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     claim=h.title,
                     supporting_text=snippet_text,
                     search_provider=provider,
-                    publication_date=h.date,
                     
                     # Scoring fields
                     credibility_score=credibility,
@@ -1108,7 +1114,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                         div_query = f"{self.s.topic} site:{target_domain}"
                         div_results = asyncio.run(
                             parallel_provider_search(
-                                self.registry,
+                                registry,
                                 query=div_query,
                                 count=3,
                                 freshness=settings.FRESHNESS_WINDOW,
@@ -1235,7 +1241,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Simple search wrapper
             def search_wrapper(query, n):
                 try:
-                    results = asyncio.run(parallel_provider_search(self.registry, query, n, None, None))
+                    results = asyncio.run(parallel_provider_search(registry, query, n, None, None))
                     # Flatten results from all providers
                     all_results = []
                     for provider, hits in results.items():
@@ -1361,7 +1367,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 for query in queries[:4]:  # Limit to 4 queries per key
                     # Execute search
                     search_results = asyncio.run(
-                        parallel_provider_search(self.registry, query=query, count=6,
+                        parallel_provider_search(registry, query=query, count=6,
                                                freshness=settings.FRESHNESS_WINDOW, region="US")
                     )
                     
@@ -1610,7 +1616,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     # Use reranking for better precision
                     backfill_results = asyncio.run(
                         parallel_provider_search(
-                            self.registry,
+                            registry,
                             query=query,
                             count=4,
                             freshness=settings.FRESHNESS_WINDOW,
@@ -1773,7 +1779,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
             logger.error(f"Report generation failed: {e}")
         
-        self._write("citation_checklist.md", self._generate_citation_checklist(cards))
+        error_file_path = self.s.output_dir / "evidence_cards.errors.jsonl"
+        self._write("citation_checklist.md", self._generate_citation_checklist(cards, error_file_path))
         
         # Check strict mode early with new guard - but ensure metrics/triangulation already written
         if self.s.strict:

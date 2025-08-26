@@ -21,31 +21,33 @@ class TestToolRegistry:
         def get_strings() -> list:
             return ["a", "b", "c"]
         
-        tool_registry.register(
-            name="test_get_strings",
-            description="Test tool",
-            category="test",
-            function=get_strings,
-            output_type=list[str]
-        )
+        from research_system.tools.registry import ToolSpec
+        
+        if "test_get_strings" not in tool_registry._tools:
+            tool_registry.register(ToolSpec(
+                name="test_get_strings",
+                fn=get_strings,
+                description="Test tool",
+                output_model=list[str]
+            ))
         
         # Execute and validate
-        result = tool_registry.execute_tool("test_get_strings", validate_output=True)
+        result = tool_registry.execute("test_get_strings", {})
         assert result == ["a", "b", "c"]
         
         # Register a tool that returns List[Dict]
         def get_dicts() -> list:
             return [{"key": "value1"}, {"key": "value2"}]
         
-        tool_registry.register(
-            name="test_get_dicts",
-            description="Test tool",
-            category="test", 
-            function=get_dicts,
-            output_type=list[dict]
-        )
+        if "test_get_dicts" not in tool_registry._tools:
+            tool_registry.register(ToolSpec(
+                name="test_get_dicts",
+                fn=get_dicts,
+                description="Test tool",
+                output_model=list[dict]
+            ))
         
-        result = tool_registry.execute_tool("test_get_dicts", validate_output=True)
+        result = tool_registry.execute("test_get_dicts", {})
         assert len(result) == 2
         assert all(isinstance(item, dict) for item in result)
     
@@ -56,21 +58,22 @@ class TestToolRegistry:
             return "test"
         
         # First registration should succeed
-        tool_registry.register(
-            name="unique_tool",
-            description="Test",
-            category="test",
-            function=dummy_tool
-        )
+        from research_system.tools.registry import ToolSpec
+        
+        if "unique_tool" not in tool_registry._tools:
+            tool_registry.register(ToolSpec(
+                name="unique_tool",
+                fn=dummy_tool,
+                description="Test"
+            ))
         
         # Second registration with same name should fail
-        with pytest.raises(ValueError, match="already registered"):
-            tool_registry.register(
+        with pytest.raises(ValueError, match="Duplicate tool name"):
+            tool_registry.register(ToolSpec(
                 name="unique_tool",
-                description="Test",
-                category="test",
-                function=dummy_tool
-            )
+                fn=dummy_tool,
+                description="Test"
+            ))
 
 
 class TestEvidenceSchema:

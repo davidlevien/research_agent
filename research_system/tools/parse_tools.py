@@ -19,27 +19,30 @@ class ParseTools:
         self._register_tools()
     
     def _register_tools(self):
-        """Register all parsing tools"""
-        tool_registry.register(
-            name="extract_text",
-            description="Extract clean text from HTML",
-            category="parse",
-            function=self.extract_text
-        )
+        """Register all parsing tools if not already registered"""
+        from .registry import ToolSpec
         
-        tool_registry.register(
-            name="clean_html",
-            description="Clean and sanitize HTML",
-            category="parse",
-            function=self.clean_html
-        )
+        # Check if tools are already registered to avoid duplicates
+        if "extract_text" not in tool_registry._tools:
+            tool_registry.register(ToolSpec(
+                name="extract_text",
+                fn=self.extract_text,
+                description="Extract clean text from HTML"
+            ))
         
-        tool_registry.register(
-            name="extract_metadata",
-            description="Extract metadata from HTML",
-            category="parse",
-            function=self.extract_metadata
-        )
+        if "clean_html" not in tool_registry._tools:
+            tool_registry.register(ToolSpec(
+                name="clean_html",
+                fn=self.clean_html,
+                description="Clean and sanitize HTML"
+            ))
+        
+        if "extract_metadata" not in tool_registry._tools:
+            tool_registry.register(ToolSpec(
+                name="extract_metadata",
+                fn=self.extract_metadata,
+                description="Extract metadata from HTML"
+            ))
     
     def extract_text(self, html_content: str, preserve_structure: bool = False) -> str:
         """Extract clean text from HTML"""

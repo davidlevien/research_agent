@@ -11,7 +11,6 @@ import logging
 from bs4 import BeautifulSoup
 import hashlib
 
-# from .registry import tool_registry  # Not needed - removed to avoid registration issues
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,6 @@ class ContentProcessor:
     
     def __init__(self):
         self.stopwords = self._load_stopwords()
-        # Removed _register_tools() - not needed for our usage
     
     def _load_stopwords(self) -> set:
         """Load stopwords for filtering"""
@@ -58,11 +56,6 @@ class ContentProcessor:
                 'it', 'from', 'be', 'are', 'was', 'were', 'been', 'have', 'has',
                 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'
             }
-    
-    # def _register_tools(self):
-    #     """Register all content processing tools - DISABLED: not needed for our usage"""
-    #     # This was causing Registry.register() errors due to incompatible signatures
-    #     pass
     
     def process_content(
         self,
@@ -110,31 +103,10 @@ class ContentProcessor:
     
     def clean_text(self, text: str) -> str:
         """Clean and normalize text"""
+        from research_system.text.normalize import clean_text
         
-        if not text:
-            return ""
-        
-        # Remove HTML tags if present
-        if '<' in text and '>' in text:
-            soup = BeautifulSoup(text, 'html.parser')
-            text = soup.get_text()
-        
-        # Remove URLs
-        text = re.sub(r'https?://\S+|www\.\S+', '', text)
-        
-        # Remove email addresses
-        text = re.sub(r'\S+@\S+', '', text)
-        
-        # Remove special characters but keep sentence structure
-        text = re.sub(r'[^\w\s\.\,\!\?\-]', ' ', text)
-        
-        # Normalize whitespace
-        text = re.sub(r'\s+', ' ', text)
-        
-        # Remove leading/trailing whitespace
-        text = text.strip()
-        
-        return text
+        # Use unified text cleaning
+        return clean_text(text, remove_html=True, remove_urls=True, remove_emails=True)
     
     def extract_keywords(
         self,
@@ -467,27 +439,10 @@ class ContentProcessor:
     
     def calculate_similarity(self, text1: str, text2: str) -> float:
         """Calculate similarity between two texts using Jaccard similarity"""
+        from research_system.text import text_jaccard
         
-        if not text1 or not text2:
-            return 0.0
-        
-        # Convert to sets of words
-        words1 = set(text1.lower().split())
-        words2 = set(text2.lower().split())
-        
-        # Remove stopwords
-        words1 = {w for w in words1 if w not in self.stopwords}
-        words2 = {w for w in words2 if w not in self.stopwords}
-        
-        if not words1 or not words2:
-            return 0.0
-        
-        # Calculate Jaccard similarity
-        intersection = words1 & words2
-        union = words1 | words2
-        
-        similarity = len(intersection) / len(union) if union else 0.0
-        
+        # Use unified similarity calculation
+        similarity = text_jaccard(text1, text2, self.stopwords)
         return round(similarity, 3)
     
     def generate_content_hash(self, text: str) -> str:

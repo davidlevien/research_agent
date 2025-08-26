@@ -39,19 +39,26 @@ echo
 echo "Upgrading pip..."
 $PYTHON_CMD -m pip install --upgrade pip --quiet
 
-# Install the project with all dependencies
-echo "Installing research-system with all dependencies..."
+# Install dependencies from requirements.txt
+echo "Installing dependencies from requirements.txt..."
 echo "This may take a few minutes..."
-$PIP_CMD install -e ".[web,test,dev,monitoring]"
+$PIP_CMD install -r requirements.txt --quiet
+
+# Install pre-commit hooks if available
+if command -v pre-commit &> /dev/null; then
+    echo "Setting up pre-commit hooks..."
+    pre-commit install
+fi
 
 if [ $? -eq 0 ]; then
     echo
     echo "✓ Setup complete! Environment is ready."
     echo
     echo "You can now run:"
+    echo "  - Verification: $PYTHON_CMD verify_installation.py"
     echo "  - Tests: $PYTHON_CMD -m pytest tests/"
-    echo "  - Research: ./run_research.sh --topic 'your topic'"
-    echo "  - Production: ./run_production.sh"
+    echo "  - Research: ./run_full_features.sh 'your topic'"
+    echo "  - Pre-commit: pre-commit run --all-files"
 else
     echo
     echo "✗ Installation failed. Please check the error messages above."

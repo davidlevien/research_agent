@@ -4,9 +4,12 @@ import httpx
 import os
 import time
 import random
+import logging
 from typing import Optional, Set, Dict
 from urllib.parse import urlparse, urlunparse
 import hashlib
+
+logger = logging.getLogger(__name__)
 
 
 MAX_PDF_MB = float(os.getenv("MAX_PDF_MB", "12"))  # hard cap

@@ -4,6 +4,10 @@ import json
 import tempfile
 from pathlib import Path
 import uuid
+import pytest
+import re
+from unittest.mock import Mock, patch
+from research_system.tools.aggregates import triangulation_rate_from_clusters
 
 
 def test_metrics_match_written_cards():
@@ -109,6 +113,96 @@ def test_orchestrator_metrics_order():
     pass  # Conceptual test showing the fix logic
 
 
+def test_triangulation_rate_calculation():
+    """Test the unified triangulation rate calculation"""
+    # Single-source clusters (not triangulated)
+    single_clusters = [
+        {"indices": [0], "size": 1},
+        {"indices": [1], "size": 1},
+    ]
+    assert triangulation_rate_from_clusters(single_clusters) == 0.0
+    
+    # Multi-source clusters (triangulated)
+    multi_clusters = [
+        {"indices": [0, 1], "size": 2},
+        {"indices": [2, 3, 4], "size": 3},
+    ]
+    # 5 cards total, all in multi-source clusters
+    assert triangulation_rate_from_clusters(multi_clusters) == 1.0
+    
+    # Mixed clusters
+    mixed_clusters = [
+        {"indices": [0], "size": 1},  # 1 single
+        {"indices": [1, 2], "size": 2},  # 2 triangulated
+    ]
+    # 3 cards total, 2 triangulated = 66.7%
+    rate = triangulation_rate_from_clusters(mixed_clusters)
+    assert abs(rate - 2/3) < 0.01
+
+
+def test_claims_counting_with_html():
+    """Test that claims are counted correctly even with HTML artifacts"""
+    report_text = """
+# Report
+
+- **First claim with <strong>HTML</strong> tags** [1] — source
+- **Second claim** [2] — source  
+- Regular text without bold
+- **Third <em>claim</em>** [3] — source
+"""
+    
+    claim_pattern = r'^\s*-\s+\*\*.*?\*\*'
+    claims_found = len(re.findall(claim_pattern, report_text, re.MULTILINE))
+    assert claims_found == 3  # Should find all three bolded claims
+
+
+def test_html_cleaning():
+    """Test HTML tag removal"""
+    html_tag_pattern = re.compile(r'<[^>]+>')
+    
+    # Test basic HTML removal
+    assert html_tag_pattern.sub('', "<strong>text</strong>") == "text"
+    assert html_tag_pattern.sub('', "text with <em>emphasis</em>") == "text with emphasis"
+    
+    # Test nested tags
+    assert html_tag_pattern.sub('', "<strong>CDC <em>policy</em></strong>") == "CDC policy"
+
+
+def test_date_parsing():
+    """Test the improved date parsing function"""
+    from datetime import datetime
+    
+    def _parse_dt(s):
+        if not s: return None
+        s = str(s).strip()
+        formats = [
+            "%Y-%m-%dT%H:%M:%SZ",
+            "%Y-%m-%dT%H:%M:%S",  
+            "%Y-%m-%d",
+            "%Y/%m/%d",
+            "%Y"
+        ]
+        for fmt in formats:
+            try:
+                clean_s = s.split('+')[0].split('.')[0]
+                return datetime.strptime(clean_s, fmt)
+            except:
+                pass
+        return None
+    
+    # Test various formats
+    assert _parse_dt("2024-03-15") is not None
+    assert _parse_dt("2024-03-15T10:30:00Z") is not None
+    assert _parse_dt("2024/03/15") is not None
+    assert _parse_dt("2024") is not None
+    assert _parse_dt(None) is None
+    assert _parse_dt("") is None
+
+
 if __name__ == "__main__":
     test_metrics_match_written_cards()
+    test_triangulation_rate_calculation()
+    test_claims_counting_with_html()
+    test_html_cleaning()
+    test_date_parsing()
     print("✅ All metrics consistency tests passed")

@@ -124,9 +124,14 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
             
             logger.info(f"  -> Multi-domain cluster found!")
             
-            # Get representative claim (highest credibility)
+            # Get representative claim (highest credibility), cleaned of HTML
             best_local_idx = max(members, key=lambda m: cards[valid_indices[m]].credibility_score)
-            representative = texts_raw[best_local_idx][:240]
+            # Clean HTML tags from representative text
+            import re
+            html_tag_pattern = re.compile(r'<[^>]+>')
+            raw_text = texts_raw[best_local_idx]
+            clean_text = html_tag_pattern.sub('', raw_text)
+            representative = clean_text[:240]
             
             clusters.append({
                 "indices": original_indices, 

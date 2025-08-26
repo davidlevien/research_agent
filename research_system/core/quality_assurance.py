@@ -334,18 +334,10 @@ class QualityAssurance:
     
     def _calculate_claim_similarity(self, claim1: str, claim2: str) -> float:
         """Calculate similarity between two claims"""
+        from research_system.text import calculate_claim_similarity
         
-        # Simple word overlap similarity (could use more sophisticated NLP)
-        words1 = set(claim1.lower().split())
-        words2 = set(claim2.lower().split())
-        
-        if not words1 or not words2:
-            return 0.0
-        
-        intersection = words1 & words2
-        union = words1 | words2
-        
-        return len(intersection) / len(union)
+        # Use unified similarity calculation
+        return calculate_claim_similarity(claim1, claim2)
     
     def _are_contradictory(self, evidence1: EvidenceCard, evidence2: EvidenceCard) -> bool:
         """Check if two evidence pieces are contradictory"""
