@@ -309,10 +309,11 @@ The Research Agent System transforms a simple text query into a comprehensive, e
    - Assigns scoring: credibility (0-1), relevance (0-1), confidence
 
 #### **Phase 3: Content Enrichment** (10-60 seconds)
-10. **Content Extraction**:
-    - Fetches full text from URLs (respects robots.txt)
-    - Handles PDFs, HTML, and academic papers
-    - Fallback: DOI resolution via Crossref/Unpaywall for paywalled content
+10. **Light HTML Enrichment** (v8.4.1):
+    - Safe, time-bounded extraction of actual article text
+    - 10-second timeout with httpx for stability
+    - Replaces weak search snippets with real content
+    - Skips PDFs and non-HTML content (preserves original snippet)
 
 11. **Quote Extraction**:
     - Extracts relevant quotes from full text
@@ -329,10 +330,11 @@ The Research Agent System transforms a simple text query into a comprehensive, e
     - Creates archival URLs for citations
 
 #### **Phase 4: Analysis & Triangulation** (5-15 seconds)
-14. **Deduplication**:
-    - MinHash algorithm removes duplicate content
-    - Title similarity threshold: 90%
-    - Preserves highest quality version
+14. **Evidence Ranking & Filtering** (v8.4.1):
+    - Primary source boosting: 10% multiplicative boost for authoritative sources
+    - Credibility floor: Drops sources <60% credibility unless corroborated
+    - Domain quality scoring with popularity priors
+    - MinHash deduplication with 90% similarity threshold
 
 15. **Paraphrase Clustering**:
     - Sentence transformer embeddings (all-MiniLM-L6-v2)
@@ -385,15 +387,18 @@ The Research Agent System transforms a simple text query into a comprehensive, e
     - Falls back to rules-based extraction if LLM unavailable
 
 #### **Phase 6: Report Generation** (3-10 seconds)
-22. **Evidence Ranking**:
-    - Sorts by combined credibility * relevance score
-    - Prioritizes primary sources
-    - Considers recency for time-sensitive topics
+22. **Deterministic Report Composition** (v8.4.1):
+    - Guaranteed 800-1,500 word reports with structured sections
+    - Executive Summary with evidence metrics (3-5 bullets)
+    - Key Findings with multi-sentence explanations and citations
+    - Key Numbers section extracting numeric claims
+    - Contradictions & Uncertainties auto-detection
+    - Outlook section with evidence-based projections
 
-23. **Claim Synthesis**:
-    - Groups evidence by triangulated claims
-    - Generates consensus findings
-    - Preserves minority viewpoints
+23. **Citation System** (v8.4.1):
+    - Inline numbered references [1][2][3] for each claim
+    - Complete source list with titles and URLs
+    - Quote prioritization for numeric/date content
 
 24. **Report Composition**:
     - Executive summary with key findings
