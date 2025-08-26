@@ -64,9 +64,7 @@ class OrchestratorSettings:
     strict: bool = False
     resume: bool = False
     verbose: bool = False
-    
-    # These are now derived from global Settings
-    # max_cost_usd removed - use Settings.MAX_COST_USD
+    max_cost_usd: Optional[float] = None  # If None, uses Settings.MAX_COST_USD
 
 class Orchestrator:
     def __init__(self, s: OrchestratorSettings):
@@ -74,6 +72,11 @@ class Orchestrator:
         self.s.output_dir.mkdir(parents=True, exist_ok=True)
         # Use global registry instead of creating a new one
         register_search_tools(registry)
+        
+        # If max_cost_usd not specified, get from global settings
+        if self.s.max_cost_usd is None:
+            from research_system.config import get_settings
+            self.s.max_cost_usd = get_settings().MAX_COST_USD
 
     def _write(self, name: str, content: str):
         """Atomic write with temp file + rename."""

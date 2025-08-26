@@ -36,13 +36,6 @@ def main():
     # Validate env per blueprint (provider gating)
     settings = Settings()  # instantiation triggers validators
     
-    # max_cost is now managed globally via Settings.MAX_COST_USD
-    if args.max_cost is not None:
-        # Override the global setting if provided via CLI
-        os.environ["MAX_COST_USD"] = str(args.max_cost)
-        # Re-instantiate settings to pick up the new value
-        settings = Settings()
-
     s = OrchestratorSettings(
         topic=args.topic,
         depth=args.depth,
@@ -50,6 +43,7 @@ def main():
         strict=args.strict,
         resume=args.resume,
         verbose=args.verbose,
+        max_cost_usd=args.max_cost,  # Will use Settings.MAX_COST_USD if None
     )
     
     # Global timeout handler

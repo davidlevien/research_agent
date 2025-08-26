@@ -3414,3 +3414,46 @@ Traceback (most recent call last):
   File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator.py", line 1786, in run
     raise SystemExit(f"STRICT MODE FAIL: {failure_details}")
 SystemExit: STRICT MODE FAIL: TRIANGULATION(paraphrase=38%, structured=0%, union=37%) < 50% | TOP_DOMAIN_SHARE(48%) > 25%
+==================================
+Research System v8.5.2 - FULL FEATURES
+==================================
+Topic: travel tourism trends post-pandemic
+Output: outputs
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Domain balancing (25% cap)
+  ✓ Triangulation enforcement (35% min)
+  ✓ Strict quality gates
+
+v8.5.2 Improvements Applied:
+  ✓ Unified global registry (no duplicates)
+  ✓ Consolidated text processing modules
+  ✓ Standardized similarity calculations
+  ✓ HTML artifact cleaning in reports
+  ✓ Enhanced paywall detection (403/402/451)
+  ✓ Citation validation with error tracking
+  ✓ Triangulation metric consistency
+  ✓ Query planner for time/geo constraints
+
+Starting in 3 seconds...
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/davidlevien/Agents/research_agent/research_system/__main__.py", line 3, in <module>
+    main()
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 42, in main
+    s = OrchestratorSettings(
+        ^^^^^^^^^^^^^^^^^^^^^
+TypeError: OrchestratorSettings.__init__() got an unexpected keyword argument 'max_cost_usd'
