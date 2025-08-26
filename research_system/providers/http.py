@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from collections import defaultdict
 import logging
 from urllib.parse import urlparse
+from research_system.tools.log_redaction import redact_url, redact_headers, safe_log_params
 
 logger = logging.getLogger(__name__)
 
@@ -229,10 +230,10 @@ def http_json(
         except (httpx.TransportError, httpx.HTTPStatusError) as e:
             last_error = e
             if attempt == max_retries:
-                logger.warning(f"HTTP request failed after {max_retries} attempts: {url}")
+                logger.warning(f"HTTP request failed after {max_retries} attempts: {redact_url(url)}")
                 raise
             
-            logger.debug(f"Retry {attempt}/{max_retries} for {url}: {e}")
+            logger.debug(f"Retry {attempt}/{max_retries} for {redact_url(url)}: {e}")
             time.sleep(backoff)
             backoff *= 2
     

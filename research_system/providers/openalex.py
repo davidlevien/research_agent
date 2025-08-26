@@ -9,28 +9,38 @@ logger = logging.getLogger(__name__)
 BASE = "https://api.openalex.org/works"
 
 def search_openalex(query: str, per_page: int = 25) -> List[Dict[str, Any]]:
-    """Search OpenAlex for scholarly works with fallback to filter API."""
+    """Search OpenAlex for scholarly works with conservative queries."""
     try:
+        # Clean query - remove punctuation and special chars that cause 400s
+        import re
+        clean_query = re.sub(r'[^\w\s]', ' ', query).strip()
+        clean_query = ' '.join(clean_query.split())[:100]  # Limit length
+        
+        # Conservative parameters with field selection to reduce payload
         params = {
-            "search": query, 
-            "per_page": per_page, 
-            "mailto": "research@example.com"  # Polite crawling
+            "search": clean_query,
+            "per_page": min(10, per_page),  # Smaller payload
+            "select": "id,title,doi,authorships,host_venue,publication_year",
+            "mailto": "research@example.com"
         }
         
         try:
-            # Try search parameter first (preferred)
-            data = http_json("openalex", "GET", BASE, params=params)
+            # Try search parameter first
+            data = http_json("openalex", "GET", BASE, params=params, timeout=30)
             return data.get("results", [])
         except Exception as e:
-            if "400" in str(e):
-                # Fallback to filter API on 400 error
-                logger.info(f"OpenAlex search failed with 400, trying filter fallback")
+            if "400" in str(e) or "Bad Request" in str(e):
+                # Fallback to filter API with even simpler query
+                logger.info(f"OpenAlex search failed, trying filter fallback")
+                # Take first 3 words for filter query
+                filter_query = ' '.join(clean_query.split()[:3])
                 params = {
-                    "filter": f"title.search:{query}",
-                    "per_page": per_page, 
+                    "filter": f"title.search:{filter_query}",
+                    "per_page": min(10, per_page),
+                    "select": "id,title,doi,authorships,host_venue,publication_year",
                     "mailto": "research@example.com"
                 }
-                data = http_json("openalex", "GET", BASE, params=params)
+                data = http_json("openalex", "GET", BASE, params=params, timeout=30)
                 return data.get("results", [])
             raise
             
