@@ -3,6 +3,7 @@ Domain filtering and quality control for evidence collection
 """
 
 from typing import Set
+import re
 
 # Banned low-quality domains
 BAN = {
@@ -12,7 +13,7 @@ BAN = {
     "buzzfeed.com", "tumblr.com", "quora.com", "answers.com"
 }
 
-# High-quality primary sources
+# High-quality primary sources (kept for backward compatibility)
 PRIMARY = {
     "unwto.org", "e-unwto.org", "iata.org", "wttc.org", 
     "oecd.org", "worldbank.org", "imf.org", "ec.europa.eu",
@@ -31,9 +32,14 @@ def allowed_domain(domain: str) -> bool:
         return False
     return domain.lower() not in BAN
 
-def is_primary_source(domain: str) -> bool:
-    """Check if domain is a primary source"""
-    return domain and domain.lower() in PRIMARY
+def is_primary_source(domain: str, primary_domains: set[str] = None, primary_patterns: list[re.Pattern] = None) -> bool:
+    """Check if domain is a primary source using pack-aware detection"""
+    if not domain:
+        return False
+    
+    # Use the new domain_norm module for pack-aware checking
+    from ..tools.domain_norm import is_primary_domain
+    return is_primary_domain(domain, additional_domains=primary_domains, patterns=primary_patterns)
 
 def domain_quality_score(domain: str) -> float:
     """

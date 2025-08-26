@@ -11,24 +11,26 @@ import math
 import unicodedata
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Iterable, Set
-from importlib import resources
+from pathlib import Path
 import yaml
 import logging
 
 logger = logging.getLogger(__name__)
 
-def _load_yaml(pkg: str, name: str) -> dict:
+def _load_yaml(name: str) -> dict:
     """Load YAML configuration with error handling."""
     try:
-        with resources.files(pkg).joinpath(name).open("r", encoding="utf-8") as f:
+        # Use path-based loading
+        config_path = Path(__file__).resolve().parents[1] / "resources" / name
+        with open(config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except Exception as e:
-        logger.warning(f"Failed to load {pkg}.{name}: {e}")
+        logger.warning(f"Failed to load {name}: {e}")
         return {}
 
 # Load configurations at module level for performance
-TOPIC_PACKS = _load_yaml("research_system.resources", "topic_packs.yaml")
-PROVIDER_CAPS = _load_yaml("research_system.resources", "provider_capabilities.yaml")
+TOPIC_PACKS = _load_yaml("topic_packs.yaml")
+PROVIDER_CAPS = _load_yaml("provider_capabilities.yaml")
 PROVIDERS_CONFIG = PROVIDER_CAPS.get("providers", {})
 SELECTION_STRATEGIES = PROVIDER_CAPS.get("selection_strategies", {})
 
@@ -54,18 +56,18 @@ class RouterDecision:
     query_refinements: Dict[str, str]
     reasoning: str
 
-def classify_topic(user_query: str) -> TopicMatch:
+def classify_topic_multi(user_query: str, confidence_threshold: float = 0.55) -> Set[str]:
     """
-    Classify user query against all topic packs.
+    Classify user query against all topic packs, returning multiple matching packs.
     
-    Returns the best matching topic with scoring details.
-    Uses alias matching + anchor weighting for robust classification.
+    Returns set of matching topic keys that exceed confidence threshold.
+    Supports multi-pack classification for cross-domain queries.
     """
     if not user_query or not TOPIC_PACKS:
-        return TopicMatch("general", 0.0, 0, [], 0.0)
+        return {"general"}
     
     q_norm = _norm(user_query)
-    best_match = TopicMatch("general", 0.0, 0, [], 0.0)
+    matches = []
     
     for topic_key, pack in TOPIC_PACKS.items():
         # Get normalized aliases and anchors
@@ -97,16 +99,72 @@ def classify_topic(user_query: str) -> TopicMatch:
         coverage = len(matched_words & query_words) / max(len(query_words), 1) if query_words else 0
         confidence = min(1.0, (total_score * 0.3) + (coverage * 0.7))
         
-        if total_score > best_match.score:
-            best_match = TopicMatch(
-                topic_key=topic_key,
-                score=total_score, 
-                anchors_hit=anchor_hits,
-                matched_aliases=alias_hits,
-                confidence=confidence
-            )
+        if confidence >= confidence_threshold:
+            matches.append((topic_key, confidence, total_score))
     
-    return best_match
+    # Sort by confidence and score
+    matches.sort(key=lambda x: (x[1], x[2]), reverse=True)
+    
+    # Return top matches, with special handling for complementary packs
+    if not matches:
+        return {"general"}
+    
+    selected_packs = {matches[0][0]}  # Always include top match
+    
+    # Check for complementary packs
+    COMPLEMENTARY = {
+        ("policy", "health"), ("policy", "finance"), ("policy", "education"),
+        ("policy", "defense"), ("policy", "energy"), ("science", "policy"),
+        ("health", "science"), ("finance", "macro"), ("climate_energy", "policy")
+    }
+    
+    for pack_key, conf, score in matches[1:]:
+        # Add if complementary to any already selected
+        for selected in selected_packs:
+            if (pack_key, selected) in COMPLEMENTARY or (selected, pack_key) in COMPLEMENTARY:
+                selected_packs.add(pack_key)
+                break
+    
+    return selected_packs
+
+def classify_topic(user_query: str) -> TopicMatch:
+    """
+    Legacy single-topic classification for backward compatibility.
+    """
+    packs = classify_topic_multi(user_query)
+    
+    # Get detailed match for the primary pack
+    primary_pack = list(packs)[0] if packs else "general"
+    
+    if not user_query or not TOPIC_PACKS:
+        return TopicMatch("general", 0.0, 0, [], 0.0)
+    
+    q_norm = _norm(user_query)
+    pack = TOPIC_PACKS.get(primary_pack, {})
+    
+    # Get normalized aliases and anchors
+    aliases = {_norm(alias) for alias in pack.get("aliases", [])}
+    anchors = {_norm(anchor) for anchor in pack.get("anchors", [])}
+    
+    # Count alias hits
+    alias_hits = [alias for alias in aliases if alias and alias in q_norm]
+    
+    # Count anchor hits
+    anchor_hits = sum(1 for anchor in anchors if anchor and anchor in q_norm)
+    
+    # Calculate scores
+    alias_score = len(alias_hits)
+    anchor_score = anchor_hits * 1.5
+    total_score = alias_score + anchor_score
+    
+    # Calculate confidence
+    query_words = set(re.findall(r'\b\w+\b', q_norm))
+    matched_words = {word for alias in alias_hits for word in alias.split()}
+    matched_words.update({word for anchor in anchors if anchor in q_norm for word in anchor.split()})
+    coverage = len(matched_words & query_words) / max(len(query_words), 1) if query_words else 0
+    confidence = min(1.0, (total_score * 0.3) + (coverage * 0.7))
+    
+    return TopicMatch(primary_pack, total_score, anchor_hits, alias_hits, confidence)
 
 def providers_for_topic(topic_key: str, strategy: str = "broad_coverage") -> List[str]:
     """

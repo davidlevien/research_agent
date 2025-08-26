@@ -23,9 +23,24 @@ macroeconomics:
     min_jaccard: 0.10
 
 health:
-  aliases: ["epidemiology", "incidence", "prevalence", "mortality", "morbidity", "who", "cdc", "nih", "pubmed", "cochrane", "systematic review", "randomized", "clinical trial", "vaccine", "drug", "treatment", "diagnosis", "biomarker", "pathogen", "disease", "health outcomes", "public health", "healthcare"]
-  anchors: ["who", "pubmed", "cochrane", "nih", "cdc", "clinical", "epidemiology"]
-  query_expansions: ["systematic review", "randomized controlled trial", "incidence rate", "prevalence", "WHO", "PubMed", "Cochrane", "clinical trial", "epidemiological", "public health"]
+  aliases: ["epidemiology", "incidence", "prevalence", "mortality", "morbidity", "who", "cdc", "nih", "pubmed", "cochrane", "systematic review", "randomized", "clinical trial", "vaccine", "drug", "treatment", "diagnosis", "biomarker", "pathogen", "disease", "health outcomes", "public health", "healthcare", "fda", "hhs", "cms", "advisory committee", "clinical guidance", "public health order", "health policy", "medical device", "pharmaceutical"]
+  anchors: ["who", "pubmed", "cochrane", "nih", "cdc", "clinical", "epidemiology", "advisory committee", "clinical guidance", "public health order", "fda", "hhs"]
+  query_expansions: [
+    "systematic review", 
+    "randomized controlled trial", 
+    "incidence rate", 
+    "prevalence", 
+    "WHO", 
+    "PubMed", 
+    "Cochrane", 
+    "clinical trial", 
+    "epidemiological", 
+    "public health",
+    "{QUERY} guidance 2023..2026 site:.gov",
+    "{QUERY} notice 2023..2026 site:.int",
+    "{QUERY} clinical guidance",
+    "{QUERY} advisory committee recommendations"
+  ]
   related_axes:
     upstream: ["risk factors", "prevention", "screening", "early detection"]
     downstream: ["treatment outcomes", "quality of life", "healthcare costs", "mortality"]
@@ -73,12 +88,52 @@ science:
     min_jaccard: 0.10
 
 policy:
-  aliases: ["policy", "regulation", "legislation", "law", "legal", "governance", "government", "regulatory", "compliance", "directive", "ordinance", "bill", "act", "statute", "rule", "guideline", "framework", "public policy", "regulatory framework", "legal framework", "judicial", "court", "supreme court", "constitutional", "administrative"]
-  anchors: ["policy", "regulation", "law", "legal", "government", "regulatory", "directive"]
-  query_expansions: ["public policy", "regulatory framework", "government regulation", "legal framework", "policy analysis", "legislation", "compliance requirements"]
+  aliases: ["policy", "regulation", "legislation", "law", "legal", "governance", "government", "regulatory", "compliance", "directive", "ordinance", "bill", "act", "statute", "rule", "guideline", "framework", "public policy", "regulatory framework", "legal framework", "judicial", "court", "supreme court", "constitutional", "administrative", "rulemaking", "nprm", "final rule", "proposed rule", "federal register", "regulations.gov", "docket", "oira", "regulatory impact", "cost-benefit"]
+  anchors: ["policy", "regulation", "law", "legal", "government", "regulatory", "directive", "Federal Register", "Unified Agenda", "NPRM", "OIRA", "docket number", "rulemaking", "final rule", "proposed rule"]
+  query_expansions: [
+    "{QUERY} 2023..2026 site:federalregister.gov",
+    "{QUERY} 2023..2026 site:regulations.gov",
+    "{QUERY} 2023..2026 \"final rule\" OR \"proposed rule\"",
+    "{QUERY} regulatory impact analysis",
+    "{QUERY} notice of proposed rulemaking",
+    "{QUERY} docket number",
+    "public policy", 
+    "regulatory framework", 
+    "government regulation", 
+    "legal framework", 
+    "policy analysis", 
+    "legislation", 
+    "compliance requirements"
+  ]
   off_topic:
-    must_contain_any: ["policy", "regulation", "law", "legal", "government", "regulatory", "directive", "legislation", "compliance", "governance", "judicial"]
-    min_jaccard: 0.10
+    must_contain_any: [
+      "rule", 
+      "final rule", 
+      "proposed rule", 
+      "notice of proposed rulemaking", 
+      "interim final rule", 
+      "guidance", 
+      "public comment", 
+      "docket", 
+      "effective date", 
+      "compliance date",
+      "policy", 
+      "regulation", 
+      "law", 
+      "legal", 
+      "government", 
+      "regulatory", 
+      "directive", 
+      "legislation", 
+      "compliance", 
+      "governance", 
+      "judicial",
+      "federal register",
+      "regulations.gov",
+      "regulatory impact",
+      "cost-benefit"
+    ]
+    min_jaccard: 0.06
 
 geospatial:
   aliases: ["gis", "geographic", "spatial", "mapping", "cartographic", "osm", "openstreetmap", "poi", "overpass", "geocoding", "geolocation", "shapefile", "geojson", "satellite", "remote sensing", "urban planning", "land use", "demographics", "population density", "geographic information systems"]
@@ -103,3 +158,132 @@ news:
   off_topic:
     must_contain_any: ["news", "breaking", "announcement", "press", "media", "recent", "latest", "current", "today", "headline"]
     min_jaccard: 0.08
+
+finance:
+  aliases: ["finance", "financial", "bank", "banking", "investment", "securities", "bonds", "equities", "derivatives", "hedge fund", "mutual fund", "etf", "portfolio", "trading", "forex", "cryptocurrency", "bitcoin", "defi", "fintech", "payment", "lending", "credit", "mortgage", "insurance", "pension", "retirement", "wealth management", "asset management", "capital markets", "capital requirements", "basel", "ipo", "merger", "acquisition", "sec", "fdic", "federal reserve", "central bank", "monetary policy", "interest rate", "yield curve", "inflation", "quantitative easing"]
+  anchors: ["sec", "federal reserve", "fdic", "bank", "banking", "capital", "investment", "securities", "capital markets", "monetary policy"]
+  query_expansions: [
+    "{QUERY} site:sec.gov",
+    "{QUERY} site:federalreserve.gov",
+    "{QUERY} site:fdic.gov",
+    "{QUERY} financial markets",
+    "{QUERY} capital markets",
+    "{QUERY} monetary policy",
+    "{QUERY} banking regulation",
+    "{QUERY} securities filing"
+  ]
+  off_topic:
+    must_contain_any: ["finance", "financial", "banking", "investment", "securities", "sec", "federal reserve", "fdic", "capital", "monetary", "trading", "market", "portfolio"]
+    min_jaccard: 0.10
+
+energy:
+  aliases: ["energy", "oil", "gas", "petroleum", "natural gas", "coal", "renewable", "solar", "wind", "hydroelectric", "nuclear", "electricity", "power generation", "grid", "transmission", "distribution", "utilities", "energy transition", "decarbonization", "net zero", "carbon neutral", "emissions", "ghg", "eia", "iea", "opec", "lng", "pipeline", "refinery", "drilling", "fracking", "shale", "barrel", "megawatt", "kilowatt", "energy efficiency", "energy storage", "battery", "hydrogen"]
+  anchors: ["eia", "iea", "opec", "energy", "oil", "gas", "renewable", "electricity", "power", "emissions"]
+  query_expansions: [
+    "{QUERY} site:eia.gov",
+    "{QUERY} site:iea.org",
+    "{QUERY} energy production",
+    "{QUERY} energy consumption",
+    "{QUERY} renewable energy",
+    "{QUERY} oil and gas",
+    "{QUERY} electricity generation",
+    "{QUERY} energy transition"
+  ]
+  off_topic:
+    must_contain_any: ["energy", "oil", "gas", "renewable", "solar", "wind", "nuclear", "electricity", "power", "eia", "iea", "opec", "emissions", "grid", "utility"]
+    min_jaccard: 0.10
+
+defense:
+  aliases: ["defense", "military", "armed forces", "army", "navy", "air force", "marines", "space force", "pentagon", "dod", "nato", "security", "national security", "homeland security", "intelligence", "cia", "nsa", "fbi", "warfare", "weapons", "missile", "aircraft", "submarine", "carrier", "fighter", "bomber", "tank", "artillery", "cyber warfare", "electronic warfare", "defense spending", "defense budget", "defense contractor", "lockheed", "boeing", "raytheon", "northrop grumman"]
+  anchors: ["defense", "military", "pentagon", "dod", "nato", "security", "warfare", "weapons"]
+  query_expansions: [
+    "{QUERY} site:defense.gov",
+    "{QUERY} site:dod.gov",
+    "{QUERY} military",
+    "{QUERY} defense spending",
+    "{QUERY} national security",
+    "{QUERY} defense strategy",
+    "{QUERY} military technology"
+  ]
+  off_topic:
+    must_contain_any: ["defense", "military", "pentagon", "dod", "nato", "security", "warfare", "weapons", "army", "navy", "air force", "intelligence"]
+    min_jaccard: 0.10
+
+education:
+  aliases: ["education", "academic", "university", "college", "school", "k-12", "elementary", "secondary", "higher education", "student", "teacher", "professor", "curriculum", "pedagogy", "learning", "teaching", "assessment", "standardized test", "sat", "act", "gre", "graduation", "enrollment", "tuition", "scholarship", "grant", "student loan", "stem", "liberal arts", "vocational", "online learning", "distance learning", "mooc", "edtech", "educational technology", "department of education", "nces"]
+  anchors: ["education", "university", "college", "school", "student", "teacher", "curriculum", "learning", "nces"]
+  query_expansions: [
+    "{QUERY} site:ed.gov",
+    "{QUERY} site:nces.ed.gov",
+    "{QUERY} education statistics",
+    "{QUERY} student achievement",
+    "{QUERY} educational outcomes",
+    "{QUERY} higher education",
+    "{QUERY} k-12 education"
+  ]
+  off_topic:
+    must_contain_any: ["education", "academic", "university", "college", "school", "student", "teacher", "curriculum", "learning", "teaching", "enrollment", "graduation"]
+    min_jaccard: 0.10
+
+transportation:
+  aliases: ["transportation", "transport", "transit", "traffic", "highway", "road", "railway", "rail", "train", "aviation", "airline", "airport", "shipping", "maritime", "port", "logistics", "freight", "cargo", "trucking", "vehicle", "automobile", "car", "bus", "subway", "metro", "infrastructure", "dot", "faa", "fra", "fmcsa", "nhtsa", "tsa", "bts", "mobility", "autonomous vehicle", "electric vehicle", "ev", "transportation planning"]
+  anchors: ["transportation", "transport", "transit", "highway", "railway", "aviation", "shipping", "dot", "faa", "bts"]
+  query_expansions: [
+    "{QUERY} site:dot.gov",
+    "{QUERY} site:bts.gov",
+    "{QUERY} site:faa.gov",
+    "{QUERY} transportation statistics",
+    "{QUERY} traffic data",
+    "{QUERY} transit ridership",
+    "{QUERY} freight transportation"
+  ]
+  off_topic:
+    must_contain_any: ["transportation", "transport", "transit", "traffic", "highway", "railway", "aviation", "shipping", "vehicle", "infrastructure", "mobility"]
+    min_jaccard: 0.10
+
+agriculture:
+  aliases: ["agriculture", "farming", "farm", "crop", "livestock", "cattle", "dairy", "poultry", "grain", "corn", "wheat", "soybean", "rice", "vegetable", "fruit", "organic", "pesticide", "fertilizer", "irrigation", "harvest", "yield", "usda", "agricultural", "agribusiness", "food production", "food security", "sustainable agriculture", "precision agriculture", "gmo", "genetically modified", "agricultural policy", "farm bill", "subsidy", "commodity"]
+  anchors: ["agriculture", "farming", "crop", "livestock", "usda", "harvest", "yield", "food production"]
+  query_expansions: [
+    "{QUERY} site:usda.gov",
+    "{QUERY} agricultural statistics",
+    "{QUERY} crop production",
+    "{QUERY} farm income",
+    "{QUERY} food security",
+    "{QUERY} agricultural policy"
+  ]
+  off_topic:
+    must_contain_any: ["agriculture", "farming", "farm", "crop", "livestock", "usda", "harvest", "yield", "food", "agricultural"]
+    min_jaccard: 0.10
+
+housing:
+  aliases: ["housing", "real estate", "property", "home", "house", "apartment", "condo", "rental", "mortgage", "foreclosure", "eviction", "affordable housing", "public housing", "homelessness", "shelter", "zoning", "development", "construction", "building", "hud", "fha", "fannie mae", "freddie mac", "housing market", "home price", "housing affordability", "rent", "landlord", "tenant", "fair housing", "housing policy", "urban planning", "residential"]
+  anchors: ["housing", "real estate", "hud", "mortgage", "affordable housing", "home price", "rent", "construction"]
+  query_expansions: [
+    "{QUERY} site:hud.gov",
+    "{QUERY} site:census.gov",
+    "{QUERY} housing statistics",
+    "{QUERY} home prices",
+    "{QUERY} housing affordability",
+    "{QUERY} residential construction",
+    "{QUERY} housing market"
+  ]
+  off_topic:
+    must_contain_any: ["housing", "real estate", "home", "mortgage", "hud", "rent", "affordable", "residential", "property", "construction"]
+    min_jaccard: 0.10
+
+labor:
+  aliases: ["labor", "employment", "unemployment", "job", "worker", "employee", "employer", "wage", "salary", "compensation", "benefits", "union", "collective bargaining", "strike", "workplace", "occupational", "osha", "nlrb", "department of labor", "bls", "bureau of labor statistics", "workforce", "labor force", "participation rate", "job market", "hiring", "layoff", "minimum wage", "overtime", "workplace safety", "workers compensation", "labor law", "employment law"]
+  anchors: ["labor", "employment", "bls", "wage", "worker", "union", "workplace", "job market"]
+  query_expansions: [
+    "{QUERY} site:bls.gov",
+    "{QUERY} site:dol.gov",
+    "{QUERY} employment statistics",
+    "{QUERY} labor market",
+    "{QUERY} wage data",
+    "{QUERY} workplace safety",
+    "{QUERY} labor force"
+  ]
+  off_topic:
+    must_contain_any: ["labor", "employment", "job", "worker", "wage", "bls", "union", "workplace", "unemployment", "workforce"]
+    min_jaccard: 0.10

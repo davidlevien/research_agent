@@ -27,9 +27,12 @@ from research_system.tools.dedup import minhash_near_dupes
 from research_system.tools.fetch import extract_article
 from research_system.tools.snapshot import save_wayback
 from research_system.tools.url_norm import canonicalize_url, domain_of, normalized_hash
-from research_system.tools.domain_norm import canonical_domain, is_primary_domain, PRIMARY_CANONICALS
+from research_system.tools.domain_norm import (
+    canonical_domain, is_primary_domain, PRIMARY_CANONICALS, 
+    PRIMARY_CONFIG, PRIMARY_PATTERNS
+)
 from research_system.tools.anchor import build_anchors
-from research_system.routing.topic_router import route_topic
+from research_system.routing.topic_router import route_topic, classify_topic_multi
 from research_system.policy import POLICIES
 from research_system.scoring import recompute_confidence
 from research_system.tools.claim_struct import extract_struct_claim, struct_key, struct_claims_match
@@ -1121,8 +1124,22 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         H = -sum((n/N)*math.log((n/N)+1e-12) for n in prov_ct.values()) if N and prov_ct else 0.0
         H_norm = H / math.log(max(1, len(prov_ct))) if prov_ct else 0.0
         
+        # Get pack-specific primary domains and patterns
+        packs = classify_topic_multi(self.s.topic)
+        pack_domains = set(PRIMARY_CANONICALS)
+        pack_patterns = list(PRIMARY_PATTERNS)
+        
+        for pack_key in packs:
+            pack_config = PRIMARY_CONFIG.get(pack_key, {})
+            pack_domains |= set(pack_config.get("canonical", []))
+            for pat_str in pack_config.get("patterns", []):
+                import re
+                pack_patterns.append(re.compile(pat_str, re.I))
+        
         # Calculate initial metrics for decision making (not final output)
-        primary_share = primary_share_in_union(cards, para_clusters, structured_matches)
+        primary_share = primary_share_in_union(cards, para_clusters, structured_matches, 
+                                              primary_domains=pack_domains, 
+                                              primary_patterns=pack_patterns)
         
         # Store values we'll need later for final metrics
         initial_H_norm = H_norm
@@ -1174,13 +1191,15 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 except:
                     return None
                     
-            # Run primary backfill
+            # Run primary backfill with pack-specific domains
             new_cards = primary_fill_for_families(
                 families=families,
                 topic=self.s.topic,
                 search_fn=search_wrapper,
                 extract_fn=extract_wrapper,
-                k_per_family=2
+                k_per_family=2,
+                primary_domains=pack_domains,
+                primary_patterns=pack_patterns
             )
             
             if new_cards:
@@ -1198,7 +1217,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 tri_union = union_rate(para_clusters, structured_matches, len(cards))
                 
                 # Recalculate values needed for final metrics
-                primary_share = primary_share_in_union(cards, para_clusters, structured_matches)
+                primary_share = primary_share_in_union(cards, para_clusters, structured_matches,
+                                                      primary_domains=pack_domains,
+                                                      primary_patterns=pack_patterns)
         
         # CONTRADICTION DETECTION
         claim_texts = [
@@ -1442,7 +1463,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         current_metrics = {
             "cards": len(cards),
             "union_triangulation": tri_union_final,
-            "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final),
+            "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final,
+                                                    primary_domains=pack_domains,
+                                                    primary_patterns=pack_patterns),
             "quote_coverage": sum(1 for c in cards if (
                 getattr(c, 'best_quote', None) or 
                 getattr(c, 'quote_span', None) or 
@@ -1575,7 +1598,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             current_metrics = {
                 "cards": len(cards),
                 "union_triangulation": tri_union_final,
-                "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final),
+                "primary_share": primary_share_in_union(cards, para_clusters_final, structured_matches_final,
+                                                    primary_domains=pack_domains,
+                                                    primary_patterns=pack_patterns),
                 "quote_coverage": sum(1 for c in cards if (
                 getattr(c, 'best_quote', None) or 
                 getattr(c, 'quote_span', None) or 

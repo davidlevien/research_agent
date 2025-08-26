@@ -1807,3 +1807,979 @@ Traceback (most recent call last):
   File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator.py", line 1664, in run
     raise SystemExit("STRICT FAIL: " + " | ".join(errs))
 SystemExit: STRICT FAIL: PRIMARY_SHARE(21%) < 50%
+==================================
+Research System v8.4 - FULL FEATURES
+==================================
+Topic: cdc policy changes 2025
+Output: outputs/full_test_20250825_210221
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Domain balancing (25% cap)
+  ✓ Triangulation enforcement (35% min)
+  ✓ Strict quality gates
+
+v8.4 Fixes Applied:
+  ✓ Enhanced quote extraction (70% coverage)
+  ✓ Anti-bot handling for SEC/WEF/Mastercard
+  ✓ PDF download deduplication
+  ✓ Free API fallbacks (OpenAlex/OECD/Crossref)
+  ✓ Robust report generation
+
+Starting in 3 seconds...
+INFO:research_system.orchestrator:Set global time budget: 1800s
+INFO:research_system.orchestrator:Routing: categories=['policy', 'general'], providers=['oecd', 'ec', 'worldbank', 'openalex', 'crossref', 'wayback', 'wikipedia', 'wikidata', 'unpaywall']
+INFO:research_system.orchestrator:Filtered out NPS provider for non-parks topic: cdc policy changes 2025
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: cdc policy changes 2025 site:pubmed.ncbi.nlm.nih.gov
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+site%3Apubmed.ncbi.nlm.nih.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: cdc policy changes 2025 site:pubmed.ncbi.nlm.nih.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+site%3Apubmed.ncbi.nlm.nih.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 site:pubmed.ncbi.nlm.nih.gov' returned 3 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: cdc policy changes 2025 site:pubmed.ncbi.nlm.nih.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: cdc policy changes 2025 randomized controlled trial 2020..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+randomized+controlled+trial+2020..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 randomized controlled trial 2020..2025' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+randomized+controlled+trial+2020..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: cdc policy changes 2025 randomized controlled trial 2020..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: cdc policy changes 2025 randomized controlled trial 2020..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+site%3Awho.int+OR+site%3Acdc.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 site:who.int OR site:cdc.gov' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+site%3Awho.int+OR+site%3Acdc.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: cdc policy changes 2025 site:who.int OR site:cdc.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: cdc policy changes 2025 site:who.int OR site:cdc.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: cdc policy changes 2025 site:who.int OR site:cdc.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: cdc policy changes 2025 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: cdc policy changes 2025 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: cdc policy changes 2025 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+filetype%3Apdf+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: cdc policy changes 2025 filetype:pdf 2024..2025
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: cdc policy changes 2025 filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: cdc policy changes 2025 filetype:pdf 2024..2025
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 filetype:pdf 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 20 results for query: cdc policy changes 2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025' returned 20 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 20 results for query: cdc policy changes 2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 20 results for query: cdc policy changes 2025
+INFO:research_system.orchestrator:Collecting from free APIs for topic: cdc policy changes 2025
+INFO:research_system.orchestrator:Router selected providers: ['oecd', 'ec', 'worldbank', 'openalex', 'crossref', 'wayback', 'wikipedia', 'wikidata', 'unpaywall'] for categories: ['policy', 'general']
+INFO:research_system.collection_enhanced:Executing 9 providers in parallel: ['oecd', 'ec', 'worldbank', 'openalex', 'crossref', 'wayback', 'wikipedia', 'wikidata', 'unpaywall']
+WARNING:research_system.providers.openalex:OpenAlex search failed: http_json_with_policy() got an unexpected keyword argument 'timeout'
+INFO:httpx:HTTP Request: GET https://en.wikipedia.org/w/rest.php/v1/search/title?q=cdc+policy+changes+2025&limit=10 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.worldbank.org/v2/indicator?format=json&per_page=1000&page=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://data.europa.eu/api/hub/search/search?query=cdc+policy+changes+2025&limit=25&lang=en "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works?query=cdc+policy+changes+2025&rows=25 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow/ALL/
+WARNING:research_system.providers.oecd:OECD dataflows fetch failed: Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/ALL/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO:research_system.orchestrator:Collected 1 cards from free APIs
+INFO:research_system.orchestrator:Enriching 141 cards with ENABLE_EXTRACT=True
+INFO:httpx:HTTP Request: GET https://doi.org/robots.txt "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.doi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.2139/ssrn.5168794 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.ssrn.com/abstract=5168794 "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5168794 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/39545677 "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/39545677/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/40376691/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/39855230/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.politico.com/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.politico.com/news/2025/05/27/the-cdc-is-no-longer-recommending-covid-vaccines-for-healthy-children-pregnant-women-00370864 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.kff.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.kff.org/quick-take/how-could-fdas-new-guidance-affect-covid-19-vaccination-coverage-in-the-u-s/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/mmwr/volumes/74/wr/pdfs/mm7429-H.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/mmwr/volumes/74/wr/pdfs/mm7429-H.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/mmwr/volumes/74/wr/pdfs/mm7429-H.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/media/releases/2024/s-t0627-vaccine-recommendations.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/covid/vaccines/stay-up-to-date.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://paltmed.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://paltmed.org/news-media/cdc-announces-2025-vaccine-schedule-updates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahcancal.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahcancal.org/News-and-Communications/Blog/Pages/CDC-Updates-2025-Immunization-Schedule-With-New-Recommendations-for-Older-Adults.aspx "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/public-health-data-strategy/php/about/phds-milestones-2025-and-2026.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cms.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cms.gov/files/document/mdpp-2025-pfs-changes-webinar-slides.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cms.gov/files/document/mdpp-2025-pfs-changes-webinar-slides.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cms.gov/files/document/mdpp-2025-pfs-changes-webinar-slides.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://oversightdemocrats.house.gov/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://oversightdemocrats.house.gov/sites/evo-subsites/democrats-oversight.house.gov/files/evo-media-document/2025-04-24.gec-to-cdc-monarez-re-foia.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://oversightdemocrats.house.gov/sites/evo-subsites/democrats-oversight.house.gov/files/evo-media-document/2025-04-24.gec-to-cdc-monarez-re-foia.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://oversightdemocrats.house.gov/sites/evo-subsites/democrats-oversight.house.gov/files/evo-media-document/2025-04-24.gec-to-cdc-monarez-re-foia.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/nhsn/pdfs/pscmanual/2025-psc-summary-508.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/nhsn/pdfs/pscmanual/2025-psc-summary-508.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/nhsn/pdfs/pscmanual/2025-psc-summary-508.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahcancal.org/News-and-Communications/Blog/Pages/CDC-Updates-2025-Immunization-Schedule-With-New-Recommendations-for-Older-Adults.aspx "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://kidscentralpediatrics.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://kidscentralpediatrics.com/2025-cdc-childhood-immunization-schedule/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.fdli.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.fdli.org/2025/08/essential-vaccine-policy-updates-acip-cdcs-covid-19-guidance-and-whats-next/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/phlp/php/news/january-2025.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/hepatitis/php/npr-2025/overview.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/flu/season/2025-2026.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.politico.com/newsletters/politico-pulse/2025/07/08/the-future-of-the-cdc-00441774 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/covid/hcp/vaccine-considerations/index.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.npr.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.npr.org/2025/05/29/1253312406/cdc-covid-vaccine-rfk-hhs-guidlines-recommended-immunization-schedule "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.apha.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.apha.org/topics-and-issues/public-health-under-threat/project-2025 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/media/releases/2025/us-government-releases-national-one-health-plan.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nejm.org/robots.txt "HTTP/1.1 200 "
+INFO:httpx:HTTP Request: GET https://www.nejm.org/doi/full/10.1056/NEJMp2507766 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.nejm.org/doi/full/10.1056/NEJMp2507766, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1056/NEJMp2507766 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/acip/vaccine-recommendations/index.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aha.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aha.org/news/headline/2025-08-11-cdc-says-covid-19-cases-growing-or-likely-growing-45-states "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdph.ca.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdph.ca.gov/Programs/CID/DCDC/Pages/COVID-19/COVID-19-Isolation-Guidance.aspx "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/39545677/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/32437047/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/39316770/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://kff.org/robots.txt "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.kff.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://kff.org/global-health-policy/fact-sheet/congress-passes-full-year-continuing-resolution-bill-maintaining-global-health-funding-at-prior-year-levels "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.kff.org/global-health-policy/fact-sheet/congress-passes-full-year-continuing-resolution-bill-maintaining-global-health-funding-at-prior-year-levels "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.kff.org/global-health-policy/congress-passes-full-year-continuing-resolution-bill-maintaining-global-health-funding-at-prior-year-levels/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://cdc2025.ieeecss.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://cdc2025.ieeecss.org/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.contagionlive.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.contagionlive.com/view/fda-shifts-covid-19-vaccine-policy-requiring-further-testing "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/ncezid/priorities/index.html "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:httpx:HTTP Request: GET https://www.ehn.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ehn.org/health-agencies-second-trump-administration-2669567703.html "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.ehn.org/health-agencies-second-trump-administration "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aarp.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aarp.org/health/conditions-treatments/updated-seasonal-covid-vaccines.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://odphp.health.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://odphp.health.gov/healthypeople "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/nhsn/pdfs/pscmanual/2025-psc-summary-508.pdf (hash: c8ebe5b2...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/epidemiology-laboratory-capacity/media/pdfs/2024/11/ELC-Fact-Sheet-2024-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/epidemiology-laboratory-capacity/media/pdfs/2024/11/ELC-Fact-Sheet-2024-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/epidemiology-laboratory-capacity/media/pdfs/2024/11/ELC-Fact-Sheet-2024-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.infectioncontroltoday.com/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.infectioncontroltoday.com/view/hot-topics-ipc-may-29-2025-policy-changes-covid-19-vaccines-measles-updates-more "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.theatlantic.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.theatlantic.com/health/archive/2025/08/cdc-shooting-trump-kennedy/683814/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dailymail.co.uk/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dailymail.co.uk/health/article-14991069/cdc-travel-warning-new-countries-polio-disease.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://health.usnews.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.statnews.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.statnews.com/2025/06/26/cdc-acip-rfk-vaccines-public-health-policy-changes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://asm.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://asm.org/press-releases/2024/july/asm-responds-to-extreme-nih-and-cdc-proposals "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://assure-test.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://assure-test.com/anticipated-covid-19-and-vaccine-policies-under-2025-trump-administration/ "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://assure-test.com/2025/02/04/anticipated-covid-19-and-vaccine-policies-under-2025-trump-administration/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.infectioncontroltoday.com/view/hot-topics-ipc-february-12-2025-public-health-policy-influenza-season-more "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.patientcareonline.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.patientcareonline.com/view/11-us-vaccine-policy-updates-how-will-they-affect-your-practice- "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dailypress.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dailypress.com/2025/06/27/vaccine-policy-changes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.npr.org/sections/shots-health-news/2025/07/29/nx-s1-5484124/cdc-director-monarez-confirmed-senate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ashpublications.org/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://ashpublications.org/ashclinicalnews/news/6952/New-Health-Care-Policies-in-FY-2023 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.hhs.gov/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.hhs.gov/press-room/hhs-restructuring-doge.html "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.apha.org/topics-and-issues/public-health-under-threat/project-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nhms.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nhms.org/news/august-2025-health-news-roundup "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.kff.org/global-health-policy/fact-sheet/white-house-releases-fy26-budget-request/ "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.kff.org/global-health-policy/white-house-releases-fy26-budget-request/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sbm.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sbm.org/advocacy/2025-us-federal-policy-changes "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aacn.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aacn.org/policy-and-advocacy/advocacy-updates/changes-in-federal-policy-and-regulations "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://pubmed.ncbi.nlm.nih.gov/40562887/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/mmwr/volumes/73/wr/mm7337e2.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nejm.org/doi/full/10.1056/NEJMp2507766 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.nejm.org/doi/full/10.1056/NEJMp2507766, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1056/NEJMp2507766 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/mmwr/volumes/74/wr/pdfs/mm7429-H.pdf (hash: 0edf9781...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/nhsn/pdfs/pscmanual/2025-psc-summary-508.pdf (hash: c8ebe5b2...)
+INFO:httpx:HTTP Request: GET https://publications.aap.org/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://publications.aap.org/aapnews/news/pdfDownload/30746 "HTTP/1.1 403 Forbidden"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+WARNING:research_system.tools.fetch:Circuit open for www.politico.com, skipping
+INFO:httpx:HTTP Request: GET https://www.apha.org/topics-and-issues/public-health-under-threat/project-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.npr.org/2025/05/29/1253312406/cdc-covid-vaccine-rfk-hhs-guidlines-recommended-immunization-schedule "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nejm.org/doi/full/10.1056/NEJMp2507766 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.nejm.org/doi/full/10.1056/NEJMp2507766, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1056/NEJMp2507766 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahcancal.org/News-and-Communications/Blog/Pages/CDC-Updates-2025-Immunization-Schedule-With-New-Recommendations-for-Older-Adults.aspx "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/rsv/hcp/vaccine-clinical-guidance/adults.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nejm.org/doi/full/10.1056/NEJMsb2506929 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.nejm.org/doi/full/10.1056/NEJMsb2506929, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1056/NEJMsb2506929 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/media/releases/2024/s0311-fiscal-year-2025.html "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/nhsn/pdfs/pscmanual/2025-psc-summary-508.pdf (hash: c8ebe5b2...)
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.cdc.gov/acip/downloads/slides-2025-04-15-16/05-Panagiotakopoulos-COVID-508.pdf (hash: f2c2d922...)
+INFO:httpx:HTTP Request: GET https://www.apha.org/topics-and-issues/public-health-under-threat/project-2025 "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.politico.com, skipping
+INFO:httpx:HTTP Request: GET https://www.nejm.org/doi/full/10.1056/NEJMp2507766 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.nejm.org/doi/full/10.1056/NEJMp2507766, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1056/NEJMp2507766 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.npr.org/2025/05/29/1253312406/cdc-covid-vaccine-rfk-hhs-guidlines-recommended-immunization-schedule "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/global-health/media/pdfs/2025/01/2024_GHC_Annual_Report_FINAL.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahcancal.org/News-and-Communications/Blog/Pages/CDC-Updates-2025-Immunization-Schedule-With-New-Recommendations-for-Older-Adults.aspx "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/acip/meetings/presentation-slides-june-25-26-2025.html "HTTP/1.1 200 OK"
+INFO:research_system.enrich.ensure_quotes:Quote rescue: 141 primary cards need quotes
+INFO:research_system.enrich.ensure_quotes:Quote rescue complete: added 133 quotes
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 60 cards, 37 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=cdc.gov, text='January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'january the public health law news public health law cdc public health law news public health law ne...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=nih.gov, text='Epub 2024 Jan 24....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'epub jan...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 3: domain=cdc.gov, text='29 August 7, 2025 INSIDE 463 Notes from the Field: Hepatitis B Virus Transmission Associated with As...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'august inside notes from the field hepatitis b virus transmission associated with assisted blood glu...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=cdc.gov, text='Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'staying up to date with covid- vaccines covid- cdc covid- vaccines covid- vaccines staying up to dat...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 6: domain=cdc.gov, text='In 2025, CDC will launch a Minimum Viable Product version with key partners....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in cdc will launch a minimum viable product version with key partners...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.257 0.123 0.299 0.340
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.257 1.000 0.150 0.011 0.102
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.123 0.150 1.000 0.301 0.094
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.299 0.011 0.301 1.000 0.285
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.340 0.102 0.094 0.285 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 0 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 0 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.381 between cards 0 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 0 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 0 and 34
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 0 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.308 between cards 0 and 36
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.321 between cards 1 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 1 and 32
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 2 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 2 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.347 between cards 2 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.378 between cards 2 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.392 between cards 2 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.337 between cards 2 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.304 between cards 2 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 3 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.393 between cards 3 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.361 between cards 3 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.385 between cards 3 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 4 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.385 between cards 4 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 4 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.315 between cards 4 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.346 between cards 4 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 4 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 4 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 4 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 4 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 4 and 30
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 4 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.364 between cards 5 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 5 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.321 between cards 5 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 5 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.387 between cards 6 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 6 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.330 between cards 6 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.389 between cards 6 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 6 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 6 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 7 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.362 between cards 7 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.309 between cards 7 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.317 between cards 7 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 7 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 7 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.388 between cards 7 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.339 between cards 7 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.334 between cards 7 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.337 between cards 8 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 8 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 8 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 8 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.395 between cards 8 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 9 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.389 between cards 9 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.392 between cards 9 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 9 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.386 between cards 9 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.333 between cards 11 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 11 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 12 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.385 between cards 12 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 12 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.382 between cards 12 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 12 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.314 between cards 12 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.391 between cards 12 and 30
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 12 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.356 between cards 12 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 13 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.372 between cards 13 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 13 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.321 between cards 13 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.319 between cards 15 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.399 between cards 15 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 16 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.355 between cards 16 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.314 between cards 17 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 17 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.365 between cards 17 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.310 between cards 17 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.347 between cards 17 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 17 and 36
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 19 and 36
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.362 between cards 20 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.355 between cards 20 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.306 between cards 20 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 20 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.321 between cards 20 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.307 between cards 20 and 30
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.334 between cards 20 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 20 and 34
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 20 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 21 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.339 between cards 21 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.389 between cards 22 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 22 and 34
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.396 between cards 22 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 23 and 24
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 23 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 23 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.381 between cards 23 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.319 between cards 24 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 24 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.399 between cards 24 and 30
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 24 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.324 between cards 24 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 24 and 36
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.384 between cards 26 and 30
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 27 and 29
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.377 between cards 27 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.331 between cards 28 and 34
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.336 between cards 28 and 36
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.400 between cards 29 and 31
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.311 between cards 29 and 33
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.392 between cards 29 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.352 between cards 30 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.305 between cards 31 and 35
+INFO:research_system.triangulation.paraphrase_cluster:Found 134 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,8): similarity=0.476
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: “CDC's FY 2025 President's Budget request outlines investments that will strengt...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,9): similarity=0.458
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 9: CDC Announces 2025 Vaccine Schedule Updates | PALTmed * PALTC Benefits Program H...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,13): similarity=0.425
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 13: Project 2025 as a Framework for Health Policy Changes: A Policy Analysis
+18 Page...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,14): similarity=0.417
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 14: April 24, 2025 Dr....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,17): similarity=0.454
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 17: At the direction of Congress in the 2023 Consolidated Appropriations Act, CDC, U...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 3 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 25: 35 members from domains {'house.gov', 'fdli.org', 'sbm.org', 'health.gov', 'assure-test.com', 'paltmed.org', 'asm.org', 'kidscentralpediatrics.com', 'infectioncontroltoday.com', 'ahcancal.org', 'patientcareonline.com', 'aacn.org', 'cdc.gov', 'npr.org', 'ieeecss.org', 'nih.gov', 'doi.org', 'kff.org', 'aarp.org', 'ashpublications.org', 'aap.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 35 cards from ['aacn.org', 'aap.org', 'aarp.org', 'ahcancal.org', 'ashpublications.org', 'asm.org', 'assure-test.com', 'cdc.gov', 'doi.org', 'fdli.org', 'health.gov', 'house.gov', 'ieeecss.org', 'infectioncontroltoday.com', 'kff.org', 'kidscentralpediatrics.com', 'nih.gov', 'npr.org', 'paltmed.org', 'patientcareonline.com', 'sbm.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 60 total cards
+INFO:research_system.triangulation.post:Cluster 0: 35 cards from 21 domains ['aacn.org', 'aap.org', 'aarp.org']...
+INFO:research_system.triangulation.post:  -> TRIMMING: cluster size 35 > cap 21 (keeping most similar)
+INFO:research_system.triangulation.post:  -> ACCEPTED after trimming to 21 cards
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:Primary share 0.00% < 50%, running backfill
+INFO:research_system.enrich.primary_fill:Found 1 families needing primary sources
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=January+2025+%7C+The+Public+Health+Law+News+%7C+Public+Health+Law+%7C+CDC+Public+Health+Law+News+Public+Health+Law+News+View+All+Public+Health+Law+site%3Aunwto.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=January+2025+%7C+The+Public+Health+Law+News+%7C+Public+Health+Law+%7C+CDC+Public+Health+Law+News+Public+Health+Law+News+View+All+Public+Health+Law+site%3Aunwto.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto.org' returned 0 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto.org
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=2025+site%3Aunwto.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: 2025 site:unwto.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2025+site%3Aunwto.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for '2025 site:unwto.org' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: 2025 site:unwto.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: 2025 site:unwto.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2025+site%3Aunwto.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for '2025 site:unwto.org' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=2025+site%3Aunwto.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: 2025 site:unwto.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: 2025 site:unwto.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: 2025 site:unwto.org
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=January+2025+%7C+The+Public+Health+Law+News+%7C+Public+Health+Law+%7C+CDC+Public+Health+Law+News+Public+Health+Law+News+View+All+Public+Health+Law+site%3Aunwto-ap.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto-ap.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto-ap.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=January+2025+%7C+The+Public+Health+Law+News+%7C+Public+Health+Law+%7C+CDC+Public+Health+Law+News+Public+Health+Law+News+View+All+Public+Health+Law+site%3Aunwto-ap.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto-ap.org' returned 0 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public Health Law News View All Public Health Law site:unwto-ap.org
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=2025+site%3Aunwto-ap.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: 2025 site:unwto-ap.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: 2025 site:unwto-ap.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: 2025 site:unwto-ap.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2025+site%3Aunwto-ap.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for '2025 site:unwto-ap.org' returned 3 results
+INFO:research_system.enrich.primary_fill:Added 0 primary source cards across families
+INFO:research_system.orchestrator:DomainBalance: cap=0.24 kept=55 total=60 (domains: {'cdc.gov': 14, 'nih.gov': 6, 'cms.gov': 1, 'paltmed.org': 1, 'ehn.org': 1, 'nhms.org': 1, 'infectioncontroltoday.com': 2, 'doi.org': 1, 'house.gov': 1, 'kff.org': 3, 'ahcancal.org': 1, 'fdli.org': 1, 'apha.org': 1, 'ashpublications.org': 1, 'sbm.org': 1, 'aacn.org': 1, 'aap.org': 1, 'assure-test.com': 1, 'patientcareonline.com': 1, 'ieeecss.org': 1, 'aarp.org': 1, 'asm.org': 1, 'nejm.org': 2, 'politico.com': 1, 'kidscentralpediatrics.com': 1, 'theatlantic.com': 1, 'dailypress.com': 1, 'aha.org': 1, 'npr.org': 2, 'ca.gov': 1, 'health.gov': 1, 'hhs.gov': 1})
+INFO:research_system.orchestrator:Credibility floor: filtered 25 low-cred singleton sources
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 29 cards, 18 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=cdc.gov, text='January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'january the public health law news public health law cdc public health law news public health law ne...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=cdc.gov, text='29 August 7, 2025 INSIDE 463 Notes from the Field: Hepatitis B Virus Transmission Associated with As...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'august inside notes from the field hepatitis b virus transmission associated with assisted blood glu...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=cdc.gov, text='Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'staying up to date with covid- vaccines covid- cdc covid- vaccines covid- vaccines staying up to dat...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=cdc.gov, text='In 2025, CDC will launch a Minimum Viable Product version with key partners....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in cdc will launch a minimum viable product version with key partners...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 5: domain=cdc.gov, text='CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus Season | CDC Online...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'cdc recommends updated - covid- and flu vaccines for fall winter virus season cdc online newsroom cd...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.123 0.299 0.340 0.354
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.123 1.000 0.301 0.094 0.277
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.299 0.301 1.000 0.285 0.788
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.340 0.094 0.285 1.000 0.280
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.354 0.277 0.788 0.280 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 0 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 0 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 1 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 1 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 2 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.393 between cards 2 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 3 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.346 between cards 3 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 3 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 3 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 3 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.364 between cards 4 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 4 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.387 between cards 5 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.330 between cards 5 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 6 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.362 between cards 6 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.334 between cards 6 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 7 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 8 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 11 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 11 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 13 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.356 between cards 13 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 14 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Found 29 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,7): similarity=0.476
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: “CDC's FY 2025 President's Budget request outlines investments that will strengt...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,11): similarity=0.455
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 11: Program evaluation is a critical tool for understanding and improving organizati...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,14): similarity=0.425
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 14: Project 2025 as a Framework for Health Policy Changes: A Policy Analysis
+18 Page...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,15): similarity=0.487
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 15: the <strong>CDC</strong>’s Global Health Center, which was funded at $693 millio...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,6): similarity=0.523
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: 29 August 7, 2025 INSIDE 463 Notes from the Field: Hepatitis B Virus Transmissio...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 6: The 2025 Viral Hepatitis National Progress Report provides information on progre...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 4 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 10: 15 members from domains {'kff.org', 'nih.gov', 'infectioncontroltoday.com', 'doi.org', 'cdc.gov', 'npr.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 15 cards from ['cdc.gov', 'doi.org', 'infectioncontroltoday.com', 'kff.org', 'nih.gov', 'npr.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 29 total cards
+INFO:research_system.triangulation.post:Cluster 0: 15 cards from 6 domains ['cdc.gov', 'doi.org', 'infectioncontroltoday.com']...
+INFO:research_system.triangulation.post:  -> TRIMMING: cluster size 15 > cap 11 (keeping most similar)
+INFO:research_system.triangulation.post:  -> ACCEPTED after trimming to 11 cards
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:Backfill attempt 1/3: primary share 0.00% < 30%
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+filetype%3Apdf&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+filetype%3Apdf&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 filetype:pdf' returned 4 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+research+report&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 research report' returned 4 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+research+report&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: cdc policy changes 2025 research report
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: cdc policy changes 2025 research report
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: cdc policy changes 2025 research report
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:research_system.orchestrator:Added 5 cards from backfill
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 27 cards, 17 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=cdc.gov, text='January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'january the public health law news public health law cdc public health law news public health law ne...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=cdc.gov, text='29 August 7, 2025 INSIDE 463 Notes from the Field: Hepatitis B Virus Transmission Associated with As...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'august inside notes from the field hepatitis b virus transmission associated with assisted blood glu...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=cdc.gov, text='Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'staying up to date with covid- vaccines covid- cdc covid- vaccines covid- vaccines staying up to dat...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=cdc.gov, text='In 2025, CDC will launch a Minimum Viable Product version with key partners....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in cdc will launch a minimum viable product version with key partners...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 5: domain=cdc.gov, text='CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus Season | CDC Online...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'cdc recommends updated - covid- and flu vaccines for fall winter virus season cdc online newsroom cd...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.123 0.299 0.340 0.354
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.123 1.000 0.301 0.094 0.277
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.299 0.301 1.000 0.285 0.788
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.340 0.094 0.285 1.000 0.280
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.354 0.277 0.788 0.280 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 0 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 0 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 0 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 1 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.346 between cards 3 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 3 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 3 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 3 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 4 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.330 between cards 5 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.324 between cards 7 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 8 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 8 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 10 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.356 between cards 10 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 11 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 11 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 12 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 14 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Found 21 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,8): similarity=0.455
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: Program evaluation is a critical tool for understanding and improving organizati...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,11): similarity=0.425
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 11: Project 2025 as a Framework for Health Policy Changes: A Policy Analysis
+18 Page...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,12): similarity=0.487
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 12: the <strong>CDC</strong>’s Global Health Center, which was funded at $693 millio...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,16): similarity=0.466
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 16: Project 2025 - American Public Health Association...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (2,4): similarity=0.788
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines *...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 4: CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 7 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 7: 8 members from domains {'kff.org', 'nih.gov', 'doi.org', 'cdc.gov', 'apha.org', 'npr.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:Group 2: 4 members from domains {'infectioncontroltoday.com', 'cdc.gov'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 2 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 8 cards from ['apha.org', 'cdc.gov', 'doi.org', 'kff.org', 'nih.gov', 'npr.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 1: 4 cards from ['cdc.gov', 'infectioncontroltoday.com']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 2 clusters with 27 total cards
+INFO:research_system.triangulation.post:Cluster 0: 8 cards from 6 domains ['apha.org', 'cdc.gov', 'doi.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Cluster 1: 4 cards from 2 domains ['cdc.gov', 'infectioncontroltoday.com']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 2 clusters retained
+INFO:research_system.orchestrator:Backfill attempt 2/3: primary share 0.00% < 30%
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+filetype%3Apdf&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+filetype%3Apdf&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 filetype:pdf' returned 4 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+research+report&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 research report' returned 4 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+research+report&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: cdc policy changes 2025 research report
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: cdc policy changes 2025 research report
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: cdc policy changes 2025 research report
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:research_system.orchestrator:Added 5 cards from backfill
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 26 cards, 16 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=cdc.gov, text='January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'january the public health law news public health law cdc public health law news public health law ne...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=cdc.gov, text='29 August 7, 2025 INSIDE 463 Notes from the Field: Hepatitis B Virus Transmission Associated with As...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'august inside notes from the field hepatitis b virus transmission associated with assisted blood glu...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=cdc.gov, text='Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'staying up to date with covid- vaccines covid- cdc covid- vaccines covid- vaccines staying up to dat...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=cdc.gov, text='In 2025, CDC will launch a Minimum Viable Product version with key partners....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in cdc will launch a minimum viable product version with key partners...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 5: domain=cdc.gov, text='CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus Season | CDC Online...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'cdc recommends updated - covid- and flu vaccines for fall winter virus season cdc online newsroom cd...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.123 0.299 0.340 0.354
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.123 1.000 0.301 0.094 0.277
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.299 0.301 1.000 0.285 0.788
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.340 0.094 0.285 1.000 0.280
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.354 0.277 0.788 0.280 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 0 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 0 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 0 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 1 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.346 between cards 3 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 3 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 3 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 3 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 4 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.324 between cards 6 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 7 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 7 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 9 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.356 between cards 9 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 10 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 10 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 11 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 13 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Found 19 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,7): similarity=0.455
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: Program evaluation is a critical tool for understanding and improving organizati...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,10): similarity=0.425
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 10: Project 2025 as a Framework for Health Policy Changes: A Policy Analysis
+18 Page...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,11): similarity=0.487
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 11: the <strong>CDC</strong>’s Global Health Center, which was funded at $693 millio...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,15): similarity=0.466
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 15: Project 2025 - American Public Health Association...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (2,4): similarity=0.788
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines *...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 4: CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 7 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 6: 8 members from domains {'kff.org', 'nih.gov', 'doi.org', 'cdc.gov', 'apha.org', 'npr.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:Group 2: 3 members from domains {'infectioncontroltoday.com', 'cdc.gov'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 2 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 8 cards from ['apha.org', 'cdc.gov', 'doi.org', 'kff.org', 'nih.gov', 'npr.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 1: 3 cards from ['cdc.gov', 'infectioncontroltoday.com']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 2 clusters with 26 total cards
+INFO:research_system.triangulation.post:Cluster 0: 8 cards from 6 domains ['apha.org', 'cdc.gov', 'doi.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Cluster 1: 3 cards from 2 domains ['cdc.gov', 'infectioncontroltoday.com']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 2 clusters retained
+INFO:research_system.orchestrator:Backfill attempt 3/3: primary share 0.00% < 30%
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+filetype%3Apdf&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 filetype:pdf' returned 4 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+filetype%3Apdf&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: cdc policy changes 2025 filetype:pdf
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=cdc+policy+changes+2025+research+report&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'cdc policy changes 2025 research report' returned 4 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=cdc+policy+changes+2025+research+report&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: cdc policy changes 2025 research report
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: cdc policy changes 2025 research report
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: cdc policy changes 2025 research report
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:research_system.orchestrator:Added 5 cards from backfill
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 26 cards, 16 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=cdc.gov, text='January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'january the public health law news public health law cdc public health law news public health law ne...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=cdc.gov, text='29 August 7, 2025 INSIDE 463 Notes from the Field: Hepatitis B Virus Transmission Associated with As...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'august inside notes from the field hepatitis b virus transmission associated with assisted blood glu...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=cdc.gov, text='Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'staying up to date with covid- vaccines covid- cdc covid- vaccines covid- vaccines staying up to dat...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=cdc.gov, text='In 2025, CDC will launch a Minimum Viable Product version with key partners....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in cdc will launch a minimum viable product version with key partners...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 5: domain=cdc.gov, text='CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus Season | CDC Online...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'cdc recommends updated - covid- and flu vaccines for fall winter virus season cdc online newsroom cd...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.123 0.299 0.340 0.354
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.123 1.000 0.301 0.094 0.277
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.299 0.301 1.000 0.285 0.788
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.340 0.094 0.285 1.000 0.280
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.354 0.277 0.788 0.280 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 0 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 0 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 0 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 1 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.346 between cards 3 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 3 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 3 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 3 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 4 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.324 between cards 6 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 7 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 7 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 9 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.356 between cards 9 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 10 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 10 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 11 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 13 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Found 19 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,7): similarity=0.455
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: Program evaluation is a critical tool for understanding and improving organizati...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,10): similarity=0.425
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 10: Project 2025 as a Framework for Health Policy Changes: A Policy Analysis
+18 Page...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,11): similarity=0.487
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 11: the <strong>CDC</strong>’s Global Health Center, which was funded at $693 millio...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,15): similarity=0.466
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: January 2025 | The Public Health Law News | Public Health Law | CDC Public Healt...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 15: Project 2025 - American Public Health Association...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (2,4): similarity=0.788
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines *...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 4: CDC Recommends Updated 2024-2025 COVID-19 and Flu Vaccines for Fall/Winter Virus...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 7 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 6: 8 members from domains {'kff.org', 'nih.gov', 'doi.org', 'cdc.gov', 'apha.org', 'npr.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:Group 2: 3 members from domains {'infectioncontroltoday.com', 'cdc.gov'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 2 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 8 cards from ['apha.org', 'cdc.gov', 'doi.org', 'kff.org', 'nih.gov', 'npr.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: January 2025 | The Public Health Law News | Public Health Law | CDC Public Health Law News Public He...
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 1: 3 cards from ['cdc.gov', 'infectioncontroltoday.com']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Staying Up to Date with COVID-19 Vaccines | COVID-19 | CDC * COVID-19 Vaccines * COVID-19 Vaccines S...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 2 clusters with 26 total cards
+INFO:research_system.triangulation.post:Cluster 0: 8 cards from 6 domains ['apha.org', 'cdc.gov', 'doi.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Cluster 1: 3 cards from 2 domains ['cdc.gov', 'infectioncontroltoday.com']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 2 clusters retained
+WARNING:research_system.tools.evidence_io:Validation failed for card 15/26: Evidence schema validation failed: '' should be non-empty
+WARNING:research_system.tools.evidence_io:Card ID: a169519c-8634-4ef9-ac10-43c5556753b4, URL: https://doi.org/10.2139/ssrn.5168794
+INFO:research_system.tools.evidence_io:JSONL write complete: 25 successful, 1 failed
+INFO:research_system.orchestrator:Evidence write: ok=25 bad=1
+INFO:research_system.orchestrator:Trimmed cards from 26 to 25 after filtering invalid
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+STRICT FAIL: PRIMARY_SHARE(0%) < 50%
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<wait_for() done, defined at /opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/tasks.py:436> exception=SystemExit('STRICT FAIL: PRIMARY_SHARE(0%) < 50%')>
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/tasks.py", line 476, in wait_for
+    await waiter
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 66, in main
+    asyncio.run(asyncio.wait_for(arun(), timeout=wall_timeout))
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 189, in run
+    with Runner(debug=debug) as runner:
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 63, in __exit__
+    self.close()
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 71, in close
+    _cancel_all_tasks(loop)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 201, in _cancel_all_tasks
+    loop.run_until_complete(tasks.gather(*to_cancel, return_exceptions=True))
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+    self._run_once()
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 1936, in _run_once
+    handle._run()
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 61, in arun
+    await loop.run_in_executor(None, orchestrator.run)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator.py", line 1681, in run
+    raise SystemExit("STRICT FAIL: " + " | ".join(errs))
+SystemExit: STRICT FAIL: PRIMARY_SHARE(0%) < 50%

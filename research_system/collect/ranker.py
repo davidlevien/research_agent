@@ -37,16 +37,17 @@ PRIMARY_HINTS = (
     "ec.europa.eu", "ecb.europa.eu", "eurostat.ec.europa.eu"
 )
 
-def is_primary_source(card: Any) -> bool:
-    """Check if card is from a primary source using extended hints."""
+def is_primary_source(card: Any, primary_domains: set[str] = None, primary_patterns: list = None) -> bool:
+    """Check if card is from a primary source using pack-aware detection."""
     domain = getattr(card, "source_domain", "").lower()
     
     # Check explicit primary flag first
     if getattr(card, "is_primary_source", False):
         return True
     
-    # Check against extended primary hints
-    return any(hint in domain or domain.endswith(hint) for hint in PRIMARY_HINTS)
+    # Use the new pack-aware primary detection
+    from ..tools.domain_norm import is_primary_domain
+    return is_primary_domain(domain, additional_domains=primary_domains, patterns=primary_patterns)
 
 def rank_evidence(card: Any) -> float:
     """

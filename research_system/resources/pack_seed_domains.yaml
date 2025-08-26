@@ -1,0 +1,149 @@
+# Pack-specific seed domains for initial discovery phase
+# These domains are used to create targeted queries in the first discovery wave
+
+seed_domains:
+  policy:
+    - federalregister.gov
+    - regulations.gov
+    - whitehouse.gov
+    - congress.gov
+    - gao.gov
+    - oira.gov
+    - cbo.gov
+    - supremecourt.gov
+    
+  finance:
+    - sec.gov
+    - treasury.gov
+    - federalreserve.gov
+    - fdic.gov
+    - occ.treas.gov
+    - bis.org
+    - ecb.europa.eu
+    - bankofengland.co.uk
+    
+  health:
+    - cdc.gov
+    - hhs.gov
+    - nih.gov
+    - fda.gov
+    - who.int
+    - ecdc.europa.eu
+    - nhs.uk
+    - canada.ca
+    - cms.gov
+    - medicare.gov
+    
+  macro:
+    - imf.org
+    - worldbank.org
+    - oecd.org
+    - un.org
+    - undp.org
+    - data.europa.eu
+    - bis.org
+    - wto.org
+    
+  climate_energy:
+    - eia.gov
+    - epa.gov
+    - noaa.gov
+    - nasa.gov
+    - iea.org
+    - ipcc.ch
+    - copernicus.eu
+    - climate.gov
+    
+  labor_education:
+    - bls.gov
+    - census.gov
+    - nces.ed.gov
+    - ed.gov
+    - ons.gov.uk
+    - statcan.gc.ca
+    - dol.gov
+    - osha.gov
+    
+  transportation:
+    - bts.gov
+    - tsa.gov
+    - faa.gov
+    - icao.int
+    - iata.org
+    - eurocontrol.int
+    - dot.gov
+    
+  housing_realestate:
+    - hud.gov
+    - fhfa.gov
+    - census.gov
+    - ons.gov.uk
+    - ec.europa.eu
+    
+  technology:
+    - nist.gov
+    - cisa.gov
+    - uspto.gov
+    - enisa.europa.eu
+    - iso.org
+    - ietf.org
+    - w3.org
+    
+  travel_tourism:
+    - unwto.org
+    - ustravel.org
+    - wttc.org
+    - bts.gov
+    - tsa.gov
+    - eurocontrol.int
+    - icao.int
+    - oecd.org
+    
+  defense:
+    - defense.gov
+    - dod.gov
+    - army.mil
+    - navy.mil
+    - af.mil
+    - nato.int
+    
+  education:
+    - ed.gov
+    - nces.ed.gov
+    - nsf.gov
+    - neh.gov
+    - arts.gov
+    - studentaid.gov
+    
+  energy:
+    - eia.gov
+    - energy.gov
+    - ferc.gov
+    - nrc.gov
+    - iea.org
+    - opec.org
+    
+  agriculture:
+    - usda.gov
+    - fas.usda.gov
+    - nass.usda.gov
+    - ers.usda.gov
+    - fao.org
+    - ifad.org
+    
+  science:
+    - nsf.gov
+    - nasa.gov
+    - noaa.gov
+    - usgs.gov
+    - nist.gov
+    - arxiv.org
+    - pubmed.gov
+    
+  labor:
+    - bls.gov
+    - dol.gov
+    - osha.gov
+    - nlrb.gov
+    - ilo.org
+    - eeoc.gov

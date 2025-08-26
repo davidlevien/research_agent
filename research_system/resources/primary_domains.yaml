@@ -1,0 +1,272 @@
+# Primary domain configurations for pack-aware source detection
+# canonical: explicit trusted domains
+# patterns: regex patterns to match additional primary sources
+
+default:
+  canonical:
+    - "federalregister.gov"
+    - "regulations.gov"
+    - "congress.gov"
+    - "whitehouse.gov"
+    - "omb.gov"
+    - "gao.gov"
+    - "sec.gov"
+    - "treasury.gov"
+    - "federalreserve.gov"
+    - "census.gov"
+    - "who.int"
+    - "oecd.org"
+    - "europa.eu"
+    - "ec.europa.eu"
+    - "eur-lex.europa.eu"
+    - "un.org"
+    - "worldbank.org"
+    - "imf.org"
+    - "bis.org"
+    - "ecb.europa.eu"
+  patterns:
+    - "\\.gov$"
+    - "\\.mil$"
+    - "\\.int$"
+    - "\\.gov\\.[a-z]{2}$"  # International gov domains
+
+# Pack-specific augmentations
+policy:
+  canonical:
+    - "federalregister.gov"
+    - "regulations.gov"
+    - "oira.gov"
+    - "gao.gov"
+    - "cbo.gov"
+    - "supremecourt.gov"
+    - "uscourts.gov"
+    - "justice.gov"
+    - "ftc.gov"
+    - "cfpb.gov"
+    - "nlrb.gov"
+    - "epa.gov"
+    - "osha.gov"
+    - "eeoc.gov"
+  patterns:
+    - "^[a-z]+\\.house\\.gov$"
+    - "^[a-z]+\\.senate\\.gov$"
+
+health:
+  canonical:
+    - "hhs.gov"
+    - "nih.gov"
+    - "fda.gov"
+    - "cdc.gov"
+    - "cms.gov"
+    - "medicare.gov"
+    - "medicaid.gov"
+    - "samhsa.gov"
+    - "hrsa.gov"
+    - "ahrq.gov"
+    - "ihs.gov"
+    - "acf.hhs.gov"
+    - "acl.gov"
+    - "aspr.hhs.gov"
+    - "cisa.gov"  # For health infrastructure
+  patterns:
+    - "^[a-z]+\\.nih\\.gov$"  # All NIH institutes
+    - "^[a-z]+\\.cdc\\.gov$"  # All CDC centers
+
+finance:
+  canonical:
+    - "sec.gov"
+    - "fdic.gov"
+    - "occ.treas.gov"
+    - "federalreserve.gov"
+    - "treasury.gov"
+    - "cftc.gov"
+    - "finra.org"
+    - "msrb.org"
+    - "fhfa.gov"
+    - "ncua.gov"
+    - "pbgc.gov"
+    - "sipc.org"
+    - "ffiec.gov"
+  patterns:
+    - "^[a-z]+\\.frb\\.gov$"  # Federal Reserve Banks
+
+education:
+  canonical:
+    - "ed.gov"
+    - "ies.ed.gov"
+    - "nces.ed.gov"
+    - "nsf.gov"
+    - "neh.gov"
+    - "arts.gov"
+    - "imls.gov"
+    - "studentaid.gov"
+  patterns:
+    - "^[a-z]+\\.ed\\.gov$"
+
+energy:
+  canonical:
+    - "energy.gov"
+    - "eia.gov"
+    - "ferc.gov"
+    - "nrc.gov"
+    - "netl.doe.gov"
+    - "osti.gov"
+    - "science.energy.gov"
+  patterns:
+    - "^[a-z]+\\.energy\\.gov$"
+    - "^[a-z]+\\.doe\\.gov$"
+
+defense:
+  canonical:
+    - "defense.gov"
+    - "dod.gov"
+    - "army.mil"
+    - "navy.mil"
+    - "af.mil"
+    - "marines.mil"
+    - "spaceforce.mil"
+    - "nga.mil"
+    - "nsa.gov"
+    - "dia.mil"
+    - "darpa.mil"
+    - "dtic.mil"
+  patterns:
+    - "^[a-z]+\\.defense\\.gov$"
+    - "^[a-z]+\\.mil$"
+
+science:
+  canonical:
+    - "nsf.gov"
+    - "nasa.gov"
+    - "noaa.gov"
+    - "usgs.gov"
+    - "nist.gov"
+    - "science.gov"
+    - "ostp.gov"
+    - "nationalacademies.org"
+    - "nature.com"
+    - "science.org"
+    - "pnas.org"
+    - "arxiv.org"
+    - "pubmed.gov"
+  patterns:
+    - "^[a-z]+\\.nasa\\.gov$"
+    - "^[a-z]+\\.noaa\\.gov$"
+
+# Additional comprehensive packs from review
+climate_energy:
+  canonical:
+    - "eia.gov"
+    - "epa.gov"
+    - "noaa.gov"
+    - "nasa.gov"
+    - "iea.org"
+    - "ipcc.ch"
+    - "copernicus.eu"
+    - "climate.gov"
+  patterns:
+    - "^[a-z]+\\.epa\\.gov$"
+
+labor_education:
+  canonical:
+    - "bls.gov"
+    - "census.gov"
+    - "nces.ed.gov"
+    - "ed.gov"
+    - "ons.gov.uk"
+    - "statcan.gc.ca"
+    - "dol.gov"
+  patterns:
+    - "^[a-z]+\\.ed\\.gov$"
+
+transportation:
+  canonical:
+    - "bts.gov"
+    - "tsa.gov"
+    - "faa.gov"
+    - "icao.int"
+    - "iata.org"
+    - "eurocontrol.int"
+    - "dot.gov"
+    - "fra.dot.gov"
+    - "fmcsa.dot.gov"
+    - "nhtsa.dot.gov"
+  patterns:
+    - "^[a-z]+\\.dot\\.gov$"
+
+housing_realestate:
+  canonical:
+    - "hud.gov"
+    - "fhfa.gov"
+    - "census.gov"
+    - "ons.gov.uk"
+    - "ec.europa.eu"
+    - "fanniemae.com"
+    - "freddiemac.com"
+  patterns:
+    - "^[a-z]+\\.hud\\.gov$"
+
+technology:
+  canonical:
+    - "nist.gov"
+    - "cisa.gov"
+    - "uspto.gov"
+    - "enisa.europa.eu"
+    - "iso.org"
+    - "ietf.org"
+    - "w3.org"
+    - "ieee.org"
+    - "acm.org"
+  patterns:
+    - "^[a-z]+\\.nist\\.gov$"
+
+travel_tourism:
+  canonical:
+    - "unwto.org"
+    - "ustravel.org"
+    - "wttc.org"
+    - "bts.gov"
+    - "tsa.gov"
+    - "eurocontrol.int"
+    - "icao.int"
+    - "oecd.org"
+    - "iata.org"
+    - "aci.aero"
+  patterns:
+    - "^[a-z]+\\.unwto\\.org$"
+
+macro:
+  canonical:
+    - "worldbank.org"
+    - "imf.org"
+    - "oecd.org"
+    - "un.org"
+    - "undp.org"
+    - "data.europa.eu"
+    - "bis.org"
+    - "wto.org"
+  patterns:
+    - "^data\\.[a-z]+\\.europa\\.eu$"
+
+agriculture:
+  canonical:
+    - "usda.gov"
+    - "fas.usda.gov"
+    - "nass.usda.gov"
+    - "ers.usda.gov"
+    - "fao.org"
+    - "ifad.org"
+    - "cgiar.org"
+  patterns:
+    - "^[a-z]+\\.usda\\.gov$"
+
+labor:
+  canonical:
+    - "bls.gov"
+    - "dol.gov"
+    - "osha.gov"
+    - "nlrb.gov"
+    - "ilo.org"
+    - "eeoc.gov"
+  patterns:
+    - "^[a-z]+\\.dol\\.gov$"

@@ -14,7 +14,7 @@ PRIMARY_SITES = [
     "site:who.int", "site:un.org"
 ]
 
-def _queries_for_family(fam: Dict) -> List[str]:
+def _queries_for_family(fam: Dict, primary_domains: Optional[set] = None) -> List[str]:
     """Build tight queries from the representative claim/key if present."""
     key = fam.get("key") or fam.get("representative_claim") or ""
     
@@ -35,8 +35,18 @@ def _queries_for_family(fam: Dict) -> List[str]:
     if metrics:
         parts.extend(metrics[:2])  # Use first couple metrics
     
+    # Build site queries - use pack-specific domains if available
+    sites_to_query = []
+    if primary_domains:
+        # Take top domains from pack-specific set
+        for domain in list(primary_domains)[:15]:
+            if not domain.startswith('.'):  # Skip pattern-like entries
+                sites_to_query.append(f"site:{domain}")
+    else:
+        sites_to_query = PRIMARY_SITES
+    
     queries = []
-    for site in PRIMARY_SITES:
+    for site in sites_to_query:
         for q in parts:
             if q.strip():
                 queries.append(f"{q.strip()} {site}")
@@ -47,7 +57,9 @@ def primary_fill_for_families(
     topic: str,
     search_fn: Callable,
     extract_fn: Callable,
-    k_per_family: int = 2
+    k_per_family: int = 2,
+    primary_domains: Optional[set] = None,
+    primary_patterns: Optional[list] = None
 ) -> List[Any]:
     """
     Fill triangulated families with primary sources where missing.
@@ -58,17 +70,23 @@ def primary_fill_for_families(
         search_fn: (query, n) -> list[SearchResult(url,title)]
         extract_fn: (url) -> Optional[EvidenceCard]
         k_per_family: Max cards to add per family
+        primary_domains: Optional set of primary domains (defaults to PRIMARY_CANONICALS)
+        primary_patterns: Optional list of regex patterns for primary sources
         
     Returns:
         list[EvidenceCard] (new primary source cards)
     """
+    # Use provided domains or fall back to defaults
+    if primary_domains is None:
+        primary_domains = PRIMARY_CANONICALS
+    
     new_cards = []
     families_needing_primary = []
     
     # First identify families without primary sources
     for fam in families:
         fam_domains = {canonical_domain(d) for d in fam.get("domains", []) if d}
-        if not (fam_domains & PRIMARY_CANONICALS):
+        if not (fam_domains & primary_domains):
             families_needing_primary.append(fam)
     
     if not families_needing_primary:
@@ -79,7 +97,7 @@ def primary_fill_for_families(
     
     for fam in families_needing_primary:
         family_cards_added = 0
-        queries = _queries_for_family(fam)
+        queries = _queries_for_family(fam, primary_domains)
         
         for q in queries[:5]:  # Limit queries per family
             if family_cards_added >= k_per_family:
@@ -96,7 +114,8 @@ def primary_fill_for_families(
                     break
                     
                 # Check if URL is from a primary domain
-                if not r.url or canonical_domain(r.url) not in PRIMARY_CANONICALS:
+                from research_system.tools.domain_norm import is_primary_domain
+                if not r.url or not is_primary_domain(r.url, primary_domains, primary_patterns):
                     continue
                 
                 try:

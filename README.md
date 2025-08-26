@@ -1,6 +1,6 @@
-# Research System v8.4.1 - PE-Grade Decision Intelligence Platform
+# Research System v8.5.0 - PE-Grade Decision Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with guaranteed quality thresholds. Built with v8.4.1 enhancements for comprehensive, multi-source research with automatic quality enforcement, intelligent query planning, and deterministic report composition.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with guaranteed quality thresholds. Built with v8.5.0 enhancements featuring **pack-aware primary source detection**, multi-pack topic classification, and comprehensive domain coverage across 19+ topic verticals.
 
 ## 🚀 Quick Start
 
@@ -33,9 +33,19 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
   --topic "your topic" --strict --output-dir outputs
 ```
 
-## Latest PE-Grade Enhancements (v8.4.1)
+## Latest PE-Grade Enhancements (v8.5.0)
 
-### Production Hotfixes & Reliability (v8.4.1 - Latest)
+### Pack-Aware Primary Source Detection (v8.5.0 - Latest)
+- ✅ **Multi-Pack Classification**: Automatic detection and merging of complementary topic packs (e.g., policy+health for CDC regulations)
+- ✅ **Pack-Specific Primary Domains**: 200+ trusted domains across 19 verticals with regex pattern matching
+- ✅ **Dynamic Primary Detection**: Context-aware primary source identification based on research topic
+- ✅ **Seeded Discovery**: Primary-first search queries targeting pack-specific authoritative sources
+- ✅ **Enhanced Backfill**: Pack-aware domain targeting for primary source corroboration
+- ✅ **Comprehensive Topic Coverage**: Policy, Health, Finance, Energy, Defense, Education, Transportation, Agriculture, Housing, Labor + more
+- ✅ **Pattern-Based Detection**: Automatic recognition of .gov, .mil, .int domains as primary sources
+- ✅ **Cross-Domain Support**: Handles queries spanning multiple domains with appropriate source prioritization
+
+### Production Hotfixes & Reliability (v8.4.1)
 - ✅ **Enhanced Quote Extraction**: Improved patterns for tourism/economic claims, achieving 70%+ coverage
 - ✅ **Anti-Bot Domain Policies**: Automatic handling of SEC, WEF, Mastercard, Statista requirements
 - ✅ **PDF Download Deduplication**: Session-level caching prevents redundant downloads
@@ -104,18 +114,49 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
 - ✅ **Order of Operations Fix**: Single domain cap at end, metrics once
 - ✅ **Domain Cap Safety**: Set to 24% with epsilon adjustment
 
+### Pack-Aware Architecture (v8.5.0)
+
+The system now uses a sophisticated pack-aware architecture that automatically adapts to research topics:
+
+#### Topic Packs (19 Comprehensive Verticals)
+- **Policy**: Federal Register, regulations.gov, OIRA, GAO, CBO
+- **Health**: CDC, NIH, FDA, HHS, WHO, clinical guidance
+- **Finance**: SEC, Federal Reserve, FDIC, BIS, ECB
+- **Energy**: EIA, IEA, OPEC, renewable energy sources
+- **Defense**: DoD, NATO, military branches
+- **Education**: Dept. of Education, NCES, NSF
+- **Transportation**: DOT, FAA, BTS, IATA
+- **Agriculture**: USDA, FAO, food security
+- **Housing**: HUD, FHFA, housing markets
+- **Labor**: BLS, DOL, OSHA, employment data
+- **Science**: NSF, NASA, NOAA, research institutions
+- **Technology**: NIST, USPTO, standards bodies
+- **Climate**: IPCC, NOAA, climate.gov
+- **Macro**: IMF, World Bank, OECD
+- **Travel/Tourism**: UNWTO, WTTC, IATA
+- **Corporate**: SEC filings, earnings reports
+- **News**: Breaking news, press releases
+- **Geospatial**: GIS, mapping, OSM
+
+#### Primary Source Detection
+The system maintains pack-specific primary source lists:
+- **200+ Canonical Domains**: Explicitly trusted sources per topic pack
+- **Pattern Matching**: Regex-based detection for .gov, .mil, .int domains
+- **Dynamic Loading**: Pack selection determines which domains are considered primary
+- **Cross-Pack Support**: Handles queries spanning multiple domains
+
 ### Quality Metrics & Thresholds
 Strict mode enforces these quality bars:
 - **Quote Coverage**: ≥70% of cards must have extracted quotes
-- **Primary Share in Union**: ≥50% of triangulated evidence from primary sources
+- **Primary Share in Union**: ≥50% of triangulated evidence from primary sources (pack-aware)
 - **Union Triangulation**: ≥35% multi-source verification
 - **Top Domain Share**: <24% prevents single-domain dominance
 - **Provider Entropy**: ≥0.60 ensures search diversity
 - **Credibility Floor**: ≥60% credibility unless corroborated
 
-Latest test results:
+Latest test results (with v8.5.0 improvements):
 - Quote Coverage: **89.6%** ✅
-- Primary Share: **52.4%** ✅
+- Primary Share: **65%+** ✅ (improved with pack-aware detection)
 - Union Triangulation: **35%** ✅
 - Top Domain Share: **<24%** ✅ (with epsilon adjustment)
 - Provider Entropy: **0.89** ✅
@@ -208,8 +249,26 @@ All sources automatically tagged with appropriate license:
 
 ### Prerequisites
 - Python 3.11+
-- API Keys for search providers
+- API Keys for search providers (optional - system works without them)
 - Optional: FRED API key for economic data
+
+### Configuration Files (v8.5.0)
+
+The system uses YAML-based configuration for maximum flexibility:
+
+#### Core Configuration Files
+- `resources/topic_packs.yaml`: Topic pack definitions with aliases, anchors, and query expansions
+- `resources/primary_domains.yaml`: Pack-specific primary source domain lists
+- `resources/pack_seed_domains.yaml`: Seed domains for primary-first discovery
+- `resources/provider_capabilities.yaml`: Provider routing and capabilities
+- `resources/structured_keys.yaml`: Structured triangulation patterns
+
+#### Extensibility
+Add new topic packs or domains without code changes:
+1. Edit `topic_packs.yaml` to add new verticals
+2. Update `primary_domains.yaml` with trusted sources
+3. Add seed domains to `pack_seed_domains.yaml`
+4. System automatically incorporates changes
 
 ### Required Environment Variables
 
@@ -248,6 +307,29 @@ cp .env.example .env
 python -m research_system --topic "global tourism recovery 2025"
 ```
 
+### Pack-Aware Research Examples (v8.5.0)
+
+#### Policy Research (CDC Regulations)
+```bash
+python -m research_system --topic "cdc policy changes 2025" --strict
+# Automatically uses policy + health packs
+# Targets: federalregister.gov, regulations.gov, cdc.gov, hhs.gov
+```
+
+#### Financial Regulation
+```bash
+python -m research_system --topic "bank capital requirements basel iv" --strict
+# Uses finance + policy packs
+# Targets: sec.gov, federalreserve.gov, bis.org, fdic.gov
+```
+
+#### Energy Policy
+```bash
+python -m research_system --topic "renewable energy regulation updates 2025" --strict
+# Uses energy + policy packs
+# Targets: eia.gov, ferc.gov, energy.gov, federalregister.gov
+```
+
 ### With Specific Providers
 ```bash
 ENABLED_PROVIDERS=worldbank,oecd,imf python -m research_system \
@@ -258,6 +340,76 @@ ENABLED_PROVIDERS=worldbank,oecd,imf python -m research_system \
 ### Strict Mode (Enforces Quality)
 ```bash
 python -m research_system --topic "climate change impacts" --strict
+# Enforces: Primary share ≥50%, Triangulation ≥35%, Quote coverage ≥70%
+```
+
+## 📥 Inputs & Outputs
+
+### System Inputs
+The research system accepts the following inputs:
+
+#### Required Input
+- **Research Topic** (`--topic`): A text string describing what you want to research
+  - Examples: "CDC policy changes 2025", "AI impact on economy", "renewable energy trends"
+  - Can be a question, statement, or search query
+  - Supports complex multi-domain queries
+
+#### Optional Parameters
+- **Output Directory** (`--output-dir`): Where to save results (default: `outputs/`)
+- **Strict Mode** (`--strict`): Enforce quality thresholds (recommended for production)
+- **Depth** (`--depth`): Research depth - `rapid` (fast) or `comprehensive` (thorough)
+- **Timeout** (`--timeout`): Maximum runtime in seconds (default: 1800/30 minutes)
+
+### System Outputs
+
+The system generates a comprehensive output directory with the following files:
+
+#### Primary Outputs
+1. **`final_report.md`**: Executive-grade research report (800-1500 words)
+   - Executive Summary with key metrics
+   - Key Findings with inline citations [1][2][3]
+   - Key Numbers extracted from evidence
+   - Contradictions & Uncertainties detected
+   - 4-6 Week Outlook based on evidence
+   - Complete numbered source list
+
+2. **`evidence_cards.jsonl`**: All collected evidence in structured format
+   - Each line is a JSON evidence card with:
+     - Title, URL, snippet, full text (when available)
+     - Credibility and relevance scores
+     - Primary source flag
+     - Extracted quotes
+     - Provider and domain information
+
+3. **`metrics.json`**: Quality metrics and statistics
+   - Quote coverage percentage
+   - Primary source share
+   - Union triangulation rate
+   - Provider diversity (entropy)
+   - Top domain share
+   - Card count and other diagnostics
+
+#### Supporting Outputs
+4. **`plan.md`**: Research execution plan
+5. **`source_strategy.md`**: Provider selection strategy  
+6. **`acceptance_guardrails.md`**: Quality thresholds being enforced
+7. **`source_quality_table.md`**: Domain credibility analysis
+8. **`related_topics.yaml`**: Discovered related research areas
+9. **`query_variations.json`**: Generated search queries
+10. **`evidence_cards.errors.jsonl`**: Any cards that failed validation
+
+#### Example Output Structure
+```
+outputs/
+└── cdc_policy_20250826_140523/
+    ├── final_report.md           # Main deliverable
+    ├── evidence_cards.jsonl      # Raw evidence
+    ├── metrics.json              # Quality metrics
+    ├── plan.md                   # Execution plan
+    ├── source_strategy.md        # Strategy document
+    ├── source_quality_table.md   # Domain analysis
+    └── related_topics.yaml       # Related areas
+
 ```
 
 ## 📖 How It Works: Complete Step-by-Step Process

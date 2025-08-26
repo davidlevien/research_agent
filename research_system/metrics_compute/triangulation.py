@@ -2,8 +2,9 @@
 
 from collections import Counter
 from math import log
-from typing import List, Dict, Any
-from research_system.tools.domain_norm import canonical_domain, PRIMARY_CANONICALS
+from typing import List, Dict, Any, Set, Pattern
+import re
+from research_system.tools.domain_norm import canonical_domain, normalize_domain, PRIMARY_CANONICALS, PRIMARY_PATTERNS
 
 
 def compute_union_triangulation(filtered_para: List[Dict], structured: List[Dict], n_cards: int) -> float:
@@ -76,7 +77,7 @@ def provider_entropy(cards: List[Any]) -> float:
 
 
 def primary_share_in_triangulated(cards: List[Any], filtered_para: List[Dict], structured: List[Dict], 
-                                  primary_domains: set = None) -> float:
+                                  primary_domains: Set[str] = None, primary_patterns: List[Pattern] = None) -> float:
     """
     Calculate the share of primary sources in triangulated evidence.
     
@@ -85,13 +86,16 @@ def primary_share_in_triangulated(cards: List[Any], filtered_para: List[Dict], s
         filtered_para: Filtered paraphrase clusters
         structured: Structured triangulation results
         primary_domains: Set of primary source domains (defaults to PRIMARY_CANONICALS)
+        primary_patterns: List of regex patterns for primary sources (defaults to PRIMARY_PATTERNS)
         
     Returns:
         Primary share in triangulated evidence [0, 1]
     """
-    # Use canonical primary domains if not specified
+    # Use canonical primary domains and patterns if not specified
     if primary_domains is None:
         primary_domains = PRIMARY_CANONICALS
+    if primary_patterns is None:
+        primary_patterns = PRIMARY_PATTERNS
     
     # Get all triangulated indices (multi-domain only, using canonical domains)
     tri_indices = set()
@@ -114,8 +118,21 @@ def primary_share_in_triangulated(cards: List[Any], filtered_para: List[Dict], s
     for idx in tri_indices:
         if idx < len(cards):
             card = cards[idx]
-            domain = canonical_domain(getattr(card, "source_domain", None) or card.get("source_domain", ""))
-            if domain in primary_domains:
+            domain = getattr(card, "source_domain", None) or card.get("source_domain", "")
+            
+            # Check if it's a primary domain using both canonical check and patterns
+            canonical = canonical_domain(domain)
+            is_primary = canonical in primary_domains
+            
+            # Also check patterns if not already primary
+            if not is_primary and primary_patterns:
+                normalized = normalize_domain(domain)
+                for pattern in primary_patterns:
+                    if pattern.search(normalized):
+                        is_primary = True
+                        break
+            
+            if is_primary:
                 primary_count += 1
     
     return primary_count / len(tri_indices)
