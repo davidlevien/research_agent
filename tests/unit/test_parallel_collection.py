@@ -41,14 +41,16 @@ class TestParallelCollection:
                     providers=["openalex", "crossref", "wikipedia"],
                     categories=["test"]
                 )
-                
-                start_time = time.time()
-                cards = await collect_from_free_apis_async("test topic")
-                elapsed = time.time() - start_time
-                
-                # Should complete in ~0.5s (parallel) not ~1.5s (serial)
-                assert elapsed < 1.0, f"Parallel execution took {elapsed}s, should be < 1.0s"
-                assert len(cards) == 3, f"Expected 3 cards, got {len(cards)}"
+                # Mock is_off_topic to always return False
+                with patch("research_system.collection_enhanced.is_off_topic", return_value=False):
+                    start_time = time.time()
+                    # Pass providers explicitly to avoid routing
+                    cards = await collect_from_free_apis_async("test topic", providers=["openalex", "crossref", "wikipedia"])
+                    elapsed = time.time() - start_time
+                    
+                    # Should complete in ~0.5s (parallel) not ~1.5s (serial)
+                    assert elapsed < 1.0, f"Parallel execution took {elapsed}s, should be < 1.0s"
+                    assert len(cards) == 3, f"Expected 3 cards, got {len(cards)}"
     
     @pytest.mark.asyncio
     async def test_provider_timeout_handling(self):
@@ -100,12 +102,13 @@ class TestParallelCollection:
                     providers=["worldbank", "openalex"],
                     categories=["test"]
                 )
-                
-                cards = await collect_from_free_apis_async("test topic")
-                
-                # Should get 1 card from working provider, failing provider is handled
-                assert len(cards) == 1
-                assert cards[0].title == "Working"
+                # Mock is_off_topic to always return False
+                with patch("research_system.collection_enhanced.is_off_topic", return_value=False):
+                    cards = await collect_from_free_apis_async("test topic")
+                    
+                    # Should get 1 card from working provider, failing provider is handled
+                    assert len(cards) == 1
+                    assert cards[0].title == "Working"
     
     def test_sync_wrapper_works(self):
         """Test that the synchronous wrapper works correctly."""
@@ -126,12 +129,13 @@ class TestParallelCollection:
                     providers=["wikipedia"],
                     categories=["test"]
                 )
-                
-                # This should work without being in an async context
-                cards = collect_from_free_apis("test topic")
-                
-                assert len(cards) == 1
-                assert cards[0].title == "Sync test"
+                # Mock is_off_topic to always return False (not off-topic)
+                with patch("research_system.collection_enhanced.is_off_topic", return_value=False):
+                    # This should work without being in an async context
+                    cards = collect_from_free_apis("test topic")
+                    
+                    assert len(cards) == 1
+                    assert cards[0].title == "Sync test"
     
     @pytest.mark.asyncio
     async def test_metrics_recorded(self):

@@ -46,13 +46,21 @@ class TestEvidenceValidation:
     
     def test_validates_required_fields(self):
         valid_card = {
+            "id": "12345678-1234-1234-1234-123456789012",
             "title": "Test Article",
             "url": "https://example.com",
             "snippet": "Test content here",
             "provider": "tavily",
             "credibility_score": 0.8,
             "relevance_score": 0.7,
-            "confidence": 0.75
+            "confidence": 0.75,
+            "subtopic_name": "Test Subtopic",
+            "claim": "Test claim here",
+            "supporting_text": "Supporting evidence text",
+            "source_domain": "example.com",
+            "is_primary_source": False,
+            "collected_at": "2024-01-01T12:00:00Z",
+            "stance": "neutral"
         }
         
         # Should not raise
@@ -60,26 +68,35 @@ class TestEvidenceValidation:
     
     def test_rejects_missing_fields(self):
         invalid_card = {
+            "id": "12345678-1234-1234-1234-123456789012",
             "title": "Test Article",
             "url": "https://example.com",
-            # Missing snippet and provider
+            # Missing snippet, provider, and other required fields
             "credibility_score": 0.8,
             "relevance_score": 0.7,
             "confidence": 0.75
         }
         
-        with pytest.raises(ValueError, match="missing required fields"):
+        with pytest.raises(ValueError, match="validation failed"):
             validate_evidence_dict(invalid_card)
     
     def test_rejects_empty_snippet(self):
         invalid_card = {
+            "id": "12345678-1234-1234-1234-123456789012",
             "title": "Test Article",
             "url": "https://example.com",
             "snippet": "   ",  # Empty/whitespace
             "provider": "tavily",
             "credibility_score": 0.8,
             "relevance_score": 0.7,
-            "confidence": 0.75
+            "confidence": 0.75,
+            "subtopic_name": "Test Subtopic",
+            "claim": "Test claim here",
+            "supporting_text": "Supporting evidence text",
+            "source_domain": "example.com",
+            "is_primary_source": False,
+            "collected_at": "2024-01-01T12:00:00Z",
+            "stance": "neutral"
         }
         
         with pytest.raises(ValueError, match="snippet cannot be empty"):
@@ -87,16 +104,24 @@ class TestEvidenceValidation:
     
     def test_validates_score_bounds(self):
         invalid_card = {
+            "id": "12345678-1234-1234-1234-123456789012",
             "title": "Test Article",
             "url": "https://example.com",
             "snippet": "Test content",
             "provider": "tavily",
             "credibility_score": 1.5,  # Out of bounds
             "relevance_score": 0.7,
-            "confidence": 0.75
+            "confidence": 0.75,
+            "subtopic_name": "Test Subtopic",
+            "claim": "Test claim here",
+            "supporting_text": "Supporting evidence text",
+            "source_domain": "example.com",
+            "is_primary_source": False,
+            "collected_at": "2024-01-01T12:00:00Z",
+            "stance": "neutral"
         }
         
-        with pytest.raises(ValueError, match="out of bounds"):
+        with pytest.raises(ValueError, match="validation failed"):
             validate_evidence_dict(invalid_card)
 
 

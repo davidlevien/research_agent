@@ -48,7 +48,7 @@ def test_relevance_score_missing_is_invalid():
         "collected_at": "2025-08-24T00:00:00Z"
     }
     
-    with pytest.raises(ValueError, match="required fields"):
+    with pytest.raises(ValueError, match="validation failed"):
         validate_evidence_dict(card)
 
 
@@ -87,5 +87,5 @@ def test_all_scores_at_boundary():
     card_invalid = dict(card_zero)
     card_invalid["relevance_score"] = 1.1
     
-    with pytest.raises(ValueError, match="out of bounds"):
+    with pytest.raises(ValueError, match="validation failed"):
         validate_evidence_dict(card_invalid)
