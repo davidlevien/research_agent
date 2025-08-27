@@ -41,6 +41,16 @@ def _schema():
 
 def _repair_minimal(doc: Dict[str, Any]) -> Dict[str, Any]:
     """Enhanced self-healing with snippet repair chain"""
+    import uuid
+    import re
+    
+    # Fix ID if not a valid UUID
+    if "id" in doc:
+        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        if not re.match(uuid_pattern, str(doc["id"])):
+            # Generate a deterministic UUID from the bad ID
+            doc["id"] = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(doc["id"])))
+    
     # Repair snippet with fallback chain: quote → abstract → supporting_text → title
     if not doc.get("snippet") or doc.get("snippet", "").strip() == "":
         # Try best quote first (often most informative)
@@ -74,6 +84,16 @@ def _repair_minimal(doc: Dict[str, Any]) -> Dict[str, Any]:
     # Fix claim if empty
     if not doc.get("claim"):
         doc["claim"] = (doc.get("title") or doc.get("snippet") or "")[:200]
+    
+    # Handle stance and claim_id relationship (conditional requirement)
+    # Ensure stance has a value (defaults to neutral)
+    if "stance" not in doc:
+        doc["stance"] = "neutral"
+    
+    # If stance is not neutral, claim_id is required
+    if doc.get("stance") != "neutral":
+        if not doc.get("claim_id"):
+            doc["claim_id"] = f"claim_{doc.get('id', 'unknown')}"
     
     return doc
 
