@@ -1,7 +1,7 @@
 """Adaptive report length configuration based on evidence quality."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 from enum import Enum
 
 
@@ -147,6 +147,90 @@ def is_low_supply(
     )
 
 
+def get_intent_report_config(intent: str) -> Optional[Dict[str, Any]]:
+    """
+    Get intent-specific report configuration.
+    
+    Args:
+        intent: Intent type (e.g., "encyclopedia", "product", "local")
+        
+    Returns:
+        Dictionary with intent-specific report settings or None
+    """
+    # Intent-specific report configurations (from third-party review)
+    configs = {
+        "encyclopedia": {
+            "prefer_deep": True,
+            "sections": ["timeline", "key_events", "citations"],
+            "min_words": 800,
+            "max_words": 1200,
+            "citations": 6
+        },
+        "product": {
+            "prefer_brief": False,
+            "sections": ["how_we_picked", "top_picks", "price_bands"],
+            "min_words": 400,
+            "max_words": 800,
+            "focus": "review_sites"
+        },
+        "local": {
+            "prefer_brief": False,
+            "sections": ["disambiguation", "map", "poi_list"],
+            "min_words": 400,
+            "max_words": 700,
+            "poi_count": 10
+        },
+        "academic": {
+            "prefer_deep": True,
+            "sections": ["abstract", "key_findings", "methods", "doi_list"],
+            "min_words": 600,
+            "max_words": 1000,
+            "show_dois": True
+        },
+        "stats": {
+            "prefer_brief": False,
+            "sections": ["chart", "table", "methodology", "dataset_links"],
+            "min_words": 400,
+            "max_words": 600,
+            "visualize": True
+        },
+        "news": {
+            "prefer_brief": True,
+            "sections": ["summary", "sources"],
+            "min_words": 200,
+            "max_words": 500,
+            "multi_outlet": True
+        },
+        "travel": {
+            "prefer_brief": False,
+            "sections": ["overview", "attractions", "logistics"],
+            "min_words": 400,
+            "max_words": 700
+        },
+        "howto": {
+            "prefer_brief": False,
+            "sections": ["steps", "requirements", "tips"],
+            "min_words": 400,
+            "max_words": 800
+        },
+        "regulatory": {
+            "prefer_deep": True,
+            "sections": ["summary", "compliance", "citations"],
+            "min_words": 500,
+            "max_words": 900
+        },
+        "medical": {
+            "prefer_deep": True,
+            "sections": ["evidence", "sources", "disclaimers"],
+            "min_words": 500,
+            "max_words": 900,
+            "show_pubmed_ids": True
+        }
+    }
+    
+    return configs.get(intent)
+
+
 def choose_report_tier(
     triangulated_cards: int,
     credible_cards: int,
@@ -157,7 +241,8 @@ def choose_report_tier(
     time_budget_remaining_sec: float,
     tokens_per_second: float = 100,
     max_tokens_override: Optional[int] = None,
-    config: Optional[ReportConfig] = None
+    config: Optional[ReportConfig] = None,
+    intent: Optional[str] = None
 ) -> Tuple[ReportTier, float, int, str]:
     """
     Choose appropriate report tier based on evidence and constraints.
@@ -173,6 +258,7 @@ def choose_report_tier(
         tokens_per_second: Token generation rate
         max_tokens_override: Optional max token override from CLI
         config: Report configuration (uses defaults if None)
+        intent: Optional intent type for intent-specific reporting
         
     Returns:
         Tuple of (tier, confidence, max_tokens, explanation)
@@ -190,6 +276,36 @@ def choose_report_tier(
     low_supply = is_low_supply(
         unique_domains, credible_cards, provider_error_rate, config
     )
+    
+    # Intent-specific adjustments
+    if intent:
+        intent_overrides = get_intent_report_config(intent)
+        if intent_overrides:
+            # Apply intent-specific tier preferences
+            if intent_overrides.get("prefer_brief") and depth != "deep":
+                tier = ReportTier.BRIEF
+                explanation = f"{intent.capitalize()} query - brief format preferred"
+                tier_config = config.tiers[tier]
+                cli_cap = max_tokens_override or config.max_tokens_default
+                safety = 1.0 - config.safety_margin_pct
+                time_cap = int(tokens_per_second * time_budget_remaining_sec * safety)
+                max_tokens = max(
+                    config.min_tokens,
+                    min(tier_config.max_tokens, cli_cap, time_cap)
+                )
+                return tier, confidence, max_tokens, explanation
+            elif intent_overrides.get("prefer_deep") and not low_supply:
+                tier = ReportTier.DEEP
+                explanation = f"{intent.capitalize()} query - comprehensive format preferred"
+                tier_config = config.tiers[tier]
+                cli_cap = max_tokens_override or config.max_tokens_default
+                safety = 1.0 - config.safety_margin_pct
+                time_cap = int(tokens_per_second * time_budget_remaining_sec * safety)
+                max_tokens = max(
+                    config.min_tokens,
+                    min(tier_config.max_tokens, cli_cap, time_cap)
+                )
+                return tier, confidence, max_tokens, explanation
     
     # Determine tier
     if depth == "rapid" or low_supply or confidence < config.brief_confidence_max:

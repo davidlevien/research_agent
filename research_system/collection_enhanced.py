@@ -37,11 +37,12 @@ async def _exec(loop, registry: Registry, tool_name: str, req: SearchRequest) ->
         SEARCH_LATENCY.labels(provider=provider).observe(time.perf_counter() - start)
 
 def _provider_policy(query: str, providers: List[str]) -> List[str]:
-    """Heuristic: include 'nps' only for park-specific queries."""
+    """Heuristic: include 'nps' for park-specific queries."""
     q = query.lower()
-    wants_nps = bool(re.search(r"\b(park|nps|national\s+park|trail|camp|permit|monument|memorial)\b", q))
+    wants_nps = bool(re.search(r"\b(parks?|nps|national\s+park|trails?|camping|camp|permits?|monument|memorial)\b", q))
     normalized = [p for p in providers if p != "nps"]
-    if wants_nps and "nps" in providers:
+    if wants_nps:
+        # Add NPS for park queries even if not in original provider list
         normalized.append("nps")
     return normalized
 

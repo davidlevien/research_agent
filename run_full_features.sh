@@ -38,7 +38,7 @@ mkdir -p "$OUTPUT_DIR"
 } > "$OUTPUT_DIR/RUN_METADATA.txt"
 
 echo "=================================="
-echo "Research System v8.6.0 - ADAPTIVE INTELLIGENCE"
+echo "Research System v8.7.0 - INTENT-AWARE UNIVERSAL RESEARCH"
 echo "=================================="
 echo "Topic: $TOPIC"
 echo "Output: $OUTPUT_DIR"
@@ -59,6 +59,13 @@ echo "  ✓ Article extraction"
 echo "  ✓ Adaptive domain balancing (25-40% cap)"
 echo "  ✓ Adaptive triangulation (25-35% threshold)"
 echo "  ✓ Adaptive strict quality gates"
+echo ""
+echo "v8.7.0 Intent-Aware Features:"
+echo "  ✓ Three-stage hybrid intent classification"
+echo "  ✓ Intent-based provider routing"
+echo "  ✓ Intent-specific quality thresholds"
+echo "  ✓ Geographic disambiguation"
+echo "  ✓ New providers: Nominatim, Wikivoyage, OSMTags"
 echo ""
 echo "v8.6.0 Adaptive Features:"
 echo "  ✓ Supply-aware quality gates"
@@ -98,6 +105,9 @@ ENABLE_DUCKDB_AGG=true \
 ENABLE_SBERT_CLUSTERING=true \
 ENABLE_AREX=true \
 ENABLE_CONTROVERSY=true \
+INTENT_USE_HYBRID=true \
+INTENT_USE_NLI=false \
+INTENT_MIN_SCORE=0.42 \
 SEARCH_PROVIDERS="${SEARCH_PROVIDERS:-tavily,brave,serper}" \
 CONCURRENCY=16 \
 HTTP_TIMEOUT_SECONDS=30 \

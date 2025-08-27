@@ -19,6 +19,8 @@ from research_system.collection import parallel_provider_search
 from research_system.collection_enhanced import collect_from_free_apis
 from research_system.routing.provider_router import choose_providers
 from research_system.config import Settings
+from research_system.intent.classifier import classify, Intent, get_confidence_threshold
+from research_system.providers.intent_registry import expand_providers_for_intent
 from research_system.controversy import ControversyDetector
 from research_system.tools.aggregates import source_quality, triangulate_claims
 from research_system.tools.content_processor import ContentProcessor
@@ -88,6 +90,9 @@ class Orchestrator:
         # Use global registry instead of creating a new one
         register_search_tools(registry)
         
+        # Initialize context dictionary for storing metadata
+        self.context = {}
+        
         # If max_cost_usd not specified, get from global settings
         if self.s.max_cost_usd is None:
             from research_system.config import get_settings
@@ -114,6 +119,33 @@ class Orchestrator:
             os.fsync(tmp.fileno())  # Ensure written to disk
         # Atomic rename
         os.replace(tmp.name, target)
+    
+    def _ensure_snippet(self, snippet: str, title: str = "", url: str = "") -> str:
+        """Ensure snippet is never empty (evidence validity invariant).
+        
+        Args:
+            snippet: Original snippet (may be None or empty)
+            title: Title to use as fallback
+            url: URL to use as last resort
+            
+        Returns:
+            Non-empty snippet string
+        """
+        # Try original snippet
+        if snippet and snippet.strip():
+            return snippet.strip()
+        
+        # Try title as snippet
+        if title and title.strip():
+            return f"Content: {title.strip()}"[:280]
+        
+        # Last resort: synthesize from URL
+        if url:
+            domain = domain_of(url)
+            return f"Source content from {domain}"[:280]
+        
+        # Absolute fallback
+        return "Content available at source"
     
     def _filter_relevance(self, cards: List[EvidenceCard], threshold: float = 0.5) -> List[EvidenceCard]:
         """Filter cards by relevance score (minimal enhancement)"""
@@ -912,6 +944,15 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         budget = set_global_budget(total_seconds)
         logger.info(f"Set global time budget: {total_seconds}s")
         
+        # Classify intent
+        intent = classify(self.s.topic)
+        self.context["intent"] = intent.value
+        logger.info(f"Query classified as intent: {intent.value}")
+        
+        # Get intent-specific thresholds
+        min_triangulation, min_sources = get_confidence_threshold(intent)
+        logger.info(f"Intent thresholds: triangulation={min_triangulation}, sources={min_sources}")
+        
         # PLAN
         self._write("plan.md", self._generate_plan())
         self._write("source_strategy.md", self._generate_source_strategy())
@@ -923,9 +964,18 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         anchors, discipline, policy = build_anchors(self.s.topic)
         self.discipline, self.policy = discipline, policy
         
-        # Use provider router to select appropriate providers
+        # Use intent-based provider selection
+        intent_providers = expand_providers_for_intent(intent)
+        logger.info(f"Intent {intent.value} selected providers: {intent_providers[:10]}")
+        
+        # Also use router for additional context
         decision = choose_providers(self.s.topic)
         logger.info(f"Routing: categories={decision.categories}, providers={decision.providers[:10]}")
+        
+        # Merge providers: intent-based first, then router's unique additions
+        merged_providers = intent_providers + [p for p in decision.providers if p not in intent_providers]
+        decision.providers = merged_providers[:20]  # Limit total
+        
         enabled = settings.enabled_providers()
         # Filter providers by topic relevance to prevent off-topic noise
         filtered_providers = self._filter_providers_by_topic(enabled, self.s.topic)
@@ -974,9 +1024,16 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         if getattr(settings, 'ENABLE_FREE_APIS', True):
             logger.info(f"Collecting from free APIs for topic: {self.s.topic}")
             
+            # Use intent-based provider selection for free APIs too
+            intent_providers = expand_providers_for_intent(intent)
+            
             # Use router to select appropriate providers
             decision = choose_providers(self.s.topic)
             logger.info(f"Router selected providers: {decision.providers[:10]} for categories: {decision.categories}")
+            
+            # Merge with intent providers
+            merged_providers = intent_providers + [p for p in decision.providers if p not in intent_providers]
+            decision.providers = merged_providers[:15]  # Limit for free APIs
             
             # Collect from free APIs
             free_api_cards = collect_from_free_apis(
@@ -1220,7 +1277,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         id=str(uuid.uuid4()),
                                         title=h.title,
                                         url=h.url,
-                                        snippet=h.snippet or "",
+                                        snippet=self._ensure_snippet(h.snippet, h.title, h.url),
                                         provider=provider,
                                         credibility_score=0.85,
                                         relevance_score=0.75,
@@ -1494,7 +1551,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         id=str(uuid.uuid4()),
                                         title=h.title,
                                         url=h.url,
-                                        snippet=h.snippet or "",
+                                        snippet=self._ensure_snippet(h.snippet, h.title, h.url),
                                         provider=provider,
                                         date=h.date,
                                         credibility_score=credibility,
@@ -1671,7 +1728,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             
             # Check triangulation with adaptive threshold
             adaptive_tri_threshold = self.quality_config.triangulation.get_threshold(
-                len(cards), unique_domains
+                len(cards), unique_domains, self.context.get("intent")
             )
             if current_metrics["union_triangulation"] < adaptive_tri_threshold:
                 needs_backfill = True

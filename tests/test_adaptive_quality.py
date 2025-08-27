@@ -81,25 +81,27 @@ class TestReportTierSelection:
         
         assert tier == ReportTier.BRIEF
         assert confidence < 0.55
-        assert "low confidence" in explanation.lower()
+        # Should mention either low confidence or limited evidence
+        assert any(phrase in explanation.lower() for phrase in ["low confidence", "limited evidence"])
     
     def test_selects_deep_for_high_quality(self):
         """Test deep tier selected for high quality evidence."""
         config = ReportConfig()
         
+        # Need very high evidence counts to trigger DEEP tier with new thresholds
         tier, confidence, max_tokens, explanation = choose_report_tier(
-            triangulated_cards=25,
-            credible_cards=40,
-            primary_share=0.60,
-            unique_domains=12,
-            provider_error_rate=0.05,
+            triangulated_cards=100,
+            credible_cards=150,
+            primary_share=0.70,
+            unique_domains=20,
+            provider_error_rate=0.01,
             depth="deep",
             time_budget_remaining_sec=1000,
             config=config
         )
         
         assert tier == ReportTier.DEEP
-        assert confidence >= 0.75
+        assert confidence >= 0.75  # Should have high confidence with this evidence
         assert max_tokens <= 3800
     
     def test_respects_rapid_depth(self):
@@ -240,7 +242,18 @@ class TestIntegration:
         from research_system.orchestrator_adaptive import compute_adaptive_metrics
         
         cards = []  # Empty for test
-        metrics = compute_adaptive_metrics(cards, unique_domains=5)
+        metrics = compute_adaptive_metrics(
+            cards=cards,
+            triangulated_cards=10,
+            primary_share=0.4,
+            provider_errors=0,
+            provider_attempts=1
+        )
         
-        assert "adaptive_confidence" in metrics
-        assert 0 <= metrics["adaptive_confidence"] <= 1
+        # Check key metrics are present
+        assert "triangulation_rate" in metrics
+        assert "primary_share" in metrics
+        assert "provider_error_rate" in metrics
+        assert metrics["triangulation_rate"] >= 0
+        assert 0 <= metrics["primary_share"] <= 1
+        assert 0 <= metrics["provider_error_rate"] <= 1

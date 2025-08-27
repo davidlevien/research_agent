@@ -1,4 +1,5 @@
 """Circuit breaker for domain failures to prevent repeat stalls."""
+import os
 import time
 import collections
 from typing import Dict, Any
@@ -7,13 +8,19 @@ from typing import Dict, Any
 class Circuit:
     """Circuit breaker pattern for HTTP failures per domain."""
     
-    def __init__(self, fail_thresh: int = 3, cooldown: int = 900):
+    def __init__(self, fail_thresh: int = None, cooldown: int = None):
         """Initialize circuit breaker.
         
         Args:
             fail_thresh: Number of failures before opening circuit
             cooldown: Seconds to wait before closing circuit
         """
+        # Read from environment if not provided
+        if fail_thresh is None:
+            fail_thresh = int(os.getenv("HTTP_CB_FAILS", "3"))
+        if cooldown is None:
+            cooldown = int(os.getenv("HTTP_CB_RESET", "900"))
+            
         self.state: Dict[str, Dict[str, Any]] = collections.defaultdict(
             lambda: {'f': 0, 'until': 0}
         )

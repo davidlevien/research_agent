@@ -20,6 +20,9 @@ from .europepmc import europepmc_search, to_cards as epmc_to_cards
 from .overpass import overpass_search, to_cards as overpass_to_cards
 from .ec import ec_search, to_cards as ec_to_cards
 from .eurostat import eurostat_search, to_cards as eurostat_to_cards
+from .nominatim import search_places as nominatim_search, to_cards as nominatim_to_cards
+from .wikivoyage import search_destinations as wikivoyage_search, to_cards as wikivoyage_to_cards
+from .osmtags import search_by_tags as osmtags_search, to_cards as osmtags_to_cards
 
 # Complete provider registry with all implementations
 PROVIDERS: Dict[str, Dict[str, Callable[..., Any]]] = {
@@ -96,6 +99,20 @@ PROVIDERS: Dict[str, Dict[str, Callable[..., Any]]] = {
     "overpass": {
         "search": overpass_search,
         "to_cards": overpass_to_cards
+    },
+    "nominatim": {
+        "search": nominatim_search,
+        "to_cards": nominatim_to_cards
+    },
+    "osmtags": {
+        "search": osmtags_search,
+        "to_cards": osmtags_to_cards
+    },
+    
+    # Travel
+    "wikivoyage": {
+        "search": wikivoyage_search,
+        "to_cards": wikivoyage_to_cards
     },
     
     # Enrichment & Resilience

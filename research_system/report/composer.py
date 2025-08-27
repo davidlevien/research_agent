@@ -33,8 +33,8 @@ def _best_text(card) -> str:
             if cleaned and len(cleaned) >= 40:
                 return cleaned
     
-    # Fall back to other text fields
-    text = getattr(card, "claim", "") or getattr(card, "supporting_text", "") or getattr(card, "snippet", "") or getattr(card, "title", "")
+    # Fall back to other text fields - prioritize actual content (snippet/supporting_text) over metadata (claim/title)
+    text = getattr(card, "snippet", "") or getattr(card, "supporting_text", "") or getattr(card, "claim", "") or getattr(card, "title", "")
     return _clean(text)
 
 def _has_numbers(s: str) -> bool:
@@ -92,7 +92,8 @@ def _pick_quotes(cards, k=2) -> List[str]:
         sents = re.split(r"(?<=[.!?])\s+", txt)
         for s in sents:
             s = s.strip()
-            if 60 <= len(s) <= 400:
+            # Reduced minimum length from 60 to 20 to include important short snippets
+            if 20 <= len(s) <= 400:
                 score = 1.0 + (1.0 if _has_numbers(s) else 0.0) + (0.2 if len(s) > 180 else 0)
                 cand.append((score, s))
     cand.sort(reverse=True, key=lambda x: x[0])

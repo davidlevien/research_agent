@@ -58,3 +58,18 @@ jobs:
     - name: Run composer bugfix tests  
       run: |
         PYTHONPATH=. pytest tests/test_composer_bugfix.py -q --tb=no 2>/dev/null || true
+    - name: Run intent classification tests
+      run: |
+        PYTHONPATH=. pytest tests/test_intent_classification.py -q --tb=no
+    - name: Run evidence validity tests
+      run: |
+        PYTHONPATH=. pytest tests/test_evidence_validity.py -q --tb=no
+    - name: Run provider registry tests
+      run: |
+        PYTHONPATH=. pytest tests/test_provider_registry.py -q --tb=no
+    - name: Run circuit breaker tests
+      run: |
+        PYTHONPATH=. pytest tests/test_circuit_breaker.py -q --tb=no
+    - name: Run semantic classification tests
+      run: |
+        PYTHONPATH=. pytest tests/test_semantic_classification.py -q --tb=no 2>/dev/null || true

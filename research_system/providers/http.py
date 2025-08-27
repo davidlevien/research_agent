@@ -121,6 +121,24 @@ POLICY = {
         "headers": lambda: {
             "User-Agent": "research-agent/1.0"
         }
+    },
+    "nominatim": {
+        "rps": 1,  # OSM Nominatim usage policy
+        "headers": lambda: {
+            "User-Agent": f"research-agent/1.0 ({os.getenv('CONTACT_EMAIL', 'research@example.com')})"
+        }
+    },
+    "wikivoyage": {
+        "rps": 2,
+        "headers": lambda: {
+            "User-Agent": f"research-agent/1.0 ({os.getenv('CONTACT_EMAIL', 'research@example.com')})"
+        }
+    },
+    "osmtags": {
+        "rps": 0.5,  # Share Overpass API rate limit
+        "headers": lambda: {
+            "User-Agent": "research-agent/1.0"
+        }
     }
 }
 

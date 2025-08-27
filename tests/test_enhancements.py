@@ -36,9 +36,12 @@ class TestProviderPolicy:
             assert "nps" in result, f"NPS should be included for: {query}"
     
     def test_handles_missing_nps(self):
+        """Test that NPS is added even when not in original providers for park queries."""
         providers = ["tavily", "brave"]
         result = _provider_policy("national park visits", providers)
-        assert result == ["tavily", "brave"]
+        assert "nps" in result  # Should include NPS for park queries
+        assert "tavily" in result
+        assert "brave" in result
 
 
 class TestEvidenceValidation:

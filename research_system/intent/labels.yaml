@@ -1,0 +1,101 @@
+labels:
+  encyclopedia: "General knowledge, definitions, origins, history, biographies, explanations of concepts and phenomena."
+  news: "Latest events or developments, time-bound and current affairs, breaking stories, recent updates."
+  product: "Shopping, comparisons, reviews, prices, what to buy, product recommendations, consumer goods."
+  local: "Places, POIs, 'near me', things to do in a city/region, local businesses, geographic-specific services."
+  academic: "Scholarly papers, DOIs, journals, citations, research methods, peer-reviewed studies, scientific literature."
+  stats: "Datasets, indicators, time series, economic/social statistics, metrics, quantitative data, growth rates."
+  travel: "Itineraries, attractions, beaches, where to stay/visit, tourism, vacation planning, destinations."
+  regulatory: "Filings, regulations, 10-K/10-Q/8-K, compliance, SEC documents, legal requirements, corporate disclosures."
+  howto: "Procedures, step-by-step instructions, tutorials, guides, DIY instructions, how-to articles."
+  medical: "Symptoms, treatments, contraindications, clinical facts, diseases, health conditions, medical procedures."
+  generic: "Uncategorized general questions that don't fit other categories."
+
+examples:
+  encyclopedia:
+    - "origins of the platypus"
+    - "history of European church"
+    - "what is quantum computing"
+    - "biography of Albert Einstein"
+    - "evolution of the internet"
+    - "definition of democracy"
+  
+  product:
+    - "best desk fans under $50"
+    - "top bluetooth earbuds 2025"
+    - "iPhone vs Samsung comparison"
+    - "cheapest gaming laptop"
+    - "review of Dyson vacuum"
+    - "worth buying MacBook Pro"
+  
+  local:
+    - "best beaches in Portland"
+    - "coffee shops near me"
+    - "restaurants in downtown Seattle"
+    - "gyms open 24 hours"
+    - "parks in San Francisco"
+    - "hotels near Times Square"
+  
+  news:
+    - "latest AI developments"
+    - "breaking news today"
+    - "current events in Europe"
+    - "what happened yesterday in tech"
+    - "recent climate change updates"
+    - "stock market news this week"
+  
+  academic:
+    - "systematic review COVID vaccines"
+    - "meta-analysis sleep quality"
+    - "peer-reviewed studies meditation"
+    - "doi:10.1038/nature12373"
+    - "arxiv:2301.08727"
+    - "journal articles machine learning"
+  
+  stats:
+    - "GDP growth rate 2024"
+    - "unemployment statistics USA"
+    - "CPI index trends"
+    - "dataset climate change"
+    - "time series stock market"
+    - "population growth metrics"
+  
+  travel:
+    - "itinerary for Japan trip"
+    - "best beaches in Thailand"
+    - "where to stay in Paris"
+    - "visa requirements Brazil"
+    - "tourist attractions Rome"
+    - "things to do in London"
+  
+  regulatory:
+    - "Apple 10-K filing"
+    - "SEC regulations crypto"
+    - "compliance requirements GDPR"
+    - "Tesla 8-K filings"
+    - "corporate disclosure rules"
+    - "quarterly earnings reports"
+  
+  howto:
+    - "how to build a website"
+    - "tutorial Python programming"
+    - "step by step cake recipe"
+    - "guide to investing"
+    - "DIY home renovation"
+    - "setup Kubernetes cluster"
+  
+  medical:
+    - "symptoms of diabetes"
+    - "treatment for hypertension"
+    - "side effects aspirin"
+    - "diagnosis criteria autism"
+    - "COVID-19 vaccine efficacy"
+    - "migraine prevention methods"
+  
+  generic:
+    - "random thoughts"
+    - "interesting facts"
+    - "general information"
+    - "tell me something"
+    - "what do you think about"
+    - "explain this concept"

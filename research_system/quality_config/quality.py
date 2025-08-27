@@ -20,11 +20,42 @@ class TriangulationConfig:
     min_credible_cards: int = 25
     provider_error_rate: float = 0.30
     
-    def get_threshold(self, cards: int, domains: int) -> float:
-        """Get adaptive triangulation threshold based on supply."""
+    def get_threshold(self, cards: int, domains: int, intent: str = None) -> float:
+        """Get adaptive triangulation threshold based on supply and intent.
+        
+        Args:
+            cards: Number of evidence cards
+            domains: Number of unique domains
+            intent: Optional intent type for intent-specific thresholds
+            
+        Returns:
+            Triangulation threshold as a percentage
+        """
+        # Intent-specific thresholds (from third-party review)
+        if intent:
+            intent_thresholds = {
+                "product": 0.20,
+                "local": 0.15,
+                "academic": 0.35,
+                "stats": 0.30,
+                "news": 0.30,
+                "encyclopedia": 0.25,
+                "travel": 0.25,
+                "howto": 0.20,
+                "regulatory": 0.30,
+                "medical": 0.35,
+                "generic": 0.25,
+            }
+            base_threshold = intent_thresholds.get(intent, self.target_normal_pct)
+        else:
+            base_threshold = self.target_normal_pct
+            
+        # Adjust for low supply conditions
         if cards < self.min_credible_cards or domains < self.min_unique_domains:
-            return self.floor_pct_low_supply
-        return self.target_normal_pct
+            # Use floor or intent threshold, whichever is lower
+            return min(self.floor_pct_low_supply, base_threshold)
+        
+        return base_threshold
 
 
 @dataclass
