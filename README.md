@@ -1,6 +1,6 @@
-# Research System v8.6.0 - Adaptive Intelligence Platform
+# Research System v8.6.1 - Adaptive Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with **adaptive quality thresholds** that respond to evidence supply conditions. Built with v8.6.0's supply-aware gates, adaptive report length, and evidence repair chains.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence with **adaptive quality thresholds** that respond to evidence supply conditions. Built with v8.6.1's supply-aware gates, adaptive report length, evidence repair chains, and enhanced CI/CD configuration.
 
 ## 🚀 Quick Start
 
@@ -180,6 +180,8 @@ pytest tests/test_integration.py
 - Schema validation tests
 - Adaptive system integration tests
 - Evidence repair validation
+- Lazy Settings initialization for proper env var loading
+- CONTACT_EMAIL compliance for API requirements
 
 ## 🔧 Configuration
 
