@@ -3457,3 +3457,462 @@ Traceback (most recent call last):
     s = OrchestratorSettings(
         ^^^^^^^^^^^^^^^^^^^^^
 TypeError: OrchestratorSettings.__init__() got an unexpected keyword argument 'max_cost_usd'
+==================================
+Research System v8.5.2 - FULL FEATURES
+==================================
+Topic: travel tourism trends post-pandemic
+Output: outputs
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Domain balancing (25% cap)
+  ✓ Triangulation enforcement (35% min)
+  ✓ Strict quality gates
+
+v8.5.2 Improvements Applied:
+  ✓ Unified global registry (no duplicates)
+  ✓ Consolidated text processing modules
+  ✓ Standardized similarity calculations
+  ✓ HTML artifact cleaning in reports
+  ✓ Enhanced paywall detection (403/402/451)
+  ✓ Citation validation with error tracking
+  ✓ Triangulation metric consistency
+  ✓ Query planner for time/geo constraints
+
+Starting in 3 seconds...
+INFO:research_system.orchestrator:Set global time budget: 1800s
+INFO:research_system.orchestrator:Routing: categories=['macro', 'general'], providers=['worldbank', 'oecd', 'eurostat', 'imf', 'fred', 'wikidata', 'wikipedia', 'wayback', 'openalex', 'crossref']
+INFO:research_system.orchestrator:Filtered out NPS provider for non-parks topic: travel tourism trends post-pandemic
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=travel+tourism+trends+post-pandemic+site%3Afred.stlouisfed.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: travel tourism trends post-pandemic site:fred.stlouisfed.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: travel tourism trends post-pandemic site:fred.stlouisfed.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=travel+tourism+trends+post-pandemic+site%3Afred.stlouisfed.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'travel tourism trends post-pandemic site:fred.stlouisfed.org' returned 0 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: travel tourism trends post-pandemic site:fred.stlouisfed.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: travel tourism trends post-pandemic site:oecd.org 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=travel+tourism+trends+post-pandemic+site%3Aoecd.org+2024..2025+filetype%3Apdf&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: travel tourism trends post-pandemic site:oecd.org 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: travel tourism trends post-pandemic site:oecd.org 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=travel+tourism+trends+post-pandemic+site%3Aoecd.org+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'travel tourism trends post-pandemic site:oecd.org 2024..2025 filetype:pdf' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=travel+tourism+trends+post-pandemic+site%3Asec.gov+%2810-k+OR+10-q+OR+8-k%29&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 1 results for query: travel tourism trends post-pandemic site:sec.gov (10-k OR 10-q OR 8-k)
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: travel tourism trends post-pandemic site:sec.gov (10-k OR 10-q OR 8-k)
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: travel tourism trends post-pandemic site:sec.gov (10-k OR 10-q OR 8-k)
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=travel+tourism+trends+post-pandemic+site%3Asec.gov+%2810-k+OR+10-q+OR+8-k%29&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'travel tourism trends post-pandemic site:sec.gov (10-k OR 10-q OR 8-k)' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=travel+tourism+trends+post-pandemic+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: travel tourism trends post-pandemic 2024..2025
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: travel tourism trends post-pandemic 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=travel+tourism+trends+post-pandemic+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'travel tourism trends post-pandemic 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: travel tourism trends post-pandemic 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=travel+tourism+trends+post-pandemic+filetype%3Apdf+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: travel tourism trends post-pandemic filetype:pdf 2024..2025
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: travel tourism trends post-pandemic filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=travel+tourism+trends+post-pandemic+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: travel tourism trends post-pandemic filetype:pdf 2024..2025
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'travel tourism trends post-pandemic filetype:pdf 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 20 results for query: travel tourism trends post-pandemic
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=travel+tourism+trends+post-pandemic&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 18 results for query: travel tourism trends post-pandemic
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 20 results for query: travel tourism trends post-pandemic
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=travel+tourism+trends+post-pandemic&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serpapi:SerpAPI search for 'travel tourism trends post-pandemic' returned 20 results
+INFO:research_system.orchestrator:Collecting from free APIs for topic: travel tourism trends post-pandemic
+INFO:research_system.orchestrator:Router selected providers: ['worldbank', 'oecd', 'eurostat', 'imf', 'fred', 'wikidata', 'wikipedia', 'wayback', 'openalex', 'crossref'] for categories: ['macro', 'general']
+INFO:research_system.collection_enhanced:Executing 10 providers in parallel: ['worldbank', 'oecd', 'eurostat', 'imf', 'fred', 'wikidata', 'wikipedia', 'wayback', 'openalex', 'crossref']
+WARNING:research_system.providers.openalex:OpenAlex search failed: http_json_with_policy() got an unexpected keyword argument 'timeout'
+INFO:httpx:HTTP Request: GET https://en.wikipedia.org/w/rest.php/v1/search/title?q=travel+tourism+trends+post-pandemic&limit=10 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.worldbank.org/v2/indicator?format=json&per_page=1000&page=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://data.europa.eu/api/hub/search/search?query=travel+tourism+trends+post-pandemic&limit=50&lang=en "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works?query=travel+tourism+trends+post-pandemic&rows=25 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow/ALL/
+WARNING:research_system.providers.oecd:OECD dataflows fetch failed: Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/ALL/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://dataservices.imf.org/REST/SDMX_JSON.svc/Dataflow
+WARNING:research_system.providers.imf:IMF dataflows fetch failed: timed out
+INFO:research_system.orchestrator:Collected 5 cards from free APIs
+INFO:research_system.orchestrator:Enriching 135 cards with ENABLE_EXTRACT=True
+INFO:httpx:HTTP Request: GET https://doi.org/robots.txt "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.doi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.64628/ab.p97gf4dfh "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://theconversation.com/post-pandemic-travel-the-trends-well-see-when-the-world-opens-up-again-153401 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.1016/j.tbs.2024.100956 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://linkinghub.elsevier.com/retrieve/pii/S2214367X24002199 "HTTP/1.1 200 "
+WARNING:trafilatura.core:discarding data: None
+INFO:httpx:HTTP Request: GET https://doi.org/10.1201/9781003429722-2 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.taylorfrancis.com/books/9781003429722/chapters/10.1201/9781003429722-2 "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.taylorfrancis.com/chapters/edit/10.1201/9781003429722-2/study-post-covid-pandemic-travel-preferences-oman-focus-mohit-kukreti-amitabh-mishra "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.54517/st.v4i2.2338 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://aber.apacsci.com/index.php/st/article/view/2338 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.54517/st.v4i1.2338 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://aber.apacsci.com/index.php/st/article/view/2338 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/categories/33202 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?t=travel "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/?ref=tradersblog.semwealth.com "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism_7d3c7654/09ad7240-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism_7d3c7654/09ad7240-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism_7d3c7654/09ad7240-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2021/06/preparing-the-tourism-workforce-for-the-digital-future_06211c0f/9258d999-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2021/06/preparing-the-tourism-workforce-for-the-digital-future_06211c0f/9258d999-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2021/06/preparing-the-tourism-workforce-for-the-digital-future_06211c0f/9258d999-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/Archives/edgar/data/1758488/000095017024022654/osw-20231231.htm "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/Archives/edgar/data/1526520/000095017022001481/trip-20211231.htm "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/Archives/edgar/data/1820872/000110465923035161/gbtg-20221231x10k.htm "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://iges.us/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://iges.us/us-tourism-travel-trends-2025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.freetour.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.freetour.com/blog/tourism-recovery-after-the-covid-19-pandemic "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590051X24000169 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://embratur.com.br/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://embratur.com.br/wp-content/uploads/2025/04/Tourism-Trends-2025-3.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://embratur.com.br/wp-content/uploads/2025/04/Tourism-Trends-2025-3.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://embratur.com.br/wp-content/uploads/2025/04/Tourism-Trends-2025-3.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.mycwt.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.mycwt.com/content/dam/vision/pdf/2025-cwt-gbta-global-business-travel-forecast.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://www.mycwt.com/content/dam/vision/pdf/2025-cwt-gbta-global-business-travel-forecast.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.mycwt.com/content/dam/vision/pdf/2025-cwt-gbta-global-business-travel-forecast.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.mycwt.com/content/dam/vision/pdf/2025-cwt-gbta-global-business-travel-forecast.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.mycwt.com/content/dam/vision/pdf/2025-cwt-gbta-global-business-travel-forecast.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.ahla.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahla.com/sites/default/files/25_SOTI.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.ahla.com/sites/default/files/25_SOTI.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahla.com/sites/default/files/25_SOTI.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.happytoursturkey.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.happytoursturkey.com/blog/post-covid-travel-habits-adapting-to-the-new-normal-in-tourism/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/blog/tourism-trends-2018-2/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://planingo.ai/robots.txt "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://planingo.ai/blog/post-pandemic-travel-the-future-of-exploration, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.trekksoft.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trekksoft.com/en/blog/post-pandemic-travel-trends-how-travelers-choose-tours-in-2022 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.educationaltravelasia.org/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.educationaltravelasia.org/post-pandemic-travel-trends-the-future-of-hospitality-and-tourism-industry/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pmc.ncbi.nlm.nih.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pmc.ncbi.nlm.nih.gov/articles/PMC9077025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://athletechnews.com/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://athletechnews.com/post-pandemic-rise-of-wellness-tourism/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.osc.ny.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.osc.ny.gov/press/releases/2024/07/dinapoli-analyzes-post-pandemic-tourism-across-nys "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.researchgate.net/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.researchgate.net/publication/380470197_Post-Pandemic_Shifts_in_Travel_Habits_New_Trends_and_Strategies "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.statista.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/iplogin?__sso_redirect=/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize?response_type=code&client_id=xjVF0FFWFPOcG7XJO8C0XleeRPllUFfI&redirect_uri=https%3A%2F%2Fwww.statista.com%2Fsso%2Fcallback&state=u4LX90-o-bi6_YOTCdgCpjZkkfgIIShO-tuQomX209Q&scope=openid+profile+offline_access&code_challenge=V5aiavJH_cX_qXiZrjp7tW6RLwvCeH9xTpla4PP0tuc&code_challenge_method=S256&audience=statista-api&ui_locales=en&connection=ip-login&0%5Bplatform%5D=en&0%5BstatistaTrackingUUID%5D=ad60abd7-eadc-450a-98f0-ee887ba4f887&0%5BrequestIp%5D=71.202.127.58 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://services.sso.statista.com/ip/authorize?login_hint=&response_type=code&redirect_uri=https%3A%2F%2Flogin.statista.com%2Flogin%2Fcallback&state=KLMknskxtwEaPSbO5fJWtww1T-pqQoUw&client_id=9a7cf70e-1be6-40a1-ba02-6e6e6654b93d "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/login/callback?state=KLMknskxtwEaPSbO5fJWtww1T-pqQoUw&error=INVALID_IP&error_description=ip-not-authorized-for-login "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize/resume?state=dRPLyKrX-cHQcsmxwKI7J6iin8aYhfoH "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/callback?error=access_denied&error_description=ip-not-authorized-for-login&state=u4LX90-o-bi6_YOTCdgCpjZkkfgIIShO-tuQomX209Q "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.linkedin.com/robots.txt "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://www.linkedin.com/pulse/post-pandemic-travel-trends-how-tourism-industry-adapting, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.aa.com.tr/en/health/post-pandemic-travel-boom-driven-by-youth-brings-to-light-new-global-trends/3356115 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.infosysbpm.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.infosysbpm.com/blogs/sourcing-procurement/5-trends-reshaping-the-future-of-travel-amidst-covid-19.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.volunteeringsolutions.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.volunteeringsolutions.com/blog/the-post-covid-19-tourism-trends-heres-all-we-need-to-know "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.weforum.org/press/2024/05/tourism-is-back-to-pre-pandemic-levels-but-challenges-remain/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590198223001550 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.investopedia.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.investopedia.com/is-post-pandemic-travel-boom-finally-ending-disney-airbnb-tripadvisor-cite-softer-demand-8691955 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590051X24000169 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/en/blogs/2024/07/tourism-continues-to-recover-from-covid-but-faces-renewed-challenges.html "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?t=air+travel%3Bprice+index "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?t=foreign%3Btravel "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/series/PCU561510561510222 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf (hash: b0266576...)
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/12/creating-economic-prosperity-through-inclusive-and-sustainable-tourism_2f5ca915/f0a49ca9-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/12/creating-economic-prosperity-through-inclusive-and-sustainable-tourism_2f5ca915/f0a49ca9-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/12/creating-economic-prosperity-through-inclusive-and-sustainable-tourism_2f5ca915/f0a49ca9-en.pdf "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+INFO:httpx:HTTP Request: GET https://www.unwto.org/news/international-tourism-recovers-pre-pandemic-levels-in-2024 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://en.unwto-ap.org/news/international-tourism-recovers-pre-pandemic-levels-in-2024 "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://en.unwto-ap.org/news/international-tourism-recovers-pre-pandemic-levels-in-2024 "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.ustravel.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ustravel.org/research/monthly-travel-data-report "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trade.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trade.gov/sites/default/files/2024-10/Effects-of-COVID-19-Travel-Tourism-Industry.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.trade.gov/sites/default/files/2024-10/Effects-of-COVID-19-Travel-Tourism-Industry.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trade.gov/sites/default/files/2024-10/Effects-of-COVID-19-Travel-Tourism-Industry.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://tourismanalytics.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://explore.to-travel.net/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ft.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ft.com/content/49e31013-67eb-4ab0-9b7f-618cf4474496 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://medium.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://medium.com/tourism-geographic/post-pandemic-travel-the-trends-well-see-when-the-world-opens-up-again-e76b2525a843 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.thundertech.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.thundertech.com/blog-news/6-post-pandemic-tourism-marketing-trends-changing-things-up-in-2022 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://www.linkedin.com/pulse/post-pandemic-travel-trends-how-tourism-industry-adapting, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.tourism-review.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.tourism-review.com/post-pandemic-tourism-introduces-4-more-trends-news12612 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nytimes.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nytimes.com/interactive/2025/travel/places-to-travel-destinations-2025.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.e-spincorp.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.e-spincorp.com/evolving-travel-trends-post-pandemic/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.wannabethere.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.wannabethere.com/post-pandemic-travel-trends-rediscovering-the-world/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.thesouthafrican.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.thesouthafrican.com/news/post-pandemic-travel-the-trends-well-see-when-the-world-opens-up/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://blog.savvynomad.io/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://blog.savvynomad.io/us-domestic-travel-statistics/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://andysto.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://worldfinancialreview.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://worldfinancialreview.com/post-pandemic-travel-the-trends-well-see-when-the-world-opens-up-again/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nationalgeographic.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nationalgeographic.com/travel/article/2025-travel-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.itb-community.com/robots.txt "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.itb-community.com/wp-login.php?redirect_to=https%3A%2F%2Fwww.itb-community.com%2Frobots.txt&bp-auth=1&action=bpnoaccess "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://itb-auth.xchange.gevme.com/authorize?client_id=R646QRT7s25SkkgC8FvY55gM615wU86I&scope=openid%20email%20profile&nonce=2ebd357ccae88b0ca81c0bad36b1c0a97aeb72c54fa518ea690148a45c040a02&response_type=code&response_mode=query&redirect_uri=https%3A%2F%2Fwww.itb-community.com%2Findex.php%3Fauth0%3D1&state=eyJpbnRlcmltIjpmYWxzZSwibm9uY2UiOiI3ZmZhZTVkOGVkOTg1MDc5NGI1MDc2MmJlNjE1Y2RlMmE5YmQxNTUyNzhlMWRhNTFlM2E2NzJmYjE0NzMzZjc3IiwicmVkaXJlY3RfdG8iOiJodHRwczpcL1wvd3d3Lml0Yi1jb21tdW5pdHkuY29tXC9yb2JvdHMudHh0In0%3D "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://itb-auth.xchange.gevme.com/login?state=hKFo2SBiT2c5dVMxdVpLM3ZqZE5PcnlDMEVrQmNMNS1YTGEyOKFupWxvZ2luo3RpZNkgR0lzMk5kYkVVQUNiRUtNYnFRUjJrSG5lcWtvNlVTTWmjY2lk2SBSNjQ2UVJUN3MyNVNra2dDOEZ2WTU1Z002MTV3VTg2SQ&client=R646QRT7s25SkkgC8FvY55gM615wU86I&protocol=oauth2&scope=openid%20email%20profile&nonce=2ebd357ccae88b0ca81c0bad36b1c0a97aeb72c54fa518ea690148a45c040a02&response_type=code&response_mode=query&redirect_uri=https%3A%2F%2Fwww.itb-community.com%2Findex.php%3Fauth0%3D1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.itb-community.com/articles/changes-in-tourism-trends-post-covid19-pandemic/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stqry.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stqry.com/blog/10-trends-reshaping-the-future-of-travel/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.tourism-review.com/post-pandemic-tourism-will-set-off-new-trends-news12009 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf (hash: 83648169...)
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism-case-studies_3508b538/the-canadian-tourism-activity-tracker_60496474/53d27afa-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism-case-studies_3508b538/the-canadian-tourism-activity-tracker_60496474/53d27afa-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism-case-studies_3508b538/the-canadian-tourism-activity-tracker_60496474/53d27afa-en.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf (hash: b0266576...)
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+INFO:httpx:HTTP Request: GET https://virtusinterpress.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.trade.gov/sites/default/files/2024-10/Effects-of-COVID-19-Travel-Tourism-Industry.pdf (hash: bf959fef...)
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+WARNING:research_system.tools.fetch:Circuit open for www.mckinsey.com, skipping
+INFO:httpx:HTTP Request: GET https://www.weforum.org/press/2024/05/tourism-is-back-to-pre-pandemic-levels-but-challenges-remain/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/blog/tourism-trends-2018-2/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590051X24000169 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://planingo.ai/blog/post-pandemic-travel-the-future-of-exploration, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.infosysbpm.com/blogs/sourcing-procurement/5-trends-reshaping-the-future-of-travel-amidst-covid-19.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.happytoursturkey.com/blog/post-covid-travel-habits-adapting-to-the-new-normal-in-tourism/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.researchgate.net/publication/380470197_Post-Pandemic_Shifts_in_Travel_Habits_New_Trends_and_Strategies "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.aa.com.tr/en/health/post-pandemic-travel-boom-driven-by-youth-brings-to-light-new-global-trends/3356115 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trekksoft.com/en/blog/post-pandemic-travel-trends-how-travelers-choose-tours-in-2022 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://www.linkedin.com/pulse/post-pandemic-travel-trends-how-tourism-industry-adapting, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.oecd.org/en/blogs/2024/07/tourism-continues-to-recover-from-covid-but-faces-renewed-challenges.html "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/iplogin?__sso_redirect=/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize?response_type=code&client_id=xjVF0FFWFPOcG7XJO8C0XleeRPllUFfI&redirect_uri=https%3A%2F%2Fwww.statista.com%2Fsso%2Fcallback&state=Ql8vVpu1laG87hMW3K84DS3jozQWsEMm_41ooTrKwIk&scope=openid+profile+offline_access&code_challenge=fO00fI-xSlg-Hc1JGDpIFxNbBqdIA72ITzlN2fAhJjM&code_challenge_method=S256&audience=statista-api&ui_locales=en&connection=ip-login&0%5Bplatform%5D=en&0%5BstatistaTrackingUUID%5D=b5d98a68-17d6-4ab9-8f2f-34ef1af61124&0%5BrequestIp%5D=71.202.127.58 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://services.sso.statista.com/ip/authorize?login_hint=&response_type=code&redirect_uri=https%3A%2F%2Flogin.statista.com%2Flogin%2Fcallback&state=i38aApFIbDkuusfiNTyPmbUnSUH9mM8k&client_id=9a7cf70e-1be6-40a1-ba02-6e6e6654b93d "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/login/callback?state=i38aApFIbDkuusfiNTyPmbUnSUH9mM8k&error=INVALID_IP&error_description=ip-not-authorized-for-login "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize/resume?state=0jqn0fcYnYhtLTc1tfGRPLvIyVkyXCU- "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/callback?error=access_denied&error_description=ip-not-authorized-for-login&state=Ql8vVpu1laG87hMW3K84DS3jozQWsEMm_41ooTrKwIk "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590198223001550 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf (hash: 83648169...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf (hash: b0266576...)
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/a8dd3019-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/a8dd3019-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/a8dd3019-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/a8dd3019-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/a8dd3019-en.pdf "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.mckinsey.com, skipping
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf (hash: 4da59df0...)
+INFO:httpx:HTTP Request: HEAD https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.trade.gov/sites/default/files/2024-10/Effects-of-COVID-19-Travel-Tourism-Industry.pdf (hash: bf959fef...)
+WARNING:research_system.tools.fetch:Circuit open for www.mckinsey.com, skipping
+INFO:httpx:HTTP Request: GET https://www.weforum.org/press/2024/05/tourism-is-back-to-pre-pandemic-levels-but-challenges-remain/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/blog/tourism-trends-2018-2/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590051X24000169 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://planingo.ai/blog/post-pandemic-travel-the-future-of-exploration, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.ftf.co/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ftf.co/post/6-post-pandemic-travel-statistics-from-2022-that-might-surprise-you "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.infosysbpm.com/blogs/sourcing-procurement/5-trends-reshaping-the-future-of-travel-amidst-covid-19.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.researchgate.net/publication/380470197_Post-Pandemic_Shifts_in_Travel_Habits_New_Trends_and_Strategies "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.trekksoft.com/en/blog/post-pandemic-travel-trends-how-travelers-choose-tours-in-2022 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://www.linkedin.com/pulse/post-pandemic-travel-trends-how-tourism-industry-adapting, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.oecd.org/en/blogs/2024/07/tourism-continues-to-recover-from-covid-but-faces-renewed-challenges.html "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/iplogin?__sso_redirect=/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize?response_type=code&client_id=xjVF0FFWFPOcG7XJO8C0XleeRPllUFfI&redirect_uri=https%3A%2F%2Fwww.statista.com%2Fsso%2Fcallback&state=lmFGxarhotoVrkd31Zabf8vUWBu6jYCtZCMPnlUhnPI&scope=openid+profile+offline_access&code_challenge=_XHjqo5HJtZ1dyEyVjIXy0dHEQ01Fb5HmSzO404cnkI&code_challenge_method=S256&audience=statista-api&ui_locales=en&connection=ip-login&0%5Bplatform%5D=en&0%5BstatistaTrackingUUID%5D=f9072d67-7d6d-442c-9f8c-d6257fa43701&0%5BrequestIp%5D=71.202.127.58 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://services.sso.statista.com/ip/authorize?login_hint=&response_type=code&redirect_uri=https%3A%2F%2Flogin.statista.com%2Flogin%2Fcallback&state=Lt1_NC1xtAvwKcmUNRMpBKMr0ekNioEV&client_id=9a7cf70e-1be6-40a1-ba02-6e6e6654b93d "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/login/callback?state=Lt1_NC1xtAvwKcmUNRMpBKMr0ekNioEV&error=INVALID_IP&error_description=ip-not-authorized-for-login "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize/resume?state=h7azI4HdeLZYED5xcyj14Ns2Hp3PttV1 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/callback?error=access_denied&error_description=ip-not-authorized-for-login&state=lmFGxarhotoVrkd31Zabf8vUWBu6jYCtZCMPnlUhnPI "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590198223001550 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.aa.com.tr/en/health/post-pandemic-travel-boom-driven-by-youth-brings-to-light-new-global-trends/3356115 "HTTP/1.1 200 OK"
+INFO:research_system.enrich.ensure_quotes:Quote rescue: 135 primary cards need quotes
+INFO:research_system.enrich.ensure_quotes:Quote rescue complete: added 127 quotes
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 60 cards, 21 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=unwto.org, text='According to the latest World <strong>Tourism</strong> Barometer from UN <strong>Tourism</strong>, a...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'according to the latest world strong tourism strong barometer from un strong tourism strong an estim...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 3: domain=oecd.org, text='Tourism has rebounded strongly following sharp declines in 2020-21, triggered by the COVID19 pandemi...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'tourism has rebounded strongly following sharp declines in - triggered by the covid19 pandemic...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 6: domain=sciencedirect.com, text='by C Yepez · 2024 · Cited by 14 — We provide an evaluation of the post-pandemic evolution of these s...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'by c yepez cited by we provide an evaluation of the post-pandemic evolution of these sectors by exam...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 16: domain=oecd.org, text='Acknowledgements  5 USING ALTERNATIVE DATA SOURCES AND TOOLS TO MEASURE AND MONITOR TOURISM © OECD ...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'acknowledgements using alternative data sources and tools to measure and monitor tourism oecd reliab...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 23: domain=doi.org, text='Trends and factors in the development of world tourism in the post-pandemic period
+Vol 4, Issue 2, 2...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'trends and factors in the development of world tourism in the post-pandemic period vol issue downloa...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.758 0.418 0.531 0.751
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.758 1.000 0.445 0.427 0.670
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.418 0.445 1.000 0.222 0.422
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.531 0.427 0.222 1.000 0.498
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.751 0.670 0.422 0.498 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.371 between cards 0 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.361 between cards 0 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 0 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 2 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.393 between cards 3 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.339 between cards 3 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.316 between cards 3 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 3 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.331 between cards 4 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 5 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.314 between cards 5 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.392 between cards 6 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.382 between cards 6 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 6 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.373 between cards 6 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 7 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.360 between cards 7 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.321 between cards 7 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.397 between cards 7 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.334 between cards 7 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 8 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 9 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 9 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 9 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.395 between cards 9 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.343 between cards 10 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.335 between cards 10 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 11 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.324 between cards 11 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 11 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 12 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.371 between cards 13 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.355 between cards 13 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.343 between cards 14 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.336 between cards 14 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.334 between cards 14 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 14 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.323 between cards 17 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.337 between cards 19 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Found 111 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,1): similarity=0.758
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Tourism has rebounded strongly following sharp declines in 2020-21, triggered by...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,2): similarity=0.418
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: by C Yepez · 2024 · Cited by 14 — We provide an evaluation of the post-pandemic ...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,3): similarity=0.531
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 3: Acknowledgements  5 USING ALTERNATIVE DATA SOURCES AND TOOLS TO MEASURE AND MON...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,4): similarity=0.751
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 4: Trends and factors in the development of world tourism in the post-pandemic peri...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,5): similarity=0.723
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 5: industry’s recovery efforts.Studies(Das et al.,2023;Khan,2022)found that many to...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 3 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 0: 19 members from domains {'freetour.com', 'oecd.org', 'athletechnews.com', 'to-travel.net', 'weforum.org', 'mycwt.com', 'sec.gov', 'itb-community.com', 'embratur.com.br', 'savvynomad.io', 'doi.org', 'sciencedirect.com', 'researchgate.net', 'stqry.com', 'ustravel.org', 'unwto.org', 'tourismanalytics.com'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 19 cards from ['athletechnews.com', 'doi.org', 'embratur.com.br', 'freetour.com', 'itb-community.com', 'mycwt.com', 'oecd.org', 'researchgate.net', 'savvynomad.io', 'sciencedirect.com', 'sec.gov', 'stqry.com', 'to-travel.net', 'tourismanalytics.com', 'unwto.org', 'ustravel.org', 'weforum.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: A discussion of the impacts of the COVID-19 pandemic on our 2020, 2021 and 2022 performance, mitigat...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 60 total cards
+INFO:research_system.triangulation.post:Cluster 0: 19 cards from 17 domains ['athletechnews.com', 'doi.org', 'embratur.com.br']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/davidlevien/Agents/research_agent/research_system/__main__.py", line 3, in <module>
+    main()
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 63, in main
+    asyncio.run(asyncio.wait_for(arun(), timeout=wall_timeout))
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 58, in arun
+    await loop.run_in_executor(None, orchestrator.run)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator.py", line 1191, in run
+    "size": match["size"]
+            ~~~~~^^^^^^^^
+KeyError: 'size'

@@ -1185,10 +1185,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         serializable_structured = []
         for match in structured_matches:
             serializable_match = {
-                "key": match["key"],
+                "key": match.get("key", ""),
                 "indices": match.get("indices", []),  # Use indices if available
-                "domains": match["domains"],
-                "size": match["size"]
+                "domains": match.get("domains", []),
+                "size": match.get("size", match.get("count", len(match.get("indices", []))))  # Handle both 'size' and 'count' fields
             }
             # If indices not available but cards are, extract indices
             if not serializable_match["indices"] and "cards" in match:
@@ -1318,7 +1318,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         contradictions = find_numeric_conflicts(claim_texts, tol=0.10)
         
         # AREX: Refined targeted expansion for uncorroborated structured claims
-        triangulated_keys = {m["key"] for m in structured_matches}
+        triangulated_keys = {m.get("key") for m in structured_matches if m.get("key")}
         
         # Extract structured claims for AREX
         from research_system.tools.claim_struct import extract_struct_claim, struct_key
@@ -1440,11 +1440,11 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         from research_system.scoring import recompute_confidence_with_discipline
         tri_card_index = set()
         for cl in para_clusters:
-            if len(cl["domains"]) >= 2:
-                tri_card_index.update(cl["indices"])
+            if len(cl.get("domains", [])) >= 2:
+                tri_card_index.update(cl.get("indices", []))
         for m in structured_matches:
-            if len(m["domains"]) >= 2:
-                tri_card_index.update(m["indices"])
+            if len(m.get("domains", [])) >= 2:
+                tri_card_index.update(m.get("indices", []))
         now = datetime.utcnow()
         for i, c in enumerate(cards):
             # Calculate recency days
@@ -1799,7 +1799,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         self._write("acceptance_guardrails.md", guardrails_md)
         
         # OBSERVABILITY: Generate triangulation breakdown
-        paraphrase_cluster_sets = [set(cl["indices"]) for cl in para_clusters if len(cl["domains"]) >= 2]
+        paraphrase_cluster_sets = [set(cl.get("indices", [])) for cl in para_clusters if len(cl.get("domains", [])) >= 2]
         dedup_count = 0  # Will be calculated if dedup is performed
         breakdown = generate_triangulation_breakdown(
             cards, paraphrase_cluster_sets, structured_matches, contradictions, dedup_count
@@ -1813,8 +1813,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             triangulation_rate = tri_union
             
             # Calculate individual rates for reporting
-            paraphrase_triangulated = sum(len(cl["indices"]) for cl in para_clusters if len(cl["domains"]) >= 2)
-            structured_triangulated = sum(len(m["indices"]) for m in structured_matches if len(m["domains"]) >= 2)
+            paraphrase_triangulated = sum(len(cl.get("indices", [])) for cl in para_clusters if len(cl.get("domains", [])) >= 2)
+            structured_triangulated = sum(len(m.get("indices", [])) for m in structured_matches if len(m.get("domains", [])) >= 2)
             
             paraphrase_rate = paraphrase_triangulated / max(1, len(cards))
             structured_rate = structured_triangulated / max(1, len(cards))

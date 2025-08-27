@@ -78,6 +78,7 @@ def compute_structured_triangles(cards: List[Any]) -> List[Dict[str, Any]]:
                     "indices": indices,
                     "domains": domains,
                     "count": len(group),
+                    "size": len(group),  # Include both 'count' and 'size' for compatibility
                     "representative_claim": representative,
                     "entity": group[0].get("entity"),
                     "metric": group[0].get("metric"),
