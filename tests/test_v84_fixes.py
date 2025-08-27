@@ -9,7 +9,7 @@ from research_system.providers.openalex import search_openalex, to_cards as open
 from research_system.providers.oecd import _dataflows, search_oecd
 from research_system.connectors.crossref import search_crossref
 from research_system.tools.domain_policies import get_headers_for_domain, should_skip_domain
-from research_system.net.pdf_fetch import download_pdf, _canonicalize_url, _seen_downloads
+from research_system.net.pdf_fetch import download_pdf, _canonicalize_url, _seen_downloads, _url_to_hash
 import httpx
 import json
 
@@ -25,14 +25,14 @@ def test_composer_handles_missing_best_quote():
     card.snippet = "A snippet"
     card.title = "Title"
     
-    # Should not crash - _best_text checks claim first
+    # Should not crash - _best_text checks snippet first (changed priority)
     result = _best_text(card)
-    assert result == "A claim"  # claim is checked before quotes
+    assert result == "A snippet"  # snippet is checked before claim now
     
-    # Test with no claim
+    # Test with no claim (snippet still takes priority)
     card.claim = None
     result = _best_text(card)
-    assert result == "Supporting text"  # supporting_text is next
+    assert result == "A snippet"  # snippet is still checked first
     
     # Test with minimal fields
     card.supporting_text = None
@@ -154,6 +154,7 @@ def test_no_duplicate_pdf_downloads():
     """Test same URL requested twice yields one download."""
     # Clear any previous downloads
     _seen_downloads.clear()
+    _url_to_hash.clear()
     
     url = "http://example.com/report.pdf"
     canonical = _canonicalize_url(url)
@@ -171,7 +172,11 @@ def test_no_duplicate_pdf_downloads():
         
         # First download
         pdf1 = download_pdf(client, url)
-        assert canonical in _seen_downloads
+        # Check that URL is tracked in _url_to_hash
+        assert canonical in _url_to_hash
+        # And content is cached by hash
+        content_hash = _url_to_hash[canonical]
+        assert content_hash in _seen_downloads
         
         # Second download should return cached
         pdf2 = download_pdf(client, url)

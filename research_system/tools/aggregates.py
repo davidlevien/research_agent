@@ -19,7 +19,8 @@ def canonical_domain(url: str) -> str:
         # Remove www prefix
         if domain.startswith("www."):
             domain = domain[4:]
-        return domain
+        # Return "unknown" if domain is empty
+        return domain if domain else "unknown"
     except:
         return "unknown"
 

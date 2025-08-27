@@ -974,7 +974,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         # Merge providers: intent-based first, then router's unique additions
         merged_providers = intent_providers + [p for p in decision.providers if p not in intent_providers]
-        decision.providers = merged_providers[:20]  # Limit total
+        # Create new decision object with updated providers (can't modify frozen dataclass)
+        from dataclasses import replace
+        decision = replace(decision, providers=merged_providers[:20])  # Limit total
         
         enabled = settings.enabled_providers()
         # Filter providers by topic relevance to prevent off-topic noise

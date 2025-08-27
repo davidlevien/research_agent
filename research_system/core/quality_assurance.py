@@ -158,14 +158,14 @@ class QualityAssurance:
         else:
             issues.append("No publication date available")
         
-        # Check for quality indicators
-        if evidence.quality_indicators:
+        # Check for quality indicators (if available)
+        if hasattr(evidence, 'quality_indicators') and evidence.quality_indicators:
             qi = evidence.quality_indicators
-            if qi.has_citations:
+            if qi.get('has_citations'):
                 score += 0.1
-            if qi.peer_reviewed:
+            if qi.get('peer_reviewed'):
                 score += 0.15
-            if qi.has_methodology:
+            if qi.get('has_methodology'):
                 score += 0.1
         
         return min(max(score, 0), 1)
@@ -222,8 +222,8 @@ class QualityAssurance:
                 score -= 0.1
                 issues.append("Claim not directly supported by text")
         
-        # Check for context
-        if evidence.entities:
+        # Check for context (if entities available)
+        if hasattr(evidence, 'entities') and evidence.entities:
             entity_count = sum(len(v) for v in evidence.entities.__dict__.values() if isinstance(v, list))
             if entity_count > 5:
                 score += 0.1

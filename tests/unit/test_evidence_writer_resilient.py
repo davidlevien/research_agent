@@ -100,9 +100,10 @@ def test_repair_minimal_fixes_empty_fields():
     
     repaired2 = _repair_minimal(doc2)
     
-    # Should have empty strings but not fail
-    assert repaired2["supporting_text"] == ""
-    assert repaired2["claim"] == ""
+    # Should fill empty fields with fallback values
+    assert repaired2["snippet"] == "Evidence snippet unavailable"
+    assert repaired2["supporting_text"] == "Evidence snippet unavailable"
+    assert repaired2["claim"] == "Evidence snippet unavailable"[:200]
     
     # Test with only title
     doc3 = {

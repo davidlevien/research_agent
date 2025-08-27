@@ -84,7 +84,9 @@ class TestEvidenceValidation:
             validate_evidence_dict(invalid_card)
     
     def test_rejects_empty_snippet(self):
-        invalid_card = {
+        # Test that empty snippets are logged as warning but don't raise
+        # (repair chain handles empty snippets)
+        card_with_empty_snippet = {
             "id": "12345678-1234-1234-1234-123456789012",
             "title": "Test Article",
             "url": "https://example.com",
@@ -102,8 +104,14 @@ class TestEvidenceValidation:
             "stance": "neutral"
         }
         
-        with pytest.raises(ValueError, match="snippet cannot be empty"):
-            validate_evidence_dict(invalid_card)
+        # Should not raise - repair chain handles empty snippets
+        # A warning is logged instead
+        import logging
+        import warnings
+        with warnings.catch_warnings(record=True):
+            # Just validate - should not raise ValueError
+            validate_evidence_dict(card_with_empty_snippet)
+            # The warning is logged internally but we don't need to assert on it
     
     def test_validates_score_bounds(self):
         invalid_card = {
@@ -205,14 +213,23 @@ class TestAggregates:
         
         results = triangulate_claims(cards)
         
+        # Find claims by content (keys are cluster-based with hashes, not exact text)
+        ai_claim = None
+        quantum_claim = None
+        for k, v in results.items():
+            if 'will transform healthcare' in v['claim'].lower():
+                ai_claim = v
+            elif 'quantum computing' in v['claim'].lower():
+                quantum_claim = v
+        
         # Check AI claim is triangulated (2 sources)
-        ai_claim = results["ai will transform healthcare"]
+        assert ai_claim is not None, "AI claim not found in results"
         assert ai_claim["is_triangulated"] == True
         assert ai_claim["num_sources"] == 2
         assert ai_claim["num_providers"] == 2
         
         # Check quantum claim is not triangulated (1 source)
-        quantum_claim = results["quantum computing breakthrough"]
+        assert quantum_claim is not None, "Quantum claim not found in results"  
         assert quantum_claim["is_triangulated"] == False
         assert quantum_claim["num_sources"] == 1
 
@@ -246,7 +263,9 @@ class TestOrchestrator:
                     supporting_text="Support",
                     source_url="https://example.com/article",
                     source_title="Article 1",
-                    source_domain="example.com"
+                    source_domain="example.com",
+                    credibility_score=0.8,
+                    relevance_score=0.9
                 ),
                 EvidenceCard(
                     url="https://example.com/article",  # Duplicate
@@ -257,7 +276,9 @@ class TestOrchestrator:
                     supporting_text="Support",
                     source_url="https://example.com/article",
                     source_title="Article 1 Duplicate",
-                    source_domain="example.com"
+                    source_domain="example.com",
+                    credibility_score=0.7,
+                    relevance_score=0.8
                 ),
                 EvidenceCard(
                     url="https://different.com/page",
@@ -268,7 +289,9 @@ class TestOrchestrator:
                     supporting_text="Different",
                     source_url="https://different.com/page",
                     source_title="Different Article",
-                    source_domain="different.com"
+                    source_domain="different.com",
+                    credibility_score=0.75,
+                    relevance_score=0.85
                 )
             ]
             

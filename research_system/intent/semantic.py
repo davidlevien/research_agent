@@ -207,11 +207,11 @@ def predict(
         return "generic", 0.0, []
     
     # Get top prediction
-    label, score = ranked[0]
+    label, confidence = ranked[0]
     
     # Return generic if confidence too low
-    if score < min_score:
-        logger.debug(f"Low confidence {score:.3f} < {min_score}, returning generic")
-        return "generic", score, ranked
+    if confidence < min_score:
+        logger.debug(f"Low confidence {confidence:.3f} < {min_score}, returning generic")
+        return "generic", confidence, ranked
     
-    return label, score, ranked
+    return label, confidence, ranked

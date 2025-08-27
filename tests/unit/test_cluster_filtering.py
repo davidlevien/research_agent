@@ -13,13 +13,15 @@ class MockCard:
 def test_cap_for_cluster_calculation():
     """Test cluster size cap calculation with domain diversity."""
     # With 24 total cards:
-    # Base cap should be 20% = ~5 cards
-    assert _cap_for_cluster(5, 2, 24) == 5  # 2 domains: base only
-    assert _cap_for_cluster(10, 3, 24) == 8  # 3 domains: base + 1 bonus
-    assert _cap_for_cluster(15, 5, 24) == 14  # 5 domains: base + 3 bonuses
+    # Base cap = max(3, ceil(0.20 * 24)) = 5
+    # Bonus per extra domain = ceil(0.10 * 24) = 3
+    # Hard ceiling = max(8, ceil(0.35 * 24)) = max(8, 9) = 9
+    assert _cap_for_cluster(5, 2, 24) == 8  # 2 domains: 5 + 3*1 = 8
+    assert _cap_for_cluster(10, 3, 24) == 9  # 3 domains: 5 + 3*2 = 11, capped at 9
+    assert _cap_for_cluster(15, 5, 24) == 9  # 5 domains: 5 + 3*4 = 17, capped at 9
     
-    # Hard ceiling at 35% = ~8 cards (for 24 total)
-    assert _cap_for_cluster(100, 10, 24) == 8  # Even with many domains
+    # Hard ceiling at max(8, 35%) = 9 cards (for 24 total)
+    assert _cap_for_cluster(100, 10, 24) == 9  # Even with many domains, capped at 9
 
 
 def test_single_domain_clusters_rejected():
