@@ -24,7 +24,7 @@ class TestQualityConfig:
         assert config.triangulation.target_normal_pct == 0.30
         assert config.triangulation.floor_pct_low_supply == 0.25
         assert config.primary_share.target_pct == 0.40
-        assert config.domain_balance.cap_pct == 0.25
+        assert config.domain_balance.cap_default == 0.25
     
     def test_triangulation_threshold_adaptation(self):
         """Test triangulation threshold adapts to conditions."""

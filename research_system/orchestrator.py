@@ -1571,7 +1571,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         # Check if we need to backfill from primary sources
         # Create a temporary config for backfill check
-        bal_cfg = BalanceConfig(cap=self.quality_config.domain_balance.cap_pct, min_cards=24, prefer_primary=True)
+        bal_cfg = BalanceConfig(cap=self.quality_config.domain_balance.cap_default, min_cards=24, prefer_primary=True)
         if need_backfill(balanced_cards, bal_cfg):
             logger.info(f"Backfilling from primary sources (have {len(balanced_cards)}, need {bal_cfg.min_cards})")
             # Use primary providers for backfill

@@ -164,7 +164,7 @@ def adaptive_strict_check(
     
     # 3. DOMAIN DIVERSITY (adaptive cap)
     if unique_domains < config.domain_balance.few_domains_threshold:
-        adjustments["domain_cap"] = f"relaxed to {config.domain_balance.cap_pct_when_few_domains:.0%} (few domains)"
+        adjustments["domain_cap"] = f"relaxed to {config.domain_balance.cap_when_few_domains:.0%} (few domains)"
     
     # Minimum domain diversity check
     if unique_domains < 3:
