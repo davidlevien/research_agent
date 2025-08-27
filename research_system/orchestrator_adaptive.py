@@ -36,7 +36,7 @@ def apply_adaptive_domain_balance(
     Returns:
         Tuple of (balanced_cards, domain_counts, adjustment_note)
     """
-    from research_system.enrich.domain_balance import canonical_domain
+    from research_system.selection.domain_balance import canonical_domain
     
     # Determine cap based on domain diversity
     if unique_domains < config.domain_balance.few_domains_threshold:
@@ -94,7 +94,7 @@ def apply_adaptive_credibility_floor(
     Returns:
         Tuple of (filtered_cards, num_filtered, retained_singletons)
     """
-    from research_system.enrich.domain_balance import canonical_domain
+    from research_system.selection.domain_balance import canonical_domain
     
     # Count domain frequencies
     domain_counts = Counter(
@@ -157,7 +157,7 @@ def compute_adaptive_metrics(
     Returns:
         Dictionary of metrics including supply context
     """
-    from research_system.enrich.domain_balance import canonical_domain
+    from research_system.selection.domain_balance import canonical_domain
     
     unique_domains = len(set(
         canonical_domain(c.source_domain) for c in cards

@@ -5977,3 +5977,191 @@ INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tou
 INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
 INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Travel_and_Tourism_at_a_Turning_Point_2025.pdf "HTTP/1.1 404 Not Found"
 INFO:research_system.net.pdf_fetch:Returning cached PDF for https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf (hash: 83b258ab...)
+INFO:httpx:HTTP Request: GET https://www.weforum.org/press/2024/05/tourism-is-back-to-pre-pandemic-levels-but-challenges-remain/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.freetour.com/blog/tourism-recovery-after-the-covid-19-pandemic "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590051X24000169 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.imf.org/en/News/Articles/2021/02/24/na022521-how-to-save-travel-and-tourism-in-a-post-pandemic-world "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.infosysbpm.com/blogs/sourcing-procurement/5-trends-reshaping-the-future-of-travel-amidst-covid-19.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.unwto.org/news/global-tourism-set-for-full-recovery-by-end-of-the-year-with-spending-growing-faster-than-arrivals "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://en.unwto-ap.org/news/global-tourism-set-for-full-recovery-by-end-of-the-year-with-spending-growing-faster-than-arrivals "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://en.unwto-ap.org/news/global-tourism-set-for-full-recovery-by-end-of-the-year-with-spending-growing-faster-than-arrivals "HTTP/1.1 404 Not Found"
+WARNING:research_system.tools.fetch:Circuit open for www.unwto.org, skipping
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2666518221000206 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.euronews.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.euronews.com/travel/2021/05/26/travel-industry-experts-on-the-post-covid-travel-trends-emerging-from-bookings "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/en/blogs/2024/07/tourism-continues-to-recover-from-covid-but-faces-renewed-challenges.html "HTTP/1.1 403 Forbidden"
+WARNING:research_system.tools.fetch:Circuit open for www.unwto.org, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.unwto.org, skipping
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/blog/tourism-trends-2018-2/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.imf.org/en/Publications/fandd/issues/2020/12/impact-of-the-pandemic-on-tourism-behsudi "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.unwto.org, skipping
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf (hash: 83648169...)
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism-case-studies_3508b538/the-canadian-tourism-activity-tracker_60496474/53d27afa-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism-case-studies_3508b538/the-canadian-tourism-activity-tracker_60496474/53d27afa-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/using-alternative-data-sources-and-tools-to-measure-and-monitor-tourism-case-studies_3508b538/the-canadian-tourism-activity-tracker_60496474/53d27afa-en.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf (hash: b0266576...)
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.mckinsey.com, skipping
+INFO:httpx:HTTP Request: GET https://virtusinterpress.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://virtusinterpress.org/IMG/pdf/cbsrv6i1art12.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.trade.gov/sites/default/files/2024-10/Effects-of-COVID-19-Travel-Tourism-Industry.pdf (hash: bf959fef...)
+INFO:httpx:HTTP Request: GET https://www.rto9.ca/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.rto9.ca/wp-content/uploads/2024/08/State-of-Travel-2024-Final-8.19.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.rto9.ca/wp-content/uploads/2024/08/State-of-Travel-2024-Final-8.19.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.rto9.ca/wp-content/uploads/2024/08/State-of-Travel-2024-Final-8.19.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.rto9.ca/wp-content/uploads/2024/08/State-of-Travel-2024-Final-8.19.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.rto9.ca/wp-content/uploads/2024/08/State-of-Travel-2024-Final-8.19.pdf "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.mckinsey.com, skipping
+INFO:httpx:HTTP Request: GET https://www.weforum.org/press/2024/05/tourism-is-back-to-pre-pandemic-levels-but-challenges-remain/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/blog/tourism-trends-2018-2/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590051X24000169 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://planingo.ai/blog/post-pandemic-travel-the-future-of-exploration, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.infosysbpm.com/blogs/sourcing-procurement/5-trends-reshaping-the-future-of-travel-amidst-covid-19.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.happytoursturkey.com/blog/post-covid-travel-habits-adapting-to-the-new-normal-in-tourism/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.researchgate.net/publication/380470197_Post-Pandemic_Shifts_in_Travel_Habits_New_Trends_and_Strategies "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.aa.com.tr/en/health/post-pandemic-travel-boom-driven-by-youth-brings-to-light-new-global-trends/3356115 "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://www.linkedin.com/pulse/post-pandemic-travel-trends-how-tourism-industry-adapting, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.trekksoft.com/en/blog/post-pandemic-travel-trends-how-travelers-choose-tours-in-2022 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/en/blogs/2024/07/tourism-continues-to-recover-from-covid-but-faces-renewed-challenges.html "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/iplogin?__sso_redirect=/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize?response_type=code&client_id=xjVF0FFWFPOcG7XJO8C0XleeRPllUFfI&redirect_uri=https%3A%2F%2Fwww.statista.com%2Fsso%2Fcallback&state=WQO_g7bxX_IfNDPlTuIrgTomFbQmp2ACZRrrnEr81zM&scope=openid+profile+offline_access&code_challenge=Zdk_godmSpw4HVgCgckqzzrZfzSmDW2fvdH4IZZ2MdM&code_challenge_method=S256&audience=statista-api&ui_locales=en&connection=ip-login&0%5Bplatform%5D=en&0%5BstatistaTrackingUUID%5D=0a0e8283-11ec-412f-9055-6964fcd659c2&0%5BrequestIp%5D=71.202.127.58 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://services.sso.statista.com/ip/authorize?login_hint=&response_type=code&redirect_uri=https%3A%2F%2Flogin.statista.com%2Flogin%2Fcallback&state=4k2XA-7uvXe5rk3fbHWOGZBR81DDDZGI&client_id=9a7cf70e-1be6-40a1-ba02-6e6e6654b93d "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/login/callback?state=4k2XA-7uvXe5rk3fbHWOGZBR81DDDZGI&error=INVALID_IP&error_description=ip-not-authorized-for-login "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize/resume?state=y-1TJG9aZy-rfzBOP-IfIDmNfELmfYAH "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/callback?error=access_denied&error_description=ip-not-authorized-for-login&state=WQO_g7bxX_IfNDPlTuIrgTomFbQmp2ACZRrrnEr81zM "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/chart/30798/traveler-attitudes-or-plans/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S2590198223001550 "HTTP/1.1 200 OK"
+INFO:research_system.enrich.ensure_quotes:Quote rescue: 104 primary cards need quotes
+INFO:research_system.enrich.ensure_quotes:Quote rescue complete: added 97 quotes
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 56 cards, 21 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=unwto.org, text='According to the latest World <strong>Tourism</strong> Barometer from UN <strong>Tourism</strong>, a...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'according to the latest world strong tourism strong barometer from un strong tourism strong an estim...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=unwto.org, text='Around 1.1 billion tourists <strong>travelled</strong> internationally in the first nine months of 2...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'around billion tourists strong travelled strong internationally in the first nine months of as the g...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 3: domain=unwto.org, text='According to the latest data from the World <strong>Tourism</strong> Organization (UNWTO), an estima...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'according to the latest data from the world strong tourism strong organization unwto an estimated mi...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=unwto.org, text='Over 900 million tourists <strong>travelled</strong> internationally in 2022, double those in 2021 t...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'over million tourists strong travelled strong internationally in double those in though still % fewe...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 7: domain=imf.org, text='Japan, which had seen its international arrivals triple from 2013 to 2018, started lifting border cl...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'japan which had seen its international arrivals triple from to started lifting border closures for s...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.927 0.725 0.711 0.335
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.927 1.000 0.756 0.798 0.380
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.725 0.756 1.000 0.749 0.368
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.711 0.798 0.749 1.000 0.389
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.335 0.380 0.368 0.389 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.335 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.373 between cards 0 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.377 between cards 0 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.389 between cards 0 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 1 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 1 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.395 between cards 1 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 2 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.370 between cards 2 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.389 between cards 3 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.397 between cards 3 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 4 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.372 between cards 4 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 4 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 5 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 5 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 5 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.378 between cards 6 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 6 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 7 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 7 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.339 between cards 7 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 8 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.365 between cards 8 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.316 between cards 8 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.343 between cards 9 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.331 between cards 9 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.377 between cards 9 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 10 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 10 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 10 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.308 between cards 11 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.364 between cards 11 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.377 between cards 11 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.350 between cards 12 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 12 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.342 between cards 12 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.360 between cards 13 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 13 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.371 between cards 15 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.310 between cards 15 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.336 between cards 16 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.356 between cards 17 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 17 and 20
+INFO:research_system.triangulation.paraphrase_cluster:Found 93 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,1): similarity=0.927
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Around 1.1 billion tourists <strong>travelled</strong> internationally in the fi...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,2): similarity=0.725
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: According to the latest data from the World <strong>Tourism</strong> Organizatio...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,3): similarity=0.711
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 3: Over 900 million tourists <strong>travelled</strong> internationally in 2022, do...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,5): similarity=0.758
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 5: Tourism has rebounded strongly following sharp declines in 2020-21, triggered by...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,6): similarity=0.522
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: According to the latest World <strong>Tourism</strong> Barometer from UN <strong...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 6: Global travel and tourism as a share of global GDP was estimated, per Statista a...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 4 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 4: 18 members from domains {'freetour.com', 'virtusinterpress.org', 'ustravel.org', 'sec.gov', 'imf.org', 'annexpublishers.com', 'researchgate.net', 'athletechnews.com', 'doi.org', 'weforum.org', 'oecd.org', 'unwto.org', 'stlouisfed.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 18 cards from ['annexpublishers.com', 'athletechnews.com', 'doi.org', 'freetour.com', 'imf.org', 'oecd.org', 'researchgate.net', 'sec.gov', 'stlouisfed.org', 'unwto.org', 'ustravel.org', 'virtusinterpress.org', 'weforum.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Global travel and tourism as a share of global GDP was estimated, per Statista and World Travel & To...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 56 total cards
+INFO:research_system.triangulation.post:Cluster 0: 18 cards from 13 domains ['annexpublishers.com', 'athletechnews.com', 'doi.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/davidlevien/Agents/research_agent/research_system/__main__.py", line 3, in <module>
+    main()
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 63, in main
+    asyncio.run(asyncio.wait_for(arun(), timeout=wall_timeout))
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 58, in arun
+    await loop.run_in_executor(None, orchestrator.run)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator.py", line 1567, in run
+    balanced_cards, kept, balance_note = apply_adaptive_domain_balance(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator_adaptive.py", line 39, in apply_adaptive_domain_balance
+    from research_system.enrich.domain_balance import canonical_domain
+ModuleNotFoundError: No module named 'research_system.enrich.domain_balance'

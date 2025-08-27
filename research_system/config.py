@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     OUTPUT_DIR: str = "outputs"
     CHECKPOINT_DIR: str = "outputs/checkpoints"
 
+    # ==== API Compliance ====
+    CONTACT_EMAIL: Optional[str] = Field(None, description="Contact email for API compliance (User-Agent headers)")
+    
     # ==== Policy ====
     FRESHNESS_WINDOW: str = "24 months"
     REGIONS: str = "US,EU"  # CSV of priority regions
@@ -156,24 +159,25 @@ class Settings(BaseSettings):
     def enabled_providers(self) -> List[str]:
         return [s.strip() for s in self.SEARCH_PROVIDERS.split(",") if s.strip()]
 
-_settings_cache = None
-
+@lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance"""
-    global _settings_cache
-    if _settings_cache is None:
-        _settings_cache = Settings()
-    return _settings_cache
+    return Settings()
 
-# Create a lazy property for backward compatibility
-class LazySettings:
-    """Lazy settings wrapper that defers initialization until first access."""
+# Create lazy proxy that defers Settings instantiation
+class _LazySettings:
+    """Proxy that creates Settings on first attribute access."""
+    _instance = None
+    
     def __getattr__(self, name):
-        return getattr(get_settings(), name)
+        if self._instance is None:
+            self._instance = get_settings()
+        return getattr(self._instance, name)
     
     def __repr__(self):
-        return repr(get_settings())
+        return f"<LazySettings>"
 
 # Export aliases for backward compatibility
-settings = LazySettings()
+# These are now lazy proxies that won't instantiate Settings until first use
+settings = _LazySettings()
 config = settings  # Provides the symbol modules expect: from ..config import config

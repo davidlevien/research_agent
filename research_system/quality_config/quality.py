@@ -19,6 +19,12 @@ class TriangulationConfig:
     min_unique_domains: int = 6
     min_credible_cards: int = 25
     provider_error_rate: float = 0.30
+    
+    def get_threshold(self, cards: int, domains: int) -> float:
+        """Get adaptive triangulation threshold based on supply."""
+        if cards < self.min_credible_cards or domains < self.min_unique_domains:
+            return self.floor_pct_low_supply
+        return self.target_normal_pct
 
 
 @dataclass
@@ -35,6 +41,12 @@ class DomainBalanceConfig:
     cap_default: float = 0.25
     cap_when_few_domains: float = 0.40
     few_domains_threshold: int = 6
+    
+    def get_cap(self, domain_count: int) -> float:
+        """Get adaptive domain cap based on domain diversity."""
+        if domain_count < self.few_domains_threshold:
+            return self.cap_when_few_domains
+        return self.cap_default
 
 
 @dataclass
@@ -96,6 +108,12 @@ class QualityConfig:
                     credibility=CredibilityConfig(**data.get("credibility", {}))
                 )
         return cls()
+    
+    def save(self, path: Path) -> None:
+        """Save configuration to JSON file."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, 'w') as f:
+            json.dump(self.to_dict(), f, indent=2)
     
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization."""
