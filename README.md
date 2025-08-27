@@ -209,22 +209,42 @@ pytest tests/test_integration.py
 ```
 
 ### Environment Variables
-```bash
-# Required for full features
-OPENAI_API_KEY=your_key
-ANTHROPIC_API_KEY=your_key
 
-# Optional search providers
+Key configuration variables (see `.env.example` for complete list):
+
+```bash
+# LLM Configuration (REQUIRED - choose one)
+LLM_PROVIDER=openai  # or anthropic, azure_openai
+OPENAI_API_KEY=your_key
+# ANTHROPIC_API_KEY=your_key  # if using Anthropic
+
+# Search Providers (at least one recommended)
+SEARCH_PROVIDERS=tavily,brave,serper
 TAVILY_API_KEY=your_key
 BRAVE_API_KEY=your_key
 SERPER_API_KEY=your_key
 
-# System configuration
+# Critical Settings
+CONTACT_EMAIL=your-email@example.com  # Required for API compliance
+WALL_TIMEOUT_SEC=1800  # 30 minutes max runtime
+HTTP_TIMEOUT_SECONDS=30
+PROVIDER_TIMEOUT_SEC=20
+
+# Feature Flags
 ENABLE_FREE_APIS=true
-MAX_COST_USD=5.00
-MAX_BACKFILL_ATTEMPTS=3
+USE_LLM_CLAIMS=true
+USE_LLM_SYNTH=true
 MIN_EVIDENCE_CARDS=24
+MAX_BACKFILL_ATTEMPTS=3
+
+# Quality Thresholds
+MIN_TRIANGULATION_RATE=0.35
+MAX_DOMAIN_CONCENTRATION=0.25
+MIN_CREDIBILITY=0.6
+STRICT=false  # Set true for strict quality enforcement
 ```
+
+**Note**: Some variables like `RESEARCH_ENCRYPTION_KEY`, `ENABLED_PROVIDERS`, and `FRED_API_KEY` are read directly via `os.getenv()` rather than through the Settings class.
 
 ## 🚨 Production Notes
 
