@@ -123,9 +123,8 @@ def compose_report(topic: str, cards, tri: dict, metrics: dict, *, max_findings:
 
     # 2) Pick top clusters by score (fall back to card groups if no tri clusters)
     clusters = []
-    for k, cluster in (tri.get("clusters") or tri.get("structured_triangles") or []):
-        # handle different shapes; normalize to list of cards
-        pass
+    # Fixed: Removed invalid tuple unpacking loop that caused crashes
+    # Clusters are lists of dicts, not key-value pairs
     # generic: tri might be {"clusters":[{"key":..., "cards":[...]}], ...}
     raw_clusters = tri.get("clusters") or []
     for cl in raw_clusters:

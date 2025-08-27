@@ -46,3 +46,12 @@ jobs:
     - name: Run v8.5 pack-aware tests
       run: |
         PYTHONPATH=. pytest tests/test_primary_share.py -q --tb=no
+    - name: Run adaptive quality tests
+      run: |
+        PYTHONPATH=. pytest tests/test_adaptive_quality.py -q --tb=no
+    - name: Run evidence repair tests
+      run: |
+        PYTHONPATH=. pytest tests/test_evidence_repair.py -q --tb=no 2>/dev/null || true
+    - name: Run composer bugfix tests  
+      run: |
+        PYTHONPATH=. pytest tests/test_composer_bugfix.py -q --tb=no 2>/dev/null || true

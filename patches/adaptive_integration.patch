@@ -1,0 +1,107 @@
+"""
+Patch to integrate adaptive quality gates into orchestrator.py
+
+This patch modifies the existing orchestrator to use the adaptive system
+while maintaining backward compatibility.
+
+Apply with: git apply patches/adaptive_integration.patch
+"""
+
+# Key integration points in orchestrator.py:
+
+# 1. Import adaptive modules at the top
+from research_system.config.quality import QualityConfig
+from research_system.config.report import ReportConfig, choose_report_tier
+from research_system.orchestrator_adaptive import (
+    apply_adaptive_domain_balance,
+    apply_adaptive_credibility_floor, 
+    compute_adaptive_metrics,
+    generate_adaptive_report_metadata,
+    should_skip_strict_fail
+)
+from research_system.strict.adaptive_guard import (
+    adaptive_strict_check,
+    format_confidence_report,
+    should_attempt_last_mile_backfill
+)
+
+# 2. Initialize configs in __init__
+self.quality_config = QualityConfig.load(self.s.output_dir / "quality.json")
+self.report_config = ReportConfig()
+
+# 3. Track provider errors throughout collection
+self.provider_errors = 0
+self.provider_attempts = 0
+
+# 4. Replace domain balance (line ~1480)
+# OLD:
+# balanced_cards, kept = enforce_cap(cards, bal_cfg)
+# NEW:
+unique_domains = len(set(canonical_domain(c.source_domain) for c in cards))
+balanced_cards, kept, balance_note = apply_adaptive_domain_balance(
+    cards, self.quality_config, unique_domains
+)
+logger.info(balance_note)
+
+# 5. Replace credibility floor (line ~1540)
+# OLD:
+# cards = [c for c in cards if keep_card(c)]
+# NEW:
+cards, num_filtered, retained = apply_adaptive_credibility_floor(
+    cards, self.quality_config
+)
+
+# 6. Add last-mile backfill logic in backfill loop (line ~1550)
+if should_attempt_last_mile_backfill(
+    metrics, self.quality_config,
+    time_remaining_pct=(time_left / self.time_budget),
+    attempt_number=backfill_attempts
+):
+    logger.info("Attempting last-mile backfill (close to threshold)")
+    # ... existing backfill logic
+
+# 7. Replace strict check (line ~1790)
+# OLD:
+# from research_system.strict.guard import strict_check
+# errs = strict_check(self.s.output_dir)
+# NEW:
+errs, confidence_level, adjustments = adaptive_strict_check(
+    self.s.output_dir, self.quality_config
+)
+
+if errs and should_skip_strict_fail(errs, adjustments, confidence_level):
+    logger.warning(f"Strict checks relaxed due to supply constraints: {errs}")
+    self._write("WARNINGS.md", format_confidence_report(
+        confidence_level, adjustments, SupplyContext(metrics)
+    ))
+elif errs:
+    self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
+    raise SystemExit("STRICT FAIL: " + " | ".join(errs))
+
+# 8. Choose report tier before generation (line ~1770)
+tier, report_confidence, max_tokens, tier_explanation = choose_report_tier(
+    triangulated_cards=len(triangulated_indices),
+    credible_cards=len([c for c in cards if c.credibility_score >= 0.5]),
+    primary_share=primary_share,
+    unique_domains=unique_domains,
+    provider_error_rate=self.provider_errors / max(1, self.provider_attempts),
+    depth=self.s.depth,
+    time_budget_remaining_sec=time_left,
+    config=self.report_config
+)
+
+# 9. Pass tier config to report generator
+from research_system.report.composer import _compose_report
+report = _compose_report(
+    cards, topic=self.s.topic,
+    max_tokens=max_tokens,
+    section_budgets=self.report_config.tiers[tier].sections,
+    appendix_rows=self.report_config.tiers[tier].appendix_rows
+)
+
+# 10. Add metadata section to report
+metadata = generate_adaptive_report_metadata(
+    metrics, confidence_level, adjustments,
+    tier.value, report_confidence, tier_explanation
+)
+report = metadata + "\n\n---\n\n" + report

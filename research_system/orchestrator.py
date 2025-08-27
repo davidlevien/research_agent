@@ -41,6 +41,21 @@ from research_system.tools.contradictions import find_numeric_conflicts
 from research_system.tools.arex import build_arex_batch, select_uncorroborated_keys
 from research_system.tools.observability import generate_triangulation_breakdown, generate_strict_failure_details
 from research_system.time_budget import set_global_budget
+from research_system.quality_config.quality import QualityConfig
+from research_system.quality_config.report import ReportConfig, choose_report_tier
+from research_system.orchestrator_adaptive import (
+    apply_adaptive_domain_balance,
+    apply_adaptive_credibility_floor,
+    compute_adaptive_metrics,
+    generate_adaptive_report_metadata,
+    should_skip_strict_fail
+)
+from research_system.strict.adaptive_guard import (
+    adaptive_strict_check,
+    format_confidence_report,
+    should_attempt_last_mile_backfill,
+    SupplyContextData
+)
 import json
 
 logger = logging.getLogger(__name__)
@@ -77,6 +92,14 @@ class Orchestrator:
         if self.s.max_cost_usd is None:
             from research_system.config import get_settings
             self.s.max_cost_usd = get_settings().MAX_COST_USD
+        
+        # Initialize adaptive quality configuration
+        self.quality_config = QualityConfig.load(self.s.output_dir / "quality.json")
+        self.report_config = ReportConfig()
+        
+        # Track provider health for adaptive adjustments
+        self.provider_errors = 0
+        self.provider_attempts = 0
 
     def _write(self, name: str, content: str):
         """Atomic write with temp file + rename."""
@@ -464,6 +487,56 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         
         return report
     
+    def _generate_adaptive_report(self, cards: List[EvidenceCard], appendix_cards: List[EvidenceCard], 
+                                   detector: ControversyDetector, tier, max_tokens: int) -> str:
+        """Generate adaptive report with tier-specific configuration."""
+        from research_system.report.composer import compose_report
+        import re
+        
+        # Ensure per-card best_quote exists
+        for c in cards:
+            if not getattr(c, "best_quote", None):
+                txt = (c.supporting_text or c.snippet or c.claim or c.title or "")
+                sents = re.split(r"(?<=[.!?])\s+", txt)
+                picked = next((s.strip() for s in sents if 60 <= len(s) <= 400 and re.search(r"\d|(?:19|20)\d{2}", s)), "")
+                c.best_quote = picked or (sents[0].strip() if sents else "")
+        
+        # Load triangulation and metrics
+        tri = {}
+        tri_path = self.s.output_dir / "triangulation.json"
+        if tri_path.exists():
+            tri = json.loads(tri_path.read_text())
+        
+        metrics = {}
+        metrics_path = self.s.output_dir / "metrics.json"
+        if metrics_path.exists():
+            metrics = json.loads(metrics_path.read_text())
+        
+        # Get tier-specific configuration
+        tier_config = self.report_config.tiers[tier]
+        
+        # Generate main report with tier constraints
+        main_report = compose_report(
+            self.s.topic, cards, tri, metrics,
+            max_findings=tier_config.sections.get("findings", 10)
+        )
+        
+        # Add appendix if cards were filtered
+        if appendix_cards and tier_config.appendix_rows > 0:
+            appendix = self._generate_appendix(appendix_cards[:tier_config.appendix_rows])
+            main_report += f"\n\n---\n\n## Appendix: Additional Sources\n\n{appendix}"
+        
+        return main_report
+    
+    def _generate_appendix(self, cards: List[EvidenceCard]) -> str:
+        """Generate appendix with additional sources."""
+        lines = []
+        for c in cards:
+            title = c.title or c.source_title or "Untitled"
+            domain = canonical_domain(c.source_domain) if c.source_domain else "unknown"
+            lines.append(f"- **{title}** [{domain}]({c.url})")
+        return "\n".join(lines) if lines else "No additional sources."
+
     def _generate_final_report(self, cards: List[EvidenceCard], detector: ControversyDetector = None) -> str:
         """Generate final report using deterministic composer with sections and budgets."""
         from research_system.report.composer import compose_report
@@ -830,9 +903,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
     def run(self):
         settings = Settings()  # validated at CLI
+        import time
+        start_time = time.time()
         
         # Set global time budget (default 1800 seconds / 30 minutes)
         total_seconds = getattr(self.s, 'timeout', 1800)
+        self.time_budget = total_seconds  # Store for adaptive decisions
         budget = set_global_budget(total_seconds)
         logger.info(f"Set global time budget: {total_seconds}s")
         
@@ -858,22 +934,33 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         if anchors and self.s.depth in ["standard", "deep"]:
             # Run discipline-aware anchor queries
             for anchor_query in anchors[:6]:
-                anchor_results = asyncio.run(
-                    parallel_provider_search(registry, query=anchor_query, count=3,
-                                           freshness=settings.FRESHNESS_WINDOW, region="US")
-                )
-                # Merge results by provider
-                for provider, hits in anchor_results.items():
-                    if provider not in all_results:
-                        all_results[provider] = []
-                    all_results[provider].extend(hits)
+                self.provider_attempts += 1
+                try:
+                    anchor_results = asyncio.run(
+                        parallel_provider_search(registry, query=anchor_query, count=3,
+                                               freshness=settings.FRESHNESS_WINDOW, region="US")
+                    )
+                    # Merge results by provider
+                    for provider, hits in anchor_results.items():
+                        if provider not in all_results:
+                            all_results[provider] = []
+                        all_results[provider].extend(hits)
+                except Exception as e:
+                    self.provider_errors += 1
+                    logger.warning(f"Anchor query failed: {e}")
         
         # Then run main query with full count
         results_count = self.depth_to_count.get(self.s.depth, 8)
-        main_results = asyncio.run(
-            parallel_provider_search(registry, query=self.s.topic, count=results_count,
-                                     freshness=settings.FRESHNESS_WINDOW, region="US")
-        )
+        self.provider_attempts += 1
+        try:
+            main_results = asyncio.run(
+                parallel_provider_search(registry, query=self.s.topic, count=results_count,
+                                         freshness=settings.FRESHNESS_WINDOW, region="US")
+            )
+        except Exception as e:
+            self.provider_errors += 1
+            logger.warning(f"Main query failed: {e}")
+            main_results = {}
         
         # Merge main results
         for provider, hits in main_results.items():
@@ -1475,14 +1562,16 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Store raw cards before balancing for appendix
         raw_cards = list(cards)
         
-        # Domain balance configuration for strict mode pass
-        bal_cfg = BalanceConfig(cap=0.25, min_cards=24, prefer_primary=True)
-        
-        # First pass: enforce cap to ensure no domain exceeds 25%
-        balanced_cards, kept = enforce_cap(cards, bal_cfg)
-        logger.info(f"DomainBalance: cap=0.25 kept={len(balanced_cards)} total={len(cards)} (domains: {kept})")
+        # Apply adaptive domain balance based on supply conditions
+        unique_domains = len(set(canonical_domain(c.source_domain) for c in cards))
+        balanced_cards, kept, balance_note = apply_adaptive_domain_balance(
+            cards, self.quality_config, unique_domains
+        )
+        logger.info(balance_note)
         
         # Check if we need to backfill from primary sources
+        # Create a temporary config for backfill check
+        bal_cfg = BalanceConfig(cap=self.quality_config.domain_balance.cap_pct, min_cards=24, prefer_primary=True)
         if need_backfill(balanced_cards, bal_cfg):
             logger.info(f"Backfilling from primary sources (have {len(balanced_cards)}, need {bal_cfg.min_cards})")
             # Use primary providers for backfill
@@ -1525,20 +1614,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         cards = enforce_domain_cap(cards, cap=0.25)  # Enforce 25% domain cap
         
         # ========== CREDIBILITY FLOOR FILTERING ==========
-        # Drop weak sources unless corroborated (PE-grade quality enforcement)
-        MIN_CRED = 0.60
-        domain_counts = defaultdict(int)
-        for c in cards:
-            domain_counts[c.source_domain] += 1
-        
-        def keep_card(c):
-            """Keep if credible or corroborated by multiple cards from same domain."""
-            return (c.credibility_score or 0.0) >= MIN_CRED or domain_counts[c.source_domain] > 1
-        
-        pre_filter_count = len(cards)
-        cards = [c for c in cards if keep_card(c)]
-        if pre_filter_count > len(cards):
-            logger.info(f"Credibility floor: filtered {pre_filter_count - len(cards)} low-cred singleton sources")
+        # Apply adaptive credibility floor based on supply conditions
+        cards, num_filtered, retained = apply_adaptive_credibility_floor(
+            cards, self.quality_config
+        )
+        if num_filtered > 0:
+            logger.info(f"Adaptive credibility floor: filtered {num_filtered} low-cred sources, retained {retained}")
         
         # ========== ITERATIVE BACKFILL LOOP FOR QUALITY GATES ==========
         # Recompute triangulation on balanced cards for quality assessment
@@ -1572,10 +1653,29 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             needs_backfill = False
             backfill_reason = []
             
-            # Check triangulation threshold
-            if current_metrics["union_triangulation"] < 0.35:
+            # Calculate time remaining for adaptive decisions
+            import time
+            elapsed = time.time() - start_time
+            time_budget = getattr(self, 'time_budget', 120)
+            time_left = max(0, time_budget - elapsed)
+            time_remaining_pct = time_left / max(1, time_budget)
+            
+            # Check if we should attempt last-mile backfill
+            if should_attempt_last_mile_backfill(
+                current_metrics, self.quality_config,
+                time_remaining_pct=time_remaining_pct,
+                attempt_number=backfill_attempts
+            ):
                 needs_backfill = True
-                backfill_reason.append(f"triangulation {current_metrics['union_triangulation']:.2%} < 35%")
+                backfill_reason.append("last-mile backfill (close to threshold)")
+            
+            # Check triangulation with adaptive threshold
+            adaptive_tri_threshold = self.quality_config.triangulation.get_threshold(
+                len(cards), unique_domains
+            )
+            if current_metrics["union_triangulation"] < adaptive_tri_threshold:
+                needs_backfill = True
+                backfill_reason.append(f"triangulation {current_metrics['union_triangulation']:.2%} < {adaptive_tri_threshold:.0%}")
             
             # Check minimum card count
             if current_metrics["cards"] < min_cards:
@@ -1769,14 +1869,47 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         quality_table = self._generate_quality_table_from_jsonl(evidence_path)
         self._write("source_quality_table.md", quality_table)
 
+        # Choose adaptive report tier based on evidence quality
+        import time
+        elapsed = time.time() - start_time
+        time_left = max(0, self.time_budget - elapsed)
+        
+        # Calculate metrics for tier selection
+        triangulated_indices = set()
+        for cl in para_clusters_final:
+            if len(cl.get("domains", [])) >= 2:
+                triangulated_indices.update(cl.get("indices", []))
+        
+        tier, report_confidence, max_tokens, tier_explanation = choose_report_tier(
+            triangulated_cards=len(triangulated_indices),
+            credible_cards=len([c for c in cards if (c.credibility_score or 0.5) >= 0.5]),
+            primary_share=current_metrics.get("primary_share", 0.0),
+            unique_domains=unique_domains,
+            provider_error_rate=self.provider_errors / max(1, self.provider_attempts),
+            depth=self.s.depth,
+            time_budget_remaining_sec=time_left,
+            config=self.report_config
+        )
+        
+        logger.info(f"Selected report tier: {tier.value} (confidence: {report_confidence:.2f}, {tier_explanation})")
+        
         # SYNTHESIZE - write defensively to ensure output even on failures
         try:
             # Calculate appendix: raw cards minus balanced cards
             balanced_ids = {c.id for c in cards}
             appendix_cards = [c for c in raw_cards if c.id not in balanced_ids]
             
-            # Generate report with balanced cards in body, appendix for transparency
-            report = self._generate_final_report_with_appendix(cards, appendix_cards, detector)
+            # Generate report with tier-specific configuration
+            report = self._generate_adaptive_report(cards, appendix_cards, detector, tier, max_tokens)
+            
+            # Add adaptive metadata to report
+            metadata = generate_adaptive_report_metadata(
+                current_metrics, confidence_level if 'confidence_level' in locals() else None,
+                adjustments if 'adjustments' in locals() else {},
+                tier.value, report_confidence, tier_explanation
+            )
+            report = metadata + "\n\n---\n\n" + report
+            
             self._write("final_report.md", report)
         except Exception as e:
             self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
@@ -1785,12 +1918,26 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         error_file_path = self.s.output_dir / "evidence_cards.errors.jsonl"
         self._write("citation_checklist.md", self._generate_citation_checklist(cards, error_file_path))
         
-        # Check strict mode early with new guard - but ensure metrics/triangulation already written
+        # Check strict mode with adaptive guard
         if self.s.strict:
-            from research_system.strict.guard import strict_check
-            errs = strict_check(self.s.output_dir)
-            if errs:
-                # Write gaps and risks, then fail (metrics and triangulation already written)
+            errs, confidence_level, adjustments = adaptive_strict_check(
+                self.s.output_dir, self.quality_config
+            )
+            
+            if errs and should_skip_strict_fail(errs, adjustments, confidence_level):
+                # Strict checks relaxed due to supply constraints
+                logger.warning(f"Strict checks relaxed due to supply constraints: {errs}")
+                supply_ctx = SupplyContextData(
+                    total_cards=len(cards),
+                    unique_domains=unique_domains,
+                    provider_attempts=self.provider_attempts,
+                    provider_errors=self.provider_errors
+                )
+                self._write("WARNINGS.md", format_confidence_report(
+                    confidence_level, adjustments, supply_ctx
+                ))
+            elif errs:
+                # Write gaps and risks, then fail
                 self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
                 raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         
