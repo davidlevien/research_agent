@@ -13,7 +13,10 @@ jobs:
       run: |
         # Copy example env for testing (without API keys)
         cp .env.example .env
-        # Set test-only values
+        # Override for CI testing (no real API keys needed)
+        echo "" >> .env
+        echo "# CI Test Overrides" >> .env
+        echo "LLM_PROVIDER=disabled" >> .env
         echo "CONTACT_EMAIL=ci-test@example.com" >> .env
         echo "ENABLE_FREE_APIS=true" >> .env
         echo "SEARCH_PROVIDERS=" >> .env
