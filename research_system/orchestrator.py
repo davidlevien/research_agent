@@ -1210,7 +1210,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         top_share = (dom_ct.most_common(1)[0][1]/N) if N and dom_ct else 0.0
         prov_ct = Counter(getattr(c, "provider", None) for c in cards if getattr(c, "provider", None))
         H = -sum((n/N)*math.log((n/N)+1e-12) for n in prov_ct.values()) if N and prov_ct else 0.0
-        H_norm = H / math.log(max(1, len(prov_ct))) if prov_ct else 0.0
+        H_norm = H / math.log(max(2, len(prov_ct))) if prov_ct and len(prov_ct) > 1 else 0.0
         
         # Get pack-specific primary domains and patterns
         packs = classify_topic_multi(self.s.topic)

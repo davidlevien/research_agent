@@ -247,6 +247,7 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     # Helper to find meta tags
     def _find_meta(html: str, name: str) -> Optional[str]:
         """Extract meta tag content by name or property."""
+        import re  # Import locally to avoid scoping issues
         patterns = [
             rf'<meta\s+name="{name}"[^>]*content="([^"]+)"',
             rf'<meta\s+property="{name}"[^>]*content="([^"]+)"',
