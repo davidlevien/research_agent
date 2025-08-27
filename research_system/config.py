@@ -156,11 +156,24 @@ class Settings(BaseSettings):
     def enabled_providers(self) -> List[str]:
         return [s.strip() for s in self.SEARCH_PROVIDERS.split(",") if s.strip()]
 
-@lru_cache()
+_settings_cache = None
+
 def get_settings() -> Settings:
     """Get cached settings instance"""
-    return Settings()
+    global _settings_cache
+    if _settings_cache is None:
+        _settings_cache = Settings()
+    return _settings_cache
+
+# Create a lazy property for backward compatibility
+class LazySettings:
+    """Lazy settings wrapper that defers initialization until first access."""
+    def __getattr__(self, name):
+        return getattr(get_settings(), name)
+    
+    def __repr__(self):
+        return repr(get_settings())
 
 # Export aliases for backward compatibility
-settings = get_settings()
+settings = LazySettings()
 config = settings  # Provides the symbol modules expect: from ..config import config
