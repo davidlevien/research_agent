@@ -157,8 +157,8 @@ class TestAdaptiveStrictGuard:
     def test_confidence_level_calculation(self):
         """Test confidence level determination."""
         metrics = {
-            "union_triangulation": 0.20,
-            "primary_share_in_union": 0.25,
+            "union_triangulation": 0.26,  # Just above 0.25 threshold
+            "primary_share_in_union": 0.32,  # Just above 0.30 threshold
             "unique_domains": 5,
             "credible_cards": 18
         }
