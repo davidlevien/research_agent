@@ -1035,7 +1035,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             
             # Merge with intent providers
             merged_providers = intent_providers + [p for p in decision.providers if p not in intent_providers]
-            decision.providers = merged_providers[:15]  # Limit for free APIs
+            # Create new decision object with updated providers (can't modify frozen dataclass)
+            from dataclasses import replace
+            decision = replace(decision, providers=merged_providers[:15])  # Limit for free APIs
             
             # Collect from free APIs
             free_api_cards = collect_from_free_apis(

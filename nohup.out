@@ -87,3 +87,168 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^
   File "<string>", line 4, in __setattr__
 dataclasses.FrozenInstanceError: cannot assign to field 'providers'
+==================================
+Research System v8.7.0 - INTENT-AWARE UNIVERSAL RESEARCH
+==================================
+Topic: wildlife in yellowstone national park
+Output: outputs
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Adaptive domain balancing (25-40% cap)
+  ✓ Adaptive triangulation (25-35% threshold)
+  ✓ Adaptive strict quality gates
+
+v8.7.0 Intent-Aware Features:
+  ✓ Three-stage hybrid intent classification
+  ✓ Intent-based provider routing
+  ✓ Intent-specific quality thresholds
+  ✓ Geographic disambiguation
+  ✓ New providers: Nominatim, Wikivoyage, OSMTags
+
+v8.6.0 Adaptive Features:
+  ✓ Supply-aware quality gates
+  ✓ Adaptive report length (Brief/Standard/Deep)
+  ✓ Evidence snippet repair chains
+  ✓ Confidence scoring and reporting
+  ✓ Last-mile backfill optimization
+  ✓ Singleton whitelisting for authorities
+
+Previous Improvements:
+  ✓ Unified architecture & deduplication
+  ✓ HTML cleaning & citation validation
+  ✓ Triangulation consistency
+  ✓ Pack-aware primary detection
+
+Starting in 3 seconds...
+INFO:research_system.orchestrator:Set global time budget: 1800s
+INFO:research_system.intent.semantic:Initializing semantic classifier with model: sentence-transformers/all-MiniLM-L6-v2
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.intent.semantic:Loaded 11 intent labels from research_system/intent/labels.yaml
+INFO:research_system.intent.semantic:Prepared embeddings for 11 labels
+INFO:research_system.intent.nli_fallback:Initializing NLI classifier with model: facebook/bart-large-mnli
+Device set to use cpu
+INFO:research_system.intent.classifier:Query 'wildlife in yellowstone national park...' classified as GENERIC (all stages failed)
+INFO:research_system.orchestrator:Query classified as intent: generic
+INFO:research_system.orchestrator:Intent thresholds: triangulation=0.25, sources=2
+INFO:research_system.providers.intent_registry:Intent generic -> providers: ['wikipedia', 'wikidata', 'openalex', 'crossref', 'wayback']
+INFO:research_system.orchestrator:Intent generic selected providers: ['wikipedia', 'wikidata', 'openalex', 'crossref', 'wayback']
+INFO:research_system.orchestrator:Routing: categories=['general'], providers=['wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall', 'wayback']
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: wildlife in yellowstone national park site:doi.org
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park site:doi.org' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park site:doi.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park site:doi.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park site:doi.org': RetryError[<Future at 0x14b4a4b50 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park 2024..2025 filetype:pdf' returned 3 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park 2024..2025 filetype:pdf': RetryError[<Future at 0x14b42d990 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: wildlife in yellowstone national park site:*.gov
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park site:*.gov' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park site:*.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park site:*.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park site:*.gov': RetryError[<Future at 0x14b48ef50 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+2024..2025&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park 2024..2025': RetryError[<Future at 0x14b481ed0 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park filetype:pdf 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park filetype:pdf 2024..2025': RetryError[<Future at 0x14b42dd10 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park&limit=20&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park' returned 20 results
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 20 results for query: wildlife in yellowstone national park
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 20 results for query: wildlife in yellowstone national park
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 20 results for query: wildlife in yellowstone national park
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park': RetryError[<Future at 0x14b481710 state=finished raised HTTPStatusError>]
+INFO:research_system.orchestrator:Collecting from free APIs for topic: wildlife in yellowstone national park
+INFO:research_system.providers.intent_registry:Intent generic -> providers: ['wikipedia', 'wikidata', 'openalex', 'crossref', 'wayback']
+INFO:research_system.orchestrator:Router selected providers: ['wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall', 'wayback'] for categories: ['general']
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/davidlevien/Agents/research_agent/research_system/__main__.py", line 3, in <module>
+    main()
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 63, in main
+    asyncio.run(asyncio.wait_for(arun(), timeout=wall_timeout))
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/main.py", line 58, in arun
+    await loop.run_in_executor(None, orchestrator.run)
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/davidlevien/Agents/research_agent/research_system/orchestrator.py", line 1038, in run
+    decision.providers = merged_providers[:15]  # Limit for free APIs
+    ^^^^^^^^^^^^^^^^^^
+  File "<string>", line 4, in __setattr__
+dataclasses.FrozenInstanceError: cannot assign to field 'providers'

@@ -6,28 +6,43 @@ from research_system.tools.fetch import extract_article
 
 
 def test_pdf_detection_by_url():
-    """Test that PDFs are detected by URL extension."""
-    # Patch fetch_html to return None HTML content for PDF
-    with patch('research_system.tools.fetch.fetch_html') as mock_fetch_html:
-        mock_fetch_html.return_value = (None, "application/pdf")
+    """Test that PDFs are detected by URL extension and properly extracted."""
+    # This tests the actual PDF extraction flow in extract_article
+    
+    url = "https://example.com/report.pdf"
+    
+    # Mock robots check to allow access
+    with patch('research_system.tools.fetch.robots_allowed') as mock_robots:
+        mock_robots.return_value = True
         
-        with patch('research_system.tools.fetch.httpx.get') as mock_get:
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.content = b"PDF content"
-            mock_get.return_value = mock_response
+        # Mock fetch_html to return None (indicates binary content)
+        with patch('research_system.tools.fetch.fetch_html') as mock_fetch_html:
+            mock_fetch_html.return_value = (None, "application/pdf")
             
-            with patch('research_system.tools.fetch.extract_pdf_text') as mock_pdf:
-                mock_pdf.return_value = {
-                    "title": "Test PDF",
-                    "text": "This is a test PDF document with important information."
-                }
+            # Since it's a PDF URL and fetch_html returns None, extract_article
+            # should detect it's a PDF and download it directly
+            with patch('research_system.tools.fetch.httpx.get') as mock_get:
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_response.content = b"PDF content bytes"
+                mock_get.return_value = mock_response
                 
-                result = extract_article("https://example.com/report.pdf")
-                
-                assert result["title"] == "Test PDF"
-                assert "important information" in result["text"]
-                mock_pdf.assert_called_once()
+                # Mock PDF text extraction
+                with patch('research_system.tools.fetch.extract_pdf_text') as mock_pdf:
+                    mock_pdf.return_value = {
+                        "title": "Test PDF",
+                        "text": "This is a test PDF document with important information."
+                    }
+                    
+                    result = extract_article(url)
+                    
+                    # Verify the PDF was detected and extracted correctly
+                    assert result["title"] == "Test PDF"
+                    assert "important information" in result["text"]
+                    # Verify httpx was used to download the PDF
+                    mock_get.assert_called()
+                    # Verify extract_pdf_text was called with the PDF bytes
+                    mock_pdf.assert_called_once_with(b"PDF content bytes")
 
 
 def test_pdf_detection_by_content_type():
@@ -35,9 +50,9 @@ def test_pdf_detection_by_content_type():
     with patch('research_system.tools.fetch.fetch_html') as mock_fetch:
         mock_fetch.return_value = (None, "application/pdf")
         
-        # Patch paywall resolver to avoid URL parsing issues
-        with patch('research_system.tools.paywall_resolver.resolve') as mock_resolve:
-            mock_resolve.return_value = None  # No alternative found
+        # Patch paywall resolver extract_doi to avoid MagicMock issue
+        with patch('research_system.tools.paywall_resolver.extract_doi_from_html') as mock_doi:
+            mock_doi.return_value = None  # No DOI found
             
             with patch('research_system.tools.fetch.httpx.get') as mock_get:
                 mock_response = MagicMock()
@@ -78,9 +93,9 @@ def test_paywalled_url_returns_empty():
         # Return paywall page HTML
         mock_fetch_html.return_value = ("<html>Login required</html>", "text/html")
         
-        # Patch paywall resolver to avoid URL parsing issues
-        with patch('research_system.tools.paywall_resolver.resolve') as mock_resolve:
-            mock_resolve.return_value = None  # No alternative found
+        # Patch DOI extraction to avoid issues
+        with patch('research_system.tools.paywall_resolver.extract_doi_from_html') as mock_doi:
+            mock_doi.return_value = None  # No DOI found
             
             with patch('research_system.tools.fetch.httpx.get') as mock_get:
                 mock_response = MagicMock()
