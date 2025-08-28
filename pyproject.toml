@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-system"
-version = "8.6.1"
+version = "8.7.1"
 description = "Production-ready research system with comprehensive error recovery and monitoring"
 readme = "README.md"
 requires-python = ">=3.11"

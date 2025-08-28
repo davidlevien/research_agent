@@ -1,8 +1,8 @@
-# Research System v8.7.0 - Universal Research Intelligence Platform
+# Research System v8.7.1 - Universal Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.7.0's intent-aware routing, adaptive quality thresholds, comprehensive provider coverage, and evidence validity guarantees.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.7.1's intent-aware routing, adaptive quality thresholds, comprehensive provider coverage, topic-agnostic diversity injection, and evidence validity guarantees.
 
-**Status**: ✅ Production-ready with 325/342 tests passing (95% pass rate)
+**Status**: ✅ Production-ready with 269/282 tests passing (95% pass rate)
 
 ## 🚀 Quick Start
 
@@ -36,7 +36,7 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
   --topic "your topic" --strict --output-dir outputs
 ```
 
-## 🎯 Intent-Aware Universal Research (v8.7.0)
+## 🎯 Intent-Aware Universal Research (v8.7.1)
 
 ### Hybrid Intent Classification
 The system uses a **three-stage hybrid classifier** for robust intent detection:
@@ -74,8 +74,11 @@ The system uses a **three-stage hybrid classifier** for robust intent detection:
 ### Provider Selection Strategy
 - **Intent-Based Routing**: Each intent has tailored provider lists
 - **Tiered Fallbacks**: Free primary → Paid primary → Free fallback → Paid fallback
+- **Vertical API Exclusion**: Prevents NPS, FRED, etc. from generic searches
+- **Site Decorator Filtering**: Excludes vertical APIs when `site:` present
+- **Provider Circuit Breakers**: Exponential backoff for 429/403 errors
 - **Rate Limiting**: Per-provider RPS controls (Nominatim: 1 RPS, SEC: 0.5 RPS)
-- **Circuit Breakers**: Auto-disable failing domains after threshold
+- **Domain Circuit Breakers**: Auto-disable failing domains after threshold
 - **Geographic Disambiguation**: Handles "Portland OR/ME" ambiguity
 
 ## 🎯 Adaptive Quality System
@@ -98,6 +101,8 @@ The system **adapts thresholds dynamically** based on evidence availability and 
 #### Domain Balance
 - **Default Cap**: 25% max from any single domain
 - **Few Domains**: 40% cap when < 6 unique domains
+- **Post-Filter Rebalancing**: Reapplies caps after credibility filtering
+- **Generic Diversity**: Class-based injection (site:.gov, site:.edu) not specific domains
 - **Smart Relaxation**: Prevents over-trimming quality sources
 
 #### Last-Mile Backfill
@@ -252,6 +257,30 @@ pytest tests/test_evidence_repair.py
 - Evidence repair validation
 - Lazy Settings initialization for proper env var loading
 - CONTACT_EMAIL compliance for API requirements
+
+## 🆕 v8.7.1 Topic-Agnostic Improvements
+
+### Generic Diversity Injection
+- **Class-Based Expansion**: Uses site:.gov, site:.edu instead of hard-coded domains
+- **No Economics Bias**: Removed OECD/WorldBank/EUR-Lex specific injections
+- **Smart Detection**: Only adds missing source classes, not redundant ones
+
+### Provider Circuit Breakers
+- **Per-Provider State**: Tracks failures independently for each API
+- **Exponential Backoff**: 5s → 10s → 20s → ... up to 5 minutes
+- **Jittered Retry**: ±20% randomization prevents thundering herd
+- **Auto-Recovery**: Circuits close after cooldown period
+
+### Strict Mode Degradation
+- **Graceful Failure**: Generates insufficient evidence report instead of hard exit
+- **Environment Control**: `STRICT_DEGRADE_TO_REPORT=true` (default)
+- **Detailed Metrics**: Shows what was attempted and next steps
+- **Non-Zero Exit**: Still returns error code for CI/CD
+
+### Domain Cap Enforcement
+- **Two-Stage Capping**: Applied before AND after credibility filtering
+- **Prevents Imbalance**: Stops single domain from dominating after filtering
+- **Adaptive Thresholds**: 25% default, 40% when few domains available
 
 ## 🔧 Configuration
 
