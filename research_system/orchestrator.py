@@ -2111,8 +2111,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     # Generate insufficient evidence report
                     logger.warning(f"STRICT MODE: Degrading to insufficient evidence report")
                     self._write_insufficient_evidence_report(errs, metrics_dict, confidence_level)
-                    import sys
-                    sys.exit(1)  # Exit with non-zero but after generating report
+                    # Raise a proper exception instead of sys.exit
+                    raise RuntimeError("Strict mode quality gates not met - generated insufficient evidence report")
                 else:
                     raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         
@@ -2212,8 +2212,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                         "Note: The main report has been generated but should be interpreted with caution."
                     ]
                     insufficient_report_path.write_text("\n".join(insufficient_content), encoding="utf-8")
-                    import sys
-                    sys.exit(1)  # Exit with non-zero but after generating report
+                    # Raise a proper exception instead of sys.exit
+                    raise RuntimeError(f"Strict mode post-report quality gates not met - see insufficient_evidence_report.md")
                 else:
                     raise SystemExit(f"STRICT MODE FAIL: {failure_details}")
 

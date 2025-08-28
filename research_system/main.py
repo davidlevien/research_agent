@@ -68,3 +68,15 @@ def main():
     except KeyboardInterrupt:
         sys.stderr.write("\nInterrupted by user.\n")
         sys.exit(1)
+    except RuntimeError as e:
+        # Handle strict mode degradation - report was generated but quality gates failed
+        if "quality gates not met" in str(e):
+            sys.stderr.write(f"\nStrict mode: {e}\n")
+            sys.exit(1)  # Exit with error code but report was generated
+        else:
+            raise  # Re-raise other RuntimeErrors
+    except SystemExit:
+        raise  # Let SystemExit pass through
+    except Exception as e:
+        sys.stderr.write(f"\nUnexpected error: {e}\n")
+        sys.exit(1)
