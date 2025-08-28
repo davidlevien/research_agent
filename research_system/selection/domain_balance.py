@@ -98,7 +98,7 @@ def enforce_cap(cards: List, cfg: BalanceConfig) -> Tuple[List, Dict[str,int]]:
         sorted_cards = sorted(
             family_card_list,
             key=lambda c: (
-                -getattr(c, 'is_triangulated', 0),  # Triangulated cards first
+                -int(getattr(c, 'is_triangulated', False)),  # Triangulated cards first
                 -getattr(c, 'credibility_score', 0)  # Then by credibility
             )
         )
@@ -156,7 +156,7 @@ def enforce_domain_cap(cards: List, cap: float = 0.25, use_families: bool = True
             sorted_cards = sorted(
                 arr,
                 key=lambda x: (
-                    -getattr(x, "is_triangulated", 0),  # Triangulated cards first
+                    -int(getattr(x, "is_triangulated", False)),  # Triangulated cards first
                     -(getattr(x, "rank", None) or getattr(x, "credibility_score", 0))
                 )
             )

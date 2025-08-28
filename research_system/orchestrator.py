@@ -1808,8 +1808,21 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     c.date = c.date.isoformat() if hasattr(c.date, 'isoformat') else str(c.date)
         
         # Mark triangulated cards for prioritization in domain balancing
+        # Use safe update pattern to avoid field assignment issues
+        updated_cards = []
         for i, c in enumerate(cards):
-            c.is_triangulated = 1 if i in tri_card_index else 0
+            # Use model's copy method with update for safe field setting
+            is_tri = i in tri_card_index
+            if hasattr(c, 'model_copy'):  # Pydantic v2
+                updated = c.model_copy(update={"is_triangulated": is_tri})
+            elif hasattr(c, 'copy'):  # Pydantic v1
+                updated = c.copy(update={"is_triangulated": is_tri})
+            else:
+                # Fallback: direct assignment if copy methods unavailable
+                c.is_triangulated = is_tri
+                updated = c
+            updated_cards.append(updated)
+        cards = updated_cards
         
         # PE-GRADE DOMAIN BALANCING - Apply after all expansion but before final metrics
         from research_system.selection.domain_balance import BalanceConfig, enforce_cap, enforce_domain_cap, need_backfill, backfill

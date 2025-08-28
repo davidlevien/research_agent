@@ -193,7 +193,8 @@ def test_doi_rescue_crossref_sufficient(mock_crossref, mock_unpaywall):
         "source": "crossref"
     }
     
-    result = doi_rescue("10.1234/test")
+    # Call with fetch_pdf=False since we don't need PDF fetching
+    result = doi_rescue("10.1234/test", fetch_pdf=False)
     
     # Should return Crossref data
     assert result["title"] == "Complete Article"

@@ -1,8 +1,8 @@
-# Research System v8.8.0 - Universal Research Intelligence Platform
+# Research System v8.9.0 - Universal Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.8.0's surgical fixes for topic-agnostic research, intent-aware routing, adaptive quality thresholds, comprehensive provider coverage, and evidence validity guarantees.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.9.0's enhanced evidence validation, provider circuit breakers, and improved triangulation marking.
 
-**Status**: ✅ Production-ready with enhanced topic-agnostic support and surgical production fixes
+**Status**: ✅ Production-ready with circuit breakers, evidence validation, and triangulation safety
 
 ## 🚀 Quick Start
 
@@ -264,6 +264,31 @@ pytest tests/test_evidence_repair.py
 - Evidence repair validation
 - Lazy Settings initialization for proper env var loading
 - CONTACT_EMAIL compliance for API requirements
+
+## 🆕 v8.9.0 Evidence Validation & Circuit Breaker Enhancements
+
+### 1. Triangulation Flag Safety
+- **Safe Model Updates**: Uses Pydantic's copy/update pattern to avoid field assignment errors
+- **Field Validation**: `is_triangulated` field properly defined with default=False
+- **Backward Compatible**: Works with both Pydantic v1 and v2
+- **Type Safety**: Maintains strict `extra="forbid"` validation
+
+### 2. OECD/IMF Circuit Breakers
+- **Catalog Caching**: Caches API catalogs for 1 hour (configurable)
+- **Circuit Threshold**: Trips after 2 consecutive failures (configurable)
+- **Cooldown Period**: 5 minute cooldown before retry (configurable)
+- **Environment Variables**: `OECD_CIRCUIT_COOLDOWN`, `IMF_CIRCUIT_COOLDOWN`
+- **Graceful Degradation**: Returns cached data when circuit is open
+
+### 3. Provider Fit Improvements
+- **GDELT Removed from Stats**: No longer used for statistical queries
+- **Intent-Specific Fallbacks**: Better secondary provider selection
+- **Reduced Noise**: Fewer irrelevant results for specialized queries
+
+### 4. Test Coverage Enhancements
+- **Triangulation Tests**: Validates flag setting and prioritization
+- **Circuit Breaker Tests**: Ensures proper tripping and recovery
+- **Integration Tests**: End-to-end validation with all components
 
 ## 🆕 v8.8.0 Surgical Production Fixes
 

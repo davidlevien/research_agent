@@ -1,26 +1,60 @@
 """OECD provider for economic statistics and datasets."""
 
 from __future__ import annotations
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from .http import http_json_with_policy as http_json
 import logging
+import time
+import os
 
 logger = logging.getLogger(__name__)
 
 # OECD SDMX-JSON: list dataflows (datasets) and filter by query
 _DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"  # Trailing slash required
 
+# Circuit breaker state
+_circuit_state = {
+    "is_open": False,
+    "last_failure": 0,
+    "consecutive_failures": 0,
+    "catalog_cache": None,
+    "cache_time": 0
+}
+
+# Configuration
+CIRCUIT_COOLDOWN = int(os.getenv("OECD_CIRCUIT_COOLDOWN", "300"))  # 5 minutes
+CIRCUIT_THRESHOLD = int(os.getenv("OECD_CIRCUIT_THRESHOLD", "2"))  # Trip after 2 failures
+CACHE_TTL = int(os.getenv("OECD_CACHE_TTL", "3600"))  # 1 hour
+
 def _dataflows() -> Dict[str, Dict[str, Any]]:
-    """Fetch OECD dataflows catalog."""
+    """Fetch OECD dataflows catalog with circuit breaker and caching."""
+    current_time = time.time()
+    
+    # Check circuit breaker
+    if _circuit_state["is_open"]:
+        if current_time - _circuit_state["last_failure"] < CIRCUIT_COOLDOWN:
+            logger.info("OECD circuit breaker OPEN, returning cached catalog")
+            return _circuit_state["catalog_cache"] or {}
+        else:
+            # Try to close circuit
+            logger.info("OECD circuit breaker attempting to close")
+            _circuit_state["is_open"] = False
+            _circuit_state["consecutive_failures"] = 0
+    
+    # Check cache
+    if (_circuit_state["catalog_cache"] is not None and 
+        current_time - _circuit_state["cache_time"] < CACHE_TTL):
+        logger.debug("OECD returning cached catalog")
+        return _circuit_state["catalog_cache"]
+    
     try:
         data = http_json("oecd", "GET", _DATAFLOW)
         
         # Shape varies; normalize
+        result = {}
         if "data" in data and "dataflows" in data["data"]:
-            return data["data"]["dataflows"]
-        
-        if "Dataflows" in data and "Dataflow" in data["Dataflows"]:
-            out = {}
+            result = data["data"]["dataflows"]
+        elif "Dataflows" in data and "Dataflow" in data["Dataflows"]:
             for df in data["Dataflows"]["Dataflow"]:
                 key = df.get("Key") or df.get("@id") or df.get("id")
                 name = ""
@@ -29,13 +63,26 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
                     name = nm[0].get("$") or nm[0].get("value") or ""
                 elif isinstance(nm, str):
                     name = nm
-                out[str(key)] = {"name": name}
-            return out
+                result[str(key)] = {"name": name}
         
-        return {}
+        # Success - cache and reset failures
+        _circuit_state["catalog_cache"] = result
+        _circuit_state["cache_time"] = current_time
+        _circuit_state["consecutive_failures"] = 0
+        return result
+        
     except Exception as e:
         logger.warning(f"OECD dataflows fetch failed: {e}")
-        return {}
+        _circuit_state["consecutive_failures"] += 1
+        _circuit_state["last_failure"] = current_time
+        
+        # Trip circuit if threshold reached
+        if _circuit_state["consecutive_failures"] >= CIRCUIT_THRESHOLD:
+            _circuit_state["is_open"] = True
+            logger.warning(f"OECD circuit breaker TRIPPED after {CIRCUIT_THRESHOLD} failures")
+        
+        # Return cached data if available
+        return _circuit_state["catalog_cache"] or {}
 
 def search_oecd(query: str, limit: int = 25) -> List[Dict[str, Any]]:
     """Search OECD datasets by relevance to query."""

@@ -73,3 +73,6 @@ jobs:
     - name: Run semantic classification tests
       run: |
         PYTHONPATH=. pytest tests/test_semantic_classification.py -q --tb=no 2>/dev/null || true
+    - name: Run triangulation flag tests
+      run: |
+        PYTHONPATH=. pytest tests/test_triangulation_flag.py -q --tb=no

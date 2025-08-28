@@ -135,8 +135,17 @@ def doi_rescue(doi: str, email: str = "ci@example.org", fetch_pdf: bool = True) 
     # Try Crossref first (has abstracts)
     meta = crossref_meta(doi, email=email)
     
-    # Always try Unpaywall for OA URL
-    upw = unpaywall_meta(doi, email=email)
+    # Only try Unpaywall if we need additional data
+    # Skip Unpaywall if Crossref has everything and we don't need PDFs
+    needs_unpaywall = (
+        fetch_pdf or  # Need to check for OA URLs if fetching PDFs
+        not meta or  # No Crossref data at all
+        not meta.get("abstract")  # Missing abstract
+    )
+    
+    upw = None
+    if needs_unpaywall:
+        upw = unpaywall_meta(doi, email=email)
     
     # Combine metadata
     combined = {}

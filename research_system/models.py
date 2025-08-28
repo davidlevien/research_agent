@@ -58,6 +58,11 @@ class EvidenceCard(BaseModel):
     content_hash: Optional[str] = None  # For duplicate detection
     reachability: float = Field(default=1.0, ge=0, le=1)  # 0=paywalled, 1=accessible
     
+    # Triangulation and clustering markers
+    is_triangulated: bool = False  # Whether this card is part of a triangulated cluster
+    cluster_id: Optional[str] = None  # ID of the cluster this card belongs to
+    family: Optional[str] = None  # Domain family grouping
+    
     # Topic tagging for conglomeration
     topic: str = "seed"  # seed topic or related topic label
     related_reason: Optional[str] = None  # Why this related topic was included
@@ -164,7 +169,8 @@ class EvidenceCard(BaseModel):
                 "disputed_by", "controversy_score", "subtopic_name",
                 "claim", "supporting_text", "is_primary_source",
                 "quote_span", "content_hash", "author", "source_title", 
-                "source_url", "search_provider", "publication_date", "metadata"]
+                "source_url", "search_provider", "publication_date", "metadata",
+                "is_triangulated", "cluster_id", "family"]
         return {k: d.get(k) for k in keys if k in d}
 
 class ReportSection(BaseModel):

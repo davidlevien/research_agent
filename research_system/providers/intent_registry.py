@@ -42,9 +42,9 @@ INTENT_REGISTRY: Dict[Intent, Dict[str, List[str]]] = {
     },
     Intent.STATS: {
         "free_primary": ["worldbank", "fred", "oecd", "imf", "eurostat", "ec"],
-        "free_fallback": ["gdelt"],
+        "free_fallback": [],  # GDELT removed - not suitable for stats
         "paid_primary": [],
-        "paid_fallback": ["tavily"]
+        "paid_fallback": ["tavily", "brave"]  # Added brave as secondary fallback
     },
     Intent.TRAVEL: {
         "free_primary": ["wikivoyage", "wikipedia", "wikidata"],
