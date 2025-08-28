@@ -212,7 +212,7 @@ def generate_adaptive_report_metadata(
     Returns:
         Formatted metadata markdown
     """
-    from research_system.config.report import ReportTier
+    from research_system.quality_config.report import ReportTier
     
     lines = [
         "# Research Metadata",
