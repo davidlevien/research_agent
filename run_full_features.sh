@@ -38,7 +38,7 @@ mkdir -p "$OUTPUT_DIR"
 } > "$OUTPUT_DIR/RUN_METADATA.txt"
 
 echo "=================================="
-echo "Research System v8.7.0 - INTENT-AWARE UNIVERSAL RESEARCH"
+echo "Research System v8.8.0 - SURGICAL PRODUCTION FIXES"
 echo "=================================="
 echo "Topic: $TOPIC"
 echo "Output: $OUTPUT_DIR"

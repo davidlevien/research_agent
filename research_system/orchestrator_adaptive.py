@@ -214,12 +214,18 @@ def generate_adaptive_report_metadata(
     """
     from research_system.quality_config.report import ReportTier
     
+    # Enforce invariant: confidence level always set
+    from research_system.strict.adaptive_guard import ConfidenceLevel as CL
+    conf_level = confidence_level if confidence_level is not None else CL.MODERATE
+    emoji = conf_level.to_emoji() if hasattr(conf_level, 'to_emoji') else "🟡"
+    label = conf_level.value.title() if hasattr(conf_level, 'value') else "Moderate"
+    
     lines = [
         "# Research Metadata",
         "",
         "## Quality Assessment",
         "",
-        f"### Overall Confidence: {confidence_level.to_emoji()} {confidence_level.value.title()}",
+        f"### Overall Confidence: {emoji} {label}",
         ""
     ]
     

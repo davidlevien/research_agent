@@ -1,8 +1,8 @@
-# Research System v8.7.1 - Universal Research Intelligence Platform
+# Research System v8.8.0 - Universal Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.7.1's intent-aware routing, adaptive quality thresholds, comprehensive provider coverage, topic-agnostic diversity injection, and evidence validity guarantees.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.8.0's surgical fixes for topic-agnostic research, intent-aware routing, adaptive quality thresholds, comprehensive provider coverage, and evidence validity guarantees.
 
-**Status**: ✅ Production-ready with 269/282 tests passing (95% pass rate)
+**Status**: ✅ Production-ready with enhanced topic-agnostic support and surgical production fixes
 
 ## 🚀 Quick Start
 
@@ -36,7 +36,7 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
   --topic "your topic" --strict --output-dir outputs
 ```
 
-## 🎯 Intent-Aware Universal Research (v8.7.1)
+## 🎯 Intent-Aware Universal Research (v8.8.0)
 
 ### Hybrid Intent Classification
 The system uses a **three-stage hybrid classifier** for robust intent detection:
@@ -72,11 +72,12 @@ The system uses a **three-stage hybrid classifier** for robust intent detection:
 | **Generic** | Fallback for unclear queries | Wikipedia, general search | 25% triangulation |
 
 ### Provider Selection Strategy
-- **Intent-Based Routing**: Each intent has tailored provider lists
+- **Intent-Based Routing**: Each intent has tailored provider lists with primary pools
 - **Tiered Fallbacks**: Free primary → Paid primary → Free fallback → Paid fallback
 - **Vertical API Exclusion**: Prevents NPS, FRED, etc. from generic searches
 - **Site Decorator Filtering**: Excludes vertical APIs when `site:` present
 - **Provider Circuit Breakers**: Exponential backoff for 429/403 errors
+- **SerpAPI Circuit Breaker**: Query deduplication, call budget (4/run), auto-trip on 429
 - **Rate Limiting**: Per-provider RPS controls (Nominatim: 1 RPS, SEC: 0.5 RPS)
 - **Domain Circuit Breakers**: Auto-disable failing domains after threshold
 - **Geographic Disambiguation**: Handles "Portland OR/ME" ambiguity
@@ -99,7 +100,9 @@ The system **adapts thresholds dynamically** based on evidence availability and 
 - **Whitelisted Domains**: OECD, IMF, World Bank, central banks preserved as singletons
 
 #### Domain Balance
-- **Default Cap**: 25% max from any single domain
+- **Default Cap**: 25% max from any single domain family
+- **Family Grouping**: Related domains grouped (all .gov, all .edu)
+- **Triangulation Priority**: Triangulated cards preserved during capping
 - **Few Domains**: 40% cap when < 6 unique domains
 - **Post-Filter Rebalancing**: Reapplies caps after credibility filtering
 - **Generic Diversity**: Class-based injection (site:.gov, site:.edu) not specific domains
@@ -126,10 +129,11 @@ confidence = 0.4*triangulation + 0.3*primary_share + 0.2*domain_diversity + 0.1*
 ```
 
 #### Report Features
-- **Confidence Badge**: 🟢 High | 🟡 Moderate | 🔴 Low
+- **Confidence Badge**: 🟢 High | 🟡 Moderate | 🔴 Low (null-safe)
 - **Supply Context**: Transparent reporting of evidence constraints
 - **Adaptive Sections**: Token budgets adjust per tier
 - **Quality Signals**: Clear explanations of any threshold adjustments
+- **Insufficient Evidence Reports**: Enhanced with metrics table, actionable recommendations
 
 ### Evidence Validity Guarantees
 
@@ -230,6 +234,9 @@ NORMAL = all thresholds met
 # Run all tests
 pytest
 
+# Surgical fixes tests (v8.8.0)
+pytest tests/test_surgical_fixes.py
+
 # Intent classification tests
 pytest tests/test_intent_classification.py
 
@@ -257,6 +264,49 @@ pytest tests/test_evidence_repair.py
 - Evidence repair validation
 - Lazy Settings initialization for proper env var loading
 - CONTACT_EMAIL compliance for API requirements
+
+## 🆕 v8.8.0 Surgical Production Fixes
+
+### 1. Confidence Badge Crash Prevention
+- **Null Safety**: Confidence level never None (defaults to MODERATE)
+- **Import Path Fixes**: Corrected quality_config module imports
+- **Emoji Fallback**: Safe rendering even with None values
+
+### 2. SerpAPI Circuit Breaker
+- **Query Deduplication**: Prevents duplicate searches (case-insensitive)
+- **Call Budget**: Max 4 calls per run (configurable)
+- **Auto-Trip on 429**: Immediate circuit trip on rate limit
+- **State Persistence**: Per-run state tracking
+- **Environment Variables**: `SERPAPI_CIRCUIT_BREAKER`, `SERPAPI_MAX_CALLS_PER_RUN`
+
+### 3. Encyclopedia Query Planning
+- **Time-Agnostic Queries**: No forced recency for historical topics
+- **Facet Expansion**: Adds timeline, history, overview queries
+- **Intent-Specific**: Only news/current queries get recency filters
+
+### 4. Intent-Aware Primary Pools
+- **Per-Intent Primary Sources**: Different authoritative sources per query type
+- **Wildcard Support**: *.gov, *.edu patterns for flexibility
+- **No Hard-Coded Economics**: Removed IMF/WorldBank from generic queries
+- **Backward Compatible**: Maintains PRIMARY_POOL for legacy code
+
+### 5. Triangulation-Aware Domain Capping
+- **Family Grouping**: Related domains grouped together
+- **Triangulation Priority**: Corroborated cards preserved
+- **Smart Sorting**: Triangulated > High credibility > Others
+- **Feature Flag**: `use_families=true` for new behavior
+
+### 6. DOI to Unpaywall Fallback
+- **Enhanced Recovery**: Fetches full PDFs from OA URLs
+- **Text Extraction**: Gets abstracts from PDF when not in metadata
+- **Combined Sources**: Merges Crossref + Unpaywall data
+- **Configurable**: `fetch_pdf` parameter for control
+
+### 7. Enhanced Insufficient Evidence Reports
+- **Metrics Table**: Visual ✅/❌ status indicators
+- **Primary Issues**: Clear identification of failures
+- **Intent-Specific Tips**: Tailored recommendations per query type
+- **Actionable Steps**: Based on actual failure reasons
 
 ## 🆕 v8.7.1 Topic-Agnostic Improvements
 

@@ -105,53 +105,100 @@ class Orchestrator:
         # Track provider health for adaptive adjustments
         self.provider_errors = 0
         self.provider_attempts = 0
+    
+    def _is_primary_class(self, domain: str) -> bool:
+        """Check if domain is a primary source based on intent"""
+        from research_system.selection.domain_balance import is_primary_source
+        return is_primary_source(domain, intent=self.context.get("intent", "generic"))
 
     def _write_insufficient_evidence_report(self, errors: List[str], metrics: Dict, confidence_level) -> None:
-        """Write an insufficient evidence report when strict mode fails."""
+        """Write an enhanced insufficient evidence report when strict mode fails."""
+        from research_system.strict.adaptive_guard import ConfidenceLevel
+        
+        # Ensure confidence level is set
+        if confidence_level is None:
+            confidence_level = ConfidenceLevel.LOW
+        
+        # Extract key metrics
+        total_cards = metrics.get('total_cards', metrics.get('cards', 0))
+        credible_cards = metrics.get('credible_cards', total_cards)
+        unique_domains = metrics.get('unique_domains', 0)
+        triangulated = metrics.get('triangulated_cards', 0)
+        triangulation_rate = metrics.get('union_triangulation', 0)
+        primary_share = metrics.get('primary_share', 0)
+        provider_error_rate = metrics.get('provider_error_rate', 0)
+        
+        # Determine primary issues
+        primary_issues = []
+        if unique_domains < 5:
+            primary_issues.append("**Low domain diversity** - Evidence from too few sources")
+        if triangulation_rate < 0.20:
+            primary_issues.append("**Poor triangulation** - Claims not corroborated")
+        if primary_share < 0.30:
+            primary_issues.append("**Insufficient primary sources** - Too few authoritative sources")
+        if provider_error_rate > 0.30:
+            primary_issues.append("**High provider failures** - Search providers unavailable")
+        
+        # Build enhanced report
         report_lines = [
             "# Insufficient Evidence Report",
             "",
-            f"## Topic: {self.s.topic}",
+            f"## Research Topic: {self.s.topic}",
             "",
-            "## Quality Assessment",
+            f"### Confidence Level: {confidence_level.to_emoji() if hasattr(confidence_level, 'to_emoji') else '⚠️'} {confidence_level.value.title() if hasattr(confidence_level, 'value') else 'Low'}",
             "",
-            f"Confidence Level: {confidence_level.value.title() if hasattr(confidence_level, 'value') else confidence_level}",
+            "## Primary Issues",
+        ]
+        
+        if primary_issues:
+            for issue in primary_issues:
+                report_lines.append(f"- {issue}")
+        else:
+            report_lines.append("- General evidence insufficiency")
+        
+        report_lines.extend([
+            "",
+            "## Evidence Metrics",
+            "",
+            "| Metric | Value | Target | Status |",
+            "|--------|-------|--------|--------|",
+            f"| Evidence Cards | {total_cards} | ≥20 | {'✅' if total_cards >= 20 else '❌'} |",
+            f"| Unique Domains | {unique_domains} | ≥8 | {'✅' if unique_domains >= 8 else '❌'} |",
+            f"| Triangulation | {triangulation_rate:.1%} | ≥30% | {'✅' if triangulation_rate >= 0.30 else '❌'} |",
+            f"| Primary Sources | {primary_share:.1%} | ≥40% | {'✅' if primary_share >= 0.40 else '❌'} |",
             "",
             "## Quality Gate Failures",
-            "",
-        ]
+            ""
+        ])
         
         for error in errors:
             report_lines.append(f"- {error}")
         
+        # Add intent-specific guidance
+        intent = self.context.get('intent', 'generic')
+        intent_tips = {
+            'encyclopedia': "Try adding 'overview', 'history', or 'timeline' to your search",
+            'news': "Ensure recent date ranges and current terminology",
+            'academic': "Search for review papers or survey articles",
+            'stats': "Specify time period and geographic region clearly",
+            'local': "Include nearby regions or broader geographic areas"
+        }
+        
         report_lines.extend([
             "",
-            "## Evidence Collection Summary",
+            f"## Query Type: {intent.upper()}",
+            f"**Tip**: {intent_tips.get(intent, 'Try broader search terms')}",
             "",
-            f"- Total cards collected: {metrics.get('total_cards', 0)}",
-            f"- Credible cards: {metrics.get('credible_cards', 0)}",
-            f"- Unique domains: {metrics.get('unique_domains', 0)}",
-            f"- Triangulated cards: {metrics.get('triangulated_cards', 0)}",
-            f"- Primary source share: {metrics.get('primary_share', 0):.1%}",
+            "## Recommendations",
             "",
-            "## What Was Attempted",
-            "",
-            "1. Searched across multiple providers for relevant information",
-            "2. Applied diversity injection to find additional sources",
-            "3. Filtered and validated evidence cards",
-            "4. Attempted triangulation and clustering",
-            "",
-            "## Recommended Next Steps",
-            "",
-            "1. **Broaden search parameters**: Try alternative keywords or phrasings",
-            "2. **Wait for source availability**: Some sources may be temporarily unavailable",
-            "3. **Check specific databases**: Consider domain-specific sources",
-            "4. **Relax strict requirements**: Set STRICT=false for best-effort results",
+            "1. **Broaden search** - Use more general terms",
+            "2. **Try alternatives** - Different terminology may yield results",
+            "3. **Break down complex queries** - Search subtopics separately",
+            "4. **Retry later** - If providers are down",
             "",
             "---",
-            "",
-            "*This report was generated because evidence quality thresholds were not met.*",
-            "*The system collected some evidence but it was insufficient for high-confidence conclusions.*"
+            f"*Generated: {self.start_time.strftime('%Y-%m-%d %H:%M')}*",
+            f"*Provider attempts: {metrics.get('provider_attempts', 0)}*"
         ])
         
         self._write("insufficient_evidence_report.md", "\n".join(report_lines))
@@ -263,6 +310,54 @@ class Orchestrator:
 Maximum cost: ${self.s.max_cost_usd:.2f}
 """
 
+    def _generate_intent_queries(self, intent: str, topic: str) -> list[str]:
+        """Generate intent-specific query expansions"""
+        queries = [topic]  # Always include the base query
+        
+        if intent == "encyclopedia":
+            # Time-agnostic, facet-rich expansion
+            # Define facets based on common encyclopedia queries
+            if "yellowstone" in topic.lower() and "park" in topic.lower():
+                facets = [
+                    "establishment act 1872", "hayden survey 1871", "washburn expedition 1870",
+                    "fort yellowstone", "northern pacific railroad 1883",
+                    "1988 fires", "wolf reintroduction 1995", "unesco world heritage 1978"
+                ]
+                queries.extend([f"{topic} {facet}" for facet in facets[:3]])  # Top 3 facets
+            
+            # Generic encyclopedia expansions (no year filters)
+            queries.extend([
+                f"{topic} timeline",
+                f"site:nps.gov {topic}",
+                f"site:usgs.gov {topic}",
+                f"{topic} history overview"  # No filetype:pdf to avoid empty results
+            ])
+            
+        elif intent in ("news", "policy"):
+            # Recent content for news/policy
+            queries.extend([
+                f"{topic} 2024..2025",
+                f"{topic} recent developments"
+            ])
+            
+        elif intent == "academic":
+            # Academic expansions
+            queries.extend([
+                f"{topic} research",
+                f"{topic} study",
+                f"site:.edu {topic}"
+            ])
+            
+        elif intent == "stats":
+            # Statistical data queries
+            queries.extend([
+                f"{topic} statistics",
+                f"{topic} data",
+                f"site:.gov {topic} data"
+            ])
+            
+        return queries[:5]  # Limit to 5 queries to avoid overwhelming the system
+    
     def _generate_source_strategy(self) -> str:
         """Generate source strategy document"""
         return f"""## Source Strategy
@@ -741,24 +836,12 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
             # Topic-agnostic primary source detection based on domain classes
             return _is_primary_class(domain)
         
+        # Import intent-aware primary source detection
+        from research_system.selection.domain_balance import is_primary_source
+        
         def _is_primary_class(domain: str) -> bool:
-            """Check if domain is a primary source based on generic classes, not specific sites."""
-            # Government sites are primary
-            if '.gov' in domain:
-                return True
-            # Educational institutions are primary
-            if '.edu' in domain or '.ac.' in domain:
-                return True
-            # International organizations
-            if any(tld in domain for tld in ['.int', '.who.int', '.un.org', '.europa.eu']):
-                return True
-            # Academic publishers and repositories  
-            if any(site in domain for site in ['arxiv.org', 'pubmed.', 'doi.org', 'ncbi.nlm.nih.gov']):
-                return True
-            # Official statistics sites (generic pattern)
-            if 'stat' in domain and '.gov' in domain:
-                return True
-            return False
+            """Check if domain is a primary source based on intent"""
+            return is_primary_source(domain, intent=self.context.get("intent", "generic"))
         
         def render_finding(claim: str, domains: list, sources: list, label: str) -> list:
             def md_link(text: str, url: str, maxlen: int = 80) -> str:
@@ -1022,6 +1105,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         min_triangulation, min_sources = get_confidence_threshold(intent)
         logger.info(f"Intent thresholds: triangulation={min_triangulation}, sources={min_sources}")
         
+        # Generate intent-specific query expansions
+        expanded_queries = self._generate_intent_queries(intent.value, self.s.topic)
+        
         # PLAN
         self._write("plan.md", self._generate_plan())
         self._write("source_strategy.md", self._generate_source_strategy())
@@ -1070,18 +1156,31 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     self.provider_errors += 1
                     logger.warning(f"Anchor query failed: {e}")
         
-        # Then run main query with full count
+        # Run expanded queries based on intent
         results_count = self.depth_to_count.get(self.s.depth, 8)
-        self.provider_attempts += 1
-        try:
-            main_results = asyncio.run(
-                parallel_provider_search(registry, query=self.s.topic, count=results_count,
-                                         freshness=settings.FRESHNESS_WINDOW, region="US")
-            )
-        except Exception as e:
-            self.provider_errors += 1
-            logger.warning(f"Main query failed: {e}")
-            main_results = {}
+        all_provider_results = {}
+        
+        # Execute each expanded query
+        for query in expanded_queries[:3]:  # Limit to first 3 queries
+            self.provider_attempts += 1
+            try:
+                query_results = asyncio.run(
+                    parallel_provider_search(registry, query=query, count=results_count,
+                                             freshness=settings.FRESHNESS_WINDOW if self.context["intent"] in ["news", "policy"] else None,
+                                             region="US")
+                )
+                # Merge results per provider
+                for provider, hits in query_results.items():
+                    if provider not in all_provider_results:
+                        all_provider_results[provider] = []
+                    all_provider_results[provider].extend(hits)
+                logger.info(f"Expanded query '{query}' returned {sum(len(h) for h in query_results.values())} results")
+            except Exception as e:
+                self.provider_errors += 1
+                logger.warning(f"Expanded query '{query}' failed: {e}")
+        
+        # Use merged results instead of single query results
+        main_results = all_provider_results
         
         # Merge main results
         for provider, hits in main_results.items():
@@ -1707,6 +1806,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             if hasattr(c, 'date') and c.date:
                 if not isinstance(c.date, str):
                     c.date = c.date.isoformat() if hasattr(c.date, 'isoformat') else str(c.date)
+        
+        # Mark triangulated cards for prioritization in domain balancing
+        for i, c in enumerate(cards):
+            c.is_triangulated = 1 if i in tri_card_index else 0
         
         # PE-GRADE DOMAIN BALANCING - Apply after all expansion but before final metrics
         from research_system.selection.domain_balance import BalanceConfig, enforce_cap, enforce_domain_cap, need_backfill, backfill

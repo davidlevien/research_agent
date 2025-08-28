@@ -1,12 +1,21 @@
 import httpx
 import logging
-from typing import Dict, Any, Optional
+import os
+from typing import Dict, Any, Optional, Set
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from ..config import Settings
 from ..metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
 from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
+
+# Circuit breaker state (module-level for persistence across calls)
+_serpapi_state = {
+    "is_open": False,
+    "seen_queries": set(),
+    "call_count": 0,
+    "consecutive_429s": 0
+}
 
 @retry(
     stop=stop_after_attempt(3),
@@ -75,8 +84,32 @@ def _parse_serpapi_results(data: Dict[str, Any]) -> list[SearchHit]:
     return results
 
 def run(req: SearchRequest) -> list[SearchHit]:
-    """Execute search using SerpAPI"""
+    """Execute search using SerpAPI with circuit breaker and deduplication"""
     settings = Settings()
+    
+    # Check if circuit breaker is enabled (default: True)
+    use_circuit_breaker = os.getenv("SERPAPI_CIRCUIT_BREAKER", "true").lower() == "true"
+    max_calls_per_run = int(os.getenv("SERPAPI_MAX_CALLS_PER_RUN", "4"))
+    trip_on_429 = os.getenv("SERPAPI_TRIP_ON_429", "true").lower() == "true"
+    
+    if use_circuit_breaker:
+        # Check if circuit is open
+        if _serpapi_state["is_open"]:
+            logger.info(f"SERPAPI_SKIPPED_CIRCUIT_OPEN", extra={"q": req.query})
+            return []
+        
+        # Check for duplicate queries
+        query_norm = req.query.strip().lower()
+        if query_norm in _serpapi_state["seen_queries"]:
+            logger.debug("SERPAPI_DEDUP", extra={"q": req.query})
+            return []
+        _serpapi_state["seen_queries"].add(query_norm)
+        
+        # Check call budget
+        if _serpapi_state["call_count"] >= max_calls_per_run:
+            logger.info("SERPAPI_SKIPPED_BUDGET", extra={"q": req.query, "count": _serpapi_state["call_count"]})
+            return []
+        _serpapi_state["call_count"] += 1
     
     # Increment request counter
     SEARCH_REQUESTS.labels(provider="serpapi").inc()
@@ -119,9 +152,24 @@ def run(req: SearchRequest) -> list[SearchHit]:
             # Parse results
             results = _parse_serpapi_results(response_data)
             
+            # Reset consecutive 429s on success
+            if use_circuit_breaker:
+                _serpapi_state["consecutive_429s"] = 0
+            
             logger.info(f"SerpAPI search for '{req.query}' returned {len(results)} results")
             return results
             
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logger.warning("SERPAPI_RATE_LIMIT", extra={"q": req.query, "status": 429})
+                if use_circuit_breaker:
+                    _serpapi_state["consecutive_429s"] += 1
+                    if trip_on_429 and _serpapi_state["consecutive_429s"] >= 1:
+                        _serpapi_state["is_open"] = True
+                        logger.warning("SERPAPI_CIRCUIT_TRIPPED", extra={"q": req.query, "consecutive_429s": _serpapi_state["consecutive_429s"]})
+            logger.error(f"SerpAPI search failed for query '{req.query}': {e}")
+            SEARCH_ERRORS.labels(provider="serpapi").inc()
+            return []
         except Exception as e:
             logger.error(f"SerpAPI search failed for query '{req.query}': {e}")
             SEARCH_ERRORS.labels(provider="serpapi").inc()

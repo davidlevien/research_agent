@@ -119,31 +119,70 @@ def unpaywall_meta(doi: str, email: str = "ci@example.org") -> Optional[Dict[str
         log.debug(f"Unpaywall lookup failed for {doi}: {e}")
         return None
 
-def doi_rescue(doi: str, email: str = "ci@example.org") -> Optional[Dict[str, Any]]:
+def doi_rescue(doi: str, email: str = "ci@example.org", fetch_pdf: bool = True) -> Optional[Dict[str, Any]]:
     """
     Try to rescue DOI metadata from Crossref first, then Unpaywall.
+    If Unpaywall provides an OA URL and fetch_pdf is True, try to get full text.
     
     Args:
         doi: The DOI identifier (without https://doi.org/ prefix)
         email: Contact email for API politeness
+        fetch_pdf: Whether to attempt fetching PDF from OA URL
         
     Returns:
         Combined metadata dict if successful, None otherwise
     """
     # Try Crossref first (has abstracts)
     meta = crossref_meta(doi, email=email)
-    if meta and (meta.get("abstract") or meta.get("title")):
-        return meta
     
-    # Fallback to Unpaywall
+    # Always try Unpaywall for OA URL
     upw = unpaywall_meta(doi, email=email)
-    if upw:
-        # Merge with any partial Crossref data
-        if meta:
-            upw.update({k: v for k, v in meta.items() if v and not upw.get(k)})
-        return upw
     
-    return meta  # Return partial Crossref data if that's all we have
+    # Combine metadata
+    combined = {}
+    if meta:
+        combined.update(meta)
+    if upw:
+        combined.update({k: v for k, v in upw.items() if v})
+    
+    # If we have OA URL and no abstract yet, try to fetch PDF
+    if fetch_pdf and combined.get("oa_url") and not combined.get("abstract"):
+        try:
+            from research_system.net.pdf_fetch import download_pdf
+            import pypdf
+            from io import BytesIO
+            
+            log.info(f"Attempting to fetch PDF from Unpaywall OA URL: {combined['oa_url']}")
+            
+            with httpx.Client() as client:
+                pdf_content = download_pdf(client, combined["oa_url"])
+                
+            if pdf_content:
+                # Extract text from first few pages
+                reader = pypdf.PdfReader(BytesIO(pdf_content))
+                text_parts = []
+                max_pages = min(3, len(reader.pages))  # First 3 pages
+                
+                for page_num in range(max_pages):
+                    page_text = reader.pages[page_num].extract_text()
+                    if page_text:
+                        text_parts.append(page_text)
+                
+                full_text = "\n".join(text_parts)
+                # Take first 5000 chars as abstract
+                if full_text:
+                    combined["abstract"] = full_text[:5000]
+                    combined["pdf_fetched"] = True
+                    log.info(f"Successfully extracted text from OA PDF for DOI {doi}")
+                    
+        except Exception as e:
+            log.debug(f"Failed to fetch/extract PDF from OA URL: {e}")
+    
+    # Return combined metadata if we have at least title
+    if combined.get("title"):
+        return combined
+    
+    return None
 
 def extract_doi_from_url(url: str) -> Optional[str]:
     """

@@ -277,24 +277,40 @@ def format_confidence_report(
     Format a confidence report for the user.
     
     Args:
-        confidence: Overall confidence level
+        confidence: Overall confidence level (may be None)
         adjustments: Adjustments made during checking
-        context: Supply context data
+        context: Supply context data (may be None)
         
     Returns:
         Formatted markdown report
     """
+    # Enforce invariant: confidence level always set
+    conf_level = confidence if confidence is not None else ConfidenceLevel.MODERATE
+    emoji = conf_level.to_emoji()
+    label = conf_level.value.title()
+    
     lines = [
         f"# Research Confidence Report",
         "",
-        f"**Confidence Level**: {confidence.value.title()} {confidence.to_emoji()}",
-        "",
-        "## Supply Context",
-        f"- Unique domains: {context.unique_domains}",
-        f"- Total evidence cards: {context.total_cards}",
-        f"- Provider error rate: {context.provider_error_rate:.1%}",
+        f"**Confidence Level**: {label} {emoji}",
         ""
     ]
+    
+    # Handle None context gracefully
+    if context is not None:
+        lines.extend([
+            "## Supply Context",
+            f"- Unique domains: {context.unique_domains}",
+            f"- Total evidence cards: {context.total_cards}",
+            f"- Provider error rate: {context.provider_error_rate:.1%}",
+            ""
+        ])
+    else:
+        lines.extend([
+            "## Supply Context",
+            "- No context data available",
+            ""
+        ])
     
     if adjustments:
         lines.extend([
