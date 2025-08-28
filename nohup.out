@@ -1677,3 +1677,693 @@ Traceback (most recent call last):
     sys.exit(1)  # Exit with non-zero but after generating report
     ^^^^^^^^^^^
 SystemExit: 1
+==================================
+Research System v8.7.0 - INTENT-AWARE UNIVERSAL RESEARCH
+==================================
+Topic: wildlife in yellowstone national park
+Output: outputs
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Adaptive domain balancing (25-40% cap)
+  ✓ Adaptive triangulation (25-35% threshold)
+  ✓ Adaptive strict quality gates
+
+v8.7.0 Intent-Aware Features:
+  ✓ Three-stage hybrid intent classification
+  ✓ Intent-based provider routing
+  ✓ Intent-specific quality thresholds
+  ✓ Geographic disambiguation
+  ✓ New providers: Nominatim, Wikivoyage, OSMTags
+
+v8.6.0 Adaptive Features:
+  ✓ Supply-aware quality gates
+  ✓ Adaptive report length (Brief/Standard/Deep)
+  ✓ Evidence snippet repair chains
+  ✓ Confidence scoring and reporting
+  ✓ Last-mile backfill optimization
+  ✓ Singleton whitelisting for authorities
+
+Previous Improvements:
+  ✓ Unified architecture & deduplication
+  ✓ HTML cleaning & citation validation
+  ✓ Triangulation consistency
+  ✓ Pack-aware primary detection
+
+Starting in 3 seconds...
+INFO:research_system.orchestrator:Set global time budget: 1800s
+INFO:research_system.intent.semantic:Initializing semantic classifier with model: sentence-transformers/all-MiniLM-L6-v2
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.intent.semantic:Loaded 11 intent labels from research_system/intent/labels.yaml
+INFO:research_system.intent.semantic:Prepared embeddings for 11 labels
+INFO:research_system.intent.nli_fallback:Initializing NLI classifier with model: facebook/bart-large-mnli
+Device set to use cpu
+INFO:research_system.intent.classifier:Query 'wildlife in yellowstone national park...' classified as GENERIC (all stages failed)
+INFO:research_system.orchestrator:Query classified as intent: generic
+INFO:research_system.orchestrator:Intent thresholds: triangulation=0.25, sources=2
+INFO:research_system.providers.intent_registry:Intent generic -> providers: ['wikipedia', 'wikidata', 'wayback']
+INFO:research_system.orchestrator:Intent generic selected providers: ['wikipedia', 'wikidata', 'wayback']
+INFO:research_system.orchestrator:Routing: categories=['general'], providers=['wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall', 'wayback']
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: wildlife in yellowstone national park site:doi.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park site:doi.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park site:doi.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park site:doi.org': RetryError[<Future at 0x13ffab250 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park 2024..2025 filetype:pdf' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park 2024..2025 filetype:pdf': RetryError[<Future at 0x138881290 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: wildlife in yellowstone national park site:*.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park site:*.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park site:*.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park site:*.gov': RetryError[<Future at 0x13ff87210 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park 2024..2025
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+2024..2025&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park 2024..2025
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park 2024..2025': RetryError[<Future at 0x13ff9c090 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&limit=3&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park filetype:pdf 2024..2025' returned 3 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park filetype:pdf 2024..2025': RetryError[<Future at 0x13ffa2090 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park&limit=20&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 20 results for query: wildlife in yellowstone national park
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park' returned 20 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 20 results for query: wildlife in yellowstone national park
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 20 results for query: wildlife in yellowstone national park
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park&num=20&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park': RetryError[<Future at 0x13ff3bdd0 state=finished raised HTTPStatusError>]
+INFO:research_system.orchestrator:Collecting from free APIs for topic: wildlife in yellowstone national park
+INFO:research_system.providers.intent_registry:Intent generic -> providers: ['wikipedia', 'wikidata', 'wayback']
+INFO:research_system.orchestrator:Router selected providers: ['wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall', 'wayback'] for categories: ['general']
+INFO:research_system.collection_enhanced:Executing 6 providers in parallel: ['wikipedia', 'wikidata', 'wayback', 'openalex', 'crossref', 'unpaywall']
+INFO:httpx:HTTP Request: GET https://en.wikipedia.org/w/rest.php/v1/search/title?q=wildlife+in+yellowstone+national+park&limit=10 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?search=wildlife+in+yellowstone+national+park&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?search=wildlife+in+yellowstone+national+park&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?search=wildlife+in+yellowstone+national+park&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://api.openalex.org/works
+INFO:research_system.providers.openalex:OpenAlex search failed, trying filter fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works?query=wildlife+in+yellowstone+national+park&rows=25 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?filter=title.search%3Awildlife+in+yellowstone&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?filter=title.search%3Awildlife+in+yellowstone&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?filter=title.search%3Awildlife+in+yellowstone&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://api.openalex.org/works
+WARNING:research_system.providers.openalex:OpenAlex search failed: Client error '400 BAD REQUEST' for url 'https://api.openalex.org/works?filter=title.search%3Awildlife+in+yellowstone&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+INFO:research_system.orchestrator:Collected 2 cards from free APIs
+INFO:research_system.orchestrator:Enriching 123 cards with ENABLE_EXTRACT=True
+INFO:httpx:HTTP Request: GET https://doi.org/robots.txt "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.doi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.1080/02755947.2017.1313793 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://academic.oup.com/najfm/article/37/4/743/7827452 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.1080/02755947.2017.1313793, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1080/02755947.2017.1313793 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.26616/nioshheta9902832855 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/niosh/hhe/reports/pdfs/1999-0283-2855.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.26616/nioshheta9902832855 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/niosh/hhe/reports/pdfs/1999-0283-2855.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.26616/nioshheta9902832855 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.cdc.gov/niosh/hhe/reports/pdfs/1999-0283-2855.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET http://www.jstor.org/stable/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 301 Permanent Redirect"
+INFO:httpx:HTTP Request: GET https://www.jstor.org/stable/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.2307/j.ctt2jbx4v.15, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://dx.doi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://dx.doi.org/10.1139%2Fz01-094 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET http://www.nrcresearchpress.com/doi/10.1139/z01-094 "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.nrcresearchpress.com/doi/10.1139/z01-094 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://dx.doi.org/10.1139%2Fz01-094, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1139%2Fz01-094 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.1080/10871209.2024.2353250 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.tandfonline.com/doi/full/10.1080/10871209.2024.2353250 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.1080/10871209.2024.2353250, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1080/10871209.2024.2353250 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://npmaps.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://npmaps.com/wp-content/uploads/yellowstone-wolf-pack-map-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://npmaps.com/wp-content/uploads/yellowstone-wolf-pack-map-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://npmaps.com/wp-content/uploads/yellowstone-wolf-pack-map-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/FINAL-4_7_25-2024-Wolf-Report_compressed.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/yell/learn/upload/FINAL-4_7_25-2024-Wolf-Report_compressed.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/FINAL-4_7_25-2024-Wolf-Report_compressed.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/FINAL-4_7_25-2024-Wolf-Report_compressed.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/FINAL-4_7_25-2024-Wolf-Report_compressed.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.org/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.org/wp-content/uploads/2024/03/YF-Park-Project-Support-2024-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.yellowstone.org/wp-content/uploads/2024/03/YF-Park-Project-Support-2024-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.org/wp-content/uploads/2024/03/YF-Park-Project-Support-2024-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/photosmultimedia/wildlife-fish.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/kidsyouth/wildlife.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.usgs.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.usgs.gov/observatories/yvo/news/wildlife-yellowstone-national-parks-thermal-basins "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/nature/mammals.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://blog.bozemancvb.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://blog.bozemancvb.com/blog/coolest-animals-in-yellowstone-national-park "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wp-content/uploads/2024/12/DYTravelPlanner24-25.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://destinationyellowstone.com/wp-content/uploads/2024/12/DYTravelPlanner24-25.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wp-content/uploads/2024/12/DYTravelPlanner24-25.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wp-content/uploads/2024/12/DYTravelPlanner24-25.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wp-content/uploads/2024/12/DYTravelPlanner24-25.pdf "HTTP/1.1 403 Forbidden"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.yellowstone.org/wp-content/uploads/2024/03/YF-Park-Project-Support-2024-2025.pdf (hash: ea25dedb...)
+INFO:httpx:HTTP Request: GET https://www.adfg.alaska.gov/robots.txt "HTTP/1.1 404 404"
+INFO:httpx:HTTP Request: GET https://www.adfg.alaska.gov/static/regulations/regprocess/gameboard/pdfs/2024-2025/special_7-14-25/rcs/rc081_Chelsey_Cook_Article_Bears_in_North_America_Journal_of_Wildlife_Management.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.adfg.alaska.gov/static/regulations/regprocess/gameboard/pdfs/2024-2025/special_7-14-25/rcs/rc081_Chelsey_Cook_Article_Bears_in_North_America_Journal_of_Wildlife_Management.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.adfg.alaska.gov/static/regulations/regprocess/gameboard/pdfs/2024-2025/special_7-14-25/rcs/rc081_Chelsey_Cook_Article_Bears_in_North_America_Journal_of_Wildlife_Management.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonenationalpark.com/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.yellowstonenationalpark.com/wildlife.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.org/current-projects/wildlife-wonders-wilderness/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wildlife-of-yellowstone/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dirtinmyshoes.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dirtinmyshoes.com/best-places-to-see-wildlife-in-yellowstone-national-park/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://koa.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://koa.com/campgrounds/yellowstone-park/blog/local-wildlife-in-yellowstone_7f7fdb81-92b4-4182-b628-d67b2bad8bea/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.rd.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.rd.com/list/yellowstone-wildlife-photos/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonenationalparklodges.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonenationalparklodges.com/connect/yellowstone-hot-spot/guide-to-watching-wildlife-in-yellowstone-by-month/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://abcnews.go.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://abcnews.go.com/US/wildlife-migrating-yellowstone-national-park-despite-misinformation-spreading/story?id=123841877 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.gocollette.com/robots.txt "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.gocollette.com/robots_collette.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.gocollette.com/en-us/travel-blog/yellowstone-wildlife-watching-tips "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.travelandleisure.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.travelandleisure.com/lamar-valley-yellowstone-usa-called-serengeti-of-north-america-11771815 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.kivitv.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.kivitv.com/backroads/experience-an-unforgettable-day-of-wildlife-viewing-at-yellowstone-national-park "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.britannica.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.britannica.com/place/Yellowstone-National-Park/Plant-and-animal-life "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://blog.bozemancvb.com/blog/coolest-animals-in-yellowstone-national-park "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonenationalparklodges.com/connect/yellowstone-hot-spot/yellowstone-weird-wildlife-facts/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/nature/wildlife.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.youtube.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.youtube.com/watch?v=0HlM104mchU "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.co/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.co/pdfs/mammallist.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.yellowstone.co/pdfs/mammallist.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.co/pdfs/mammallist.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://npshistory.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://npshistory.com/publications/yell/newspaper/summer-2023-2.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://npshistory.com/publications/yell/newspaper/summer-2023-2.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://npshistory.com/publications/yell/newspaper/summer-2023-2.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.usgs.gov/observatories/yvo/news/no-animals-are-not-leaving-yellowstone-national-park "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2024_Wildlife.pdf "HTTP/1.1 404 Not Found"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.yellowstone.co/pdfs/mammallist.pdf (hash: 6500432f...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://npshistory.com/publications/yell/newspaper/summer-2023-2.pdf (hash: b2b38250...)
+INFO:httpx:HTTP Request: GET https://www.yellowstonenationalparklodges.com/connect/yellowstone-hot-spot/ten-animals-you-may-or-may-not-see-in-yellowstone/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wildlife-of-yellowstone/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.youtube.com/watch?v=OmtH_3gSVBE&pp=0gcJCdgAo7VqN5tD "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonereports.com/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.yellowstonereports.com/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trafalgar.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.trafalgar.com/real-word/wildlife-yellowstone-national-park/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://alicesadventuresonearth.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://alicesadventuresonearth.com/winter-guide-to-wildlife-in-yellowstone-national-park/ "HTTP/1.1 200 OK"
+WARNING:trafilatura.core:discarding data: None
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/planyourvisit/safety.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstoneguidelines.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstoneguidelines.com/whats-new/hayden-valley-wildlife-watching.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://visityellowstonenationalparkyall.weebly.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://visityellowstonenationalparkyall.weebly.com/yellowstones-wildlife.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.org/yellowstone-wildlife-a-look-into-the-history-of-management/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://coveredgroundtours.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://coveredgroundtours.com/blog/best-places-to-see-wildlife-in-yellowstone-national-park/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://yellowstonesafari.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://yellowstonesafari.com/yellowstone-wildlife-safari/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.1080/10871209.2024.2353250 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.tandfonline.com/doi/full/10.1080/10871209.2024.2353250 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.1080/10871209.2024.2353250, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1080/10871209.2024.2353250 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET http://www.jstor.org/stable/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 301 Permanent Redirect"
+INFO:httpx:HTTP Request: GET https://www.jstor.org/stable/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.2307/j.ctt2jbx4v.15, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.1016/j.fooweb.2020.e00142 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://linkinghub.elsevier.com/retrieve/pii/S2352249620300021 "HTTP/1.1 200 "
+WARNING:trafilatura.core:discarding data: None
+INFO:httpx:HTTP Request: GET https://www.prompt.tennessee.edu/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.prompt.tennessee.edu/browse/7P8068/default.aspx/YellowstoneNationalParkGuide.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.prompt.tennessee.edu/browse/7P8068/default.aspx/YellowstoneNationalParkGuide.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.prompt.tennessee.edu/browse/7P8068/default.aspx/YellowstoneNationalParkGuide.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2025_Wildlife_web.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/yell/learn/upload/8_RI_2025_Wildlife_web.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/yell/learn/upload/8_RI_2025_Wildlife_web.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.naturalistjourneys.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.naturalistjourneys.com/pdf/trip-reports/1394-202506-mainland_usa-yellowstone-species_list.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.naturalistjourneys.com/pdf/trip-reports/1394-202506-mainland_usa-yellowstone-species_list.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.naturalistjourneys.com/pdf/trip-reports/1394-202506-mainland_usa-yellowstone-species_list.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.prompt.tennessee.edu/browse/7P8068/default.aspx/YellowstoneNationalParkGuide.pdf (hash: a42d5772...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.nps.gov/yell/learn/upload/8_RI_2025_Wildlife_web.pdf (hash: 9778fd74...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.naturalistjourneys.com/pdf/trip-reports/1394-202506-mainland_usa-yellowstone-species_list.pdf (hash: ae3f789d...)
+INFO:httpx:HTTP Request: GET https://destinationyellowstone.com/wildlife-of-yellowstone/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.youtube.com/watch?v=gt3Ua3ThF-U "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://blog.bozemancvb.com/blog/wildlife-watching-in-northern-yellowstone "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.youtube.com/watch?v=81VXXl9XdSU "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://yellowstonesafari.com/yellowstone-national-park-animals/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonepark.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstonepark.com/things-to-do/wildlife/lamar-hayden-valley/ "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://accounts.outsideonline.com/oidc/o/authorize/?prompt=none&response_type=code%20id_token&response_mode=query&state=%7B%22token%22%3A%223ca29f307241da84d8d0bbae9677228a7c3597a0d29d7d93ce41bfee9e493a548441ede7e7ca75cd405b18fc44d04ef0c872ccbac58800fd0b857a35bb9b540fbf4dbf3f8deb87f4aafcd79899a3dd81160cc7b1e730b3b7ed546db25bfab73e462f13e5eb69f759c24f8fd10a2c16aa47c706d4ead5a1d655a185e47f956b344bc97fff26b92cea16eac658d7e2b9df7a9b451d9f0dd5e4be0c7f751568304dff11cf97e93a96be814711%22%2C%22iv%22%3A%22d51649bbc3d4e77e386ccae8%22%7D&nonce=6b34ac38-975d-4ff3-a755-0bbe7f58754e&client_id=zW6ji0kF1tAJjnFx9Ey9xtRlS7AHK6dpgbkmtNrf&redirect_uri=https%3A%2F%2Fwww.yellowstonepark.com%2Fauthorize "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.yellowstonepark.com/authorize?error=login_required&state=%7B%22token%22%3A%223ca29f307241da84d8d0bbae9677228a7c3597a0d29d7d93ce41bfee9e493a548441ede7e7ca75cd405b18fc44d04ef0c872ccbac58800fd0b857a35bb9b540fbf4dbf3f8deb87f4aafcd79899a3dd81160cc7b1e730b3b7ed546db25bfab73e462f13e5eb69f759c24f8fd10a2c16aa47c706d4ead5a1d655a185e47f956b344bc97fff26b92cea16eac658d7e2b9df7a9b451d9f0dd5e4be0c7f751568304dff11cf97e93a96be814711%22%2C%22iv%22%3A%22d51649bbc3d4e77e386ccae8%22%7D "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.yellowstonepark.com/things-to-do/wildlife/lamar-hayden-valley/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://visityellowstonenationalparkyall.weebly.com/yellowstones-wildlife.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.yellowstone.org/protect-wildlife/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/abli/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/acad/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/adam/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/afam/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/afbg/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/agfo/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/alka/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/alag/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/anch/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/alca/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/aleu/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/alfl/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/alpo/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/amch/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/amme/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/amis/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/anac/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/ande/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/anjo/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nps.gov/ania/index.htm "HTTP/1.1 200 OK"
+INFO:research_system.enrich.ensure_quotes:Quote rescue: 123 primary cards need quotes
+INFO:research_system.enrich.ensure_quotes:Quote rescue complete: added 120 quotes
+INFO:research_system.orchestrator:Domain nps.gov at 37.8%, injecting diversity
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+%28dataset+OR+data%29+site%3Adata.gov+OR+site%3Acatalog.data.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+%28dataset+OR+data%29+site%3Adata.gov+OR+site%3Acatalog.data.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: wildlife in yellowstone national park (dataset OR data) site:data.gov OR site:catalog.data.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: wildlife in yellowstone national park (dataset OR data) site:data.gov OR site:catalog.data.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: wildlife in yellowstone national park (dataset OR data) site:data.gov OR site:catalog.data.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+%28dataset+OR+data%29+site%3Adata.gov+OR+site%3Acatalog.data.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+%28dataset+OR+data%29+site%3Adata.gov+OR+site%3Acatalog.data.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park (dataset OR data) site:data.gov OR site:catalog.data.gov': RetryError[<Future at 0x30d92d950 state=finished raised HTTPStatusError>]
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 60 cards, 18 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=doi.org, text='Jun 3, 2024·We examined bear viewing in Yellowstone National Park....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'jun we examined bear viewing in yellowstone national park...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 7: domain=nps.gov, text='Apr 18, 2025·67 different mammals live here, including many small mammals....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'apr different mammals live here including many small mammals...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 8: domain=alaska.gov, text='May 29, 2025·In Yellowstone National Park, grizzly bears were 3....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'may in yellowstone national park grizzly bears were...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 14: domain=yellowstone.org, text='PARK PROJECTS 2024–2025 PHOTO TOM MURPHY NPS / NEAL HERBERT Introduction We connect people to Yellow...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'park projects photo tom murphy nps neal herbert introduction we connect people to yellowstone nation...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 18: domain=nps.gov, text='Yellowstone National Park Wolf, Cougar, and Elk Project Annual Report 2024 ....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'yellowstone national park wolf cougar and elk project annual report...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.224 0.687 0.473 0.608
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.224 1.000 0.269 0.161 0.332
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.687 0.269 1.000 0.352 0.600
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.473 0.161 0.352 1.000 0.555
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.608 0.332 0.600 0.555 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 0 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 0 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 1 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 1 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 1 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.352 between cards 2 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.324 between cards 2 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.382 between cards 3 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.344 between cards 3 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.345 between cards 3 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.390 between cards 4 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 4 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.386 between cards 5 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.320 between cards 5 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.360 between cards 5 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 5 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 7 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 7 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.349 between cards 8 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.335 between cards 9 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.359 between cards 9 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 9 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.319 between cards 9 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.307 between cards 10 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.311 between cards 11 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 11 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.316 between cards 14 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.336 between cards 14 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Found 57 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,2): similarity=0.687
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: May 29, 2025·In Yellowstone National Park, grizzly bears were 3....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,3): similarity=0.473
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 3: PARK PROJECTS 2024–2025 PHOTO TOM MURPHY NPS / NEAL HERBERT Introduction We conn...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,4): similarity=0.608
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 4: Yellowstone National Park Wolf, Cougar, and Elk Project Annual Report 2024 ....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,7): similarity=0.405
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: Apr 27, 2023·Bears, moose, elks, oh my!...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,8): similarity=0.549
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: Jul 17, 2025·Yellowstone is home to hundreds of species of birds, fish and mamma...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 4 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 5: 15 members from domains {'rd.com', 'yellowstone.org', 'doi.org', 'go.com', 'weebly.com', 'kivitv.com', 'alaska.gov', 'youtube.com', 'nps.gov', 'npshistory.com'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 15 cards from ['alaska.gov', 'doi.org', 'go.com', 'kivitv.com', 'nps.gov', 'npshistory.com', 'rd.com', 'weebly.com', 'yellowstone.org', 'youtube.com']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 60 total cards
+INFO:research_system.triangulation.post:Cluster 0: 15 cards from 10 domains ['alaska.gov', 'doi.org', 'go.com']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:Primary share 33.33% < 50%, running backfill
+INFO:research_system.enrich.primary_fill:Found 1 families needing primary sources
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Acongress.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:congress.gov
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Acongress.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:congress.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:congress.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Acongress.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Acongress.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:congress.gov': RetryError[<Future at 0x30d953fd0 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2024+site%3Acongress.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=2024+site%3Acongress.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: 2024 site:congress.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: 2024 site:congress.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: 2024 site:congress.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2024+site%3Acongress.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2024+site%3Acongress.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query '2024 site:congress.gov': RetryError[<Future at 0x30d99f290 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Aiata.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Aiata.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:iata.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:iata.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Aiata.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Aiata.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:iata.org': RetryError[<Future at 0x30d9a5790 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 0 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:iata.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2024+site%3Aiata.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=2024+site%3Aiata.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: 2024 site:iata.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: 2024 site:iata.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: 2024 site:iata.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2024+site%3Aiata.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=2024+site%3Aiata.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query '2024 site:iata.org': RetryError[<Future at 0x30d99c050 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Atreasury.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Atreasury.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:treasury.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:treasury.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 2 results for query: Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:treasury.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Atreasury.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=Jun+3%2C+2024%C2%B7We+examined+bear+viewing+in+Yellowstone+National+Park.+site%3Atreasury.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'Jun 3, 2024·We examined bear viewing in Yellowstone National Park. site:treasury.gov': RetryError[<Future at 0x30d9a7950 state=finished raised HTTPStatusError>]
+INFO:research_system.enrich.primary_fill:Added 0 primary source cards across families
+INFO:research_system.orchestrator_adaptive:Adaptive domain balance: cap=0.25 kept=49 from 60 cards across 26 domains
+INFO:research_system.orchestrator:Standard domain cap 25% applied
+INFO:research_system.orchestrator_adaptive:Adaptive credibility floor: filtered 21 low-cred singletons, retained 0 whitelisted/high-cred singletons
+INFO:research_system.orchestrator:Adaptive credibility floor: filtered 21 low-cred sources, retained set()
+INFO:research_system.orchestrator:Re-applying domain caps after filtering (max share: 48.00%)
+INFO:research_system.orchestrator_adaptive:Adaptive domain balance: cap=0.40 kept=23 from 25 cards across 5 domains
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 23 cards, 9 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=doi.org, text='Jun 3, 2024·We examined bear viewing in Yellowstone National Park....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'jun we examined bear viewing in yellowstone national park...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=doi.org, text='Health hazard evaluation report: HETA #99-0283-2855, Yellowstone National Park, Yellowstone National...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'health hazard evaluation report heta - - yellowstone national park yellowstone national park wyoming...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 6: domain=nps.gov, text='Yellowstone National Park Wolf, Cougar, and Elk Project Annual Report 2024 ....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'yellowstone national park wolf cougar and elk project annual report...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 7: domain=nps.gov, text='Apr 18, 2025·67 different mammals live here, including many small mammals....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'apr different mammals live here including many small mammals...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 8: domain=nps.gov, text='At 4 million visits a year, it's one of the top 10 most-visited national parks in the United States....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'at million visits a year it s one of the top most-visited national parks in the united states...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.507 0.608 0.224 0.394
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.507 1.000 0.536 0.174 0.379
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.608 0.536 1.000 0.332 0.390
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.224 0.174 0.332 1.000 0.198
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.394 0.379 0.390 0.198 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 0 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 1 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 2 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.390 between cards 2 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 2 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.382 between cards 4 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.307 between cards 5 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.311 between cards 5 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Found 17 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,1): similarity=0.507
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Health hazard evaluation report: HETA #99-0283-2855, Yellowstone National Park, ...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,2): similarity=0.608
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: Yellowstone National Park Wolf, Cougar, and Elk Project Annual Report 2024 ....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,6): similarity=0.473
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 6: PARK PROJECTS 2024–2025 PHOTO TOM MURPHY NPS / NEAL HERBERT Introduction We conn...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,7): similarity=0.644
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: Jan 25, 2025·Watch more Yellowstone wildlife videos here: https://youtu....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,8): similarity=0.439
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: Established as the world&#x27;s first <strong>national</strong> <strong>park</st...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 2 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 5: 8 members from domains {'nps.gov', 'yellowstone.org', 'youtube.com', 'doi.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 8 cards from ['doi.org', 'nps.gov', 'yellowstone.org', 'youtube.com']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 23 total cards
+INFO:research_system.triangulation.post:Cluster 0: 8 cards from 4 domains ['doi.org', 'nps.gov', 'yellowstone.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:Backfill attempt 1/3: cards 23 < 24
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+filetype%3Apdf&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: wildlife in yellowstone national park filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+filetype%3Apdf&limit=4&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park filetype:pdf' returned 4 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: wildlife in yellowstone national park filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: wildlife in yellowstone national park filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+filetype%3Apdf&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park filetype:pdf': RetryError[<Future at 0x30d92d410 state=finished raised HTTPStatusError>]
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+research+report&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=wildlife+in+yellowstone+national+park+research+report&count=4&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 4 results for query: wildlife in yellowstone national park research report
+INFO:httpx:HTTP Request: GET https://developer.nps.gov/api/v1/parks?q=wildlife+in+yellowstone+national+park+research+report&limit=4&api_key=NcfSCcShdtf6TtctfuxMAjqazcfToR1WyZhRcEfo&fields=fullName%2CparkCode%2Cdescription%2Cdesignation%2Curl%2Cstates%2Ctopics%2Cactivities "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_nps:NPS search for 'wildlife in yellowstone national park research report' returned 4 results
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 4 results for query: wildlife in yellowstone national park research report
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 4 results for query: wildlife in yellowstone national park research report
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+research+report&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=wildlife+in+yellowstone+national+park+research+report&num=4&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'wildlife in yellowstone national park research report': RetryError[<Future at 0x30d8e6950 state=finished raised HTTPStatusError>]
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: mps
+WARNING:research_system.rankers.cross_encoder:Cross-encoder reranking failed: 'SearchHit' object has no attribute 'get'
+INFO:research_system.orchestrator:Added 9 cards from backfill
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 26 cards, 9 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=doi.org, text='Jun 3, 2024·We examined bear viewing in Yellowstone National Park....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'jun we examined bear viewing in yellowstone national park...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=doi.org, text='Health hazard evaluation report: HETA #99-0283-2855, Yellowstone National Park, Yellowstone National...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'health hazard evaluation report heta - - yellowstone national park yellowstone national park wyoming...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 6: domain=nps.gov, text='Yellowstone National Park Wolf, Cougar, and Elk Project Annual Report 2024 ....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'yellowstone national park wolf cougar and elk project annual report...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 10: domain=nps.gov, text='Apr 18, 2025·67 different mammals live here, including many small mammals....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'apr different mammals live here including many small mammals...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 11: domain=nps.gov, text='At 4 million visits a year, it's one of the top 10 most-visited national parks in the United States....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'at million visits a year it s one of the top most-visited national parks in the united states...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.507 0.608 0.224 0.394
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.507 1.000 0.536 0.174 0.379
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.608 0.536 1.000 0.332 0.390
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.224 0.174 0.332 1.000 0.198
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.394 0.379 0.390 0.198 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 0 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 1 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 2 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.390 between cards 2 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 2 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.382 between cards 4 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.307 between cards 5 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.311 between cards 5 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Found 17 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,1): similarity=0.507
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Health hazard evaluation report: HETA #99-0283-2855, Yellowstone National Park, ...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,2): similarity=0.608
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: Yellowstone National Park Wolf, Cougar, and Elk Project Annual Report 2024 ....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,6): similarity=0.473
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 6: PARK PROJECTS 2024–2025 PHOTO TOM MURPHY NPS / NEAL HERBERT Introduction We conn...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,7): similarity=0.644
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: Jan 25, 2025·Watch more Yellowstone wildlife videos here: https://youtu....
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,8): similarity=0.439
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: Established as the world&#x27;s first <strong>national</strong> <strong>park</st...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 2 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 5: 8 members from domains {'nps.gov', 'yellowstone.org', 'youtube.com', 'doi.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 8 cards from ['doi.org', 'nps.gov', 'yellowstone.org', 'youtube.com']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Jun 3, 2024·We examined bear viewing in Yellowstone National Park....
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 26 total cards
+INFO:research_system.triangulation.post:Cluster 0: 8 cards from 4 domains ['doi.org', 'nps.gov', 'yellowstone.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:Quality gates passed after 1 backfill attempts
+INFO:research_system.tools.evidence_io:JSONL write complete: 26 successful, 0 failed
+INFO:research_system.orchestrator:Evidence write: ok=26 bad=0
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.orchestrator:Selected report tier: brief (confidence: 0.54, Low confidence (0.54))
+ERROR:research_system.orchestrator:Report generation failed: No module named 'research_system.config.report'; 'research_system.config' is not a package
+INFO:research_system.strict.adaptive_guard:Low supply detected: domains=0, credible=26, error_rate=0.00
+WARNING:research_system.orchestrator:Strict checks relaxed due to supply constraints: ['TRIANGULATED_COUNT(0) < 8', 'DOMAINS(0) < 3 minimum', 'CRITICAL: Single-source evidence']
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.1080/10871209.2024.2353250 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://www.tandfonline.com/doi/full/10.1080/10871209.2024.2353250 "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://doi.org/10.1080/10871209.2024.2353250
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.1016/j.fooweb.2020.e00142 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://linkinghub.elsevier.com/retrieve/pii/S2352249620300021 "HTTP/1.1 200 "
+INFO:httpx:HTTP Request: HEAD https://dx.doi.org/10.1139%2Fz01-094 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD http://www.nrcresearchpress.com/doi/10.1139/z01-094 "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: HEAD https://www.nrcresearchpress.com/doi/10.1139/z01-094 "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://dx.doi.org/10.1139%2Fz01-094
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD http://www.jstor.org/stable/10.2307/j.ctt2jbx4v.15 "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://doi.org/10.2307/j.ctt2jbx4v.15
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.26616/nioshheta9902832855 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://www.cdc.gov/niosh/hhe/reports/pdfs/1999-0283-2855.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.1080/02755947.2017.1313793 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://academic.oup.com/najfm/article/37/4/743/7827452 "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://doi.org/10.1080/02755947.2017.1313793
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/yell/learn/upload/FINAL-4_7_25-2024-Wolf-Report_compressed.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/yell/planyourvisit/safety.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/agfo/index.htm "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.nps.gov/alfl/index.htm "HTTP/1.1 200 OK"
+WARNING:research_system.orchestrator:STRICT MODE: Degrading to insufficient evidence report (post-report)
+
+Strict mode: Strict mode post-report quality gates not met - see insufficient_evidence_report.md
