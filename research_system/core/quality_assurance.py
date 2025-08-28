@@ -175,6 +175,10 @@ class QualityAssurance:
         
         score = 0.7  # Base score
         text = evidence.supporting_text
+        # Also check the claim if present
+        full_text = text
+        if evidence.claim:
+            full_text = f"{evidence.claim} {text}"
         
         # Check for citations
         citations = re.findall(self.fact_patterns["citation_patterns"], text)
@@ -187,8 +191,8 @@ class QualityAssurance:
             score -= 0.2
             issues.append("Statistical claims without citations")
         
-        # Check for absolute claims
-        absolutes = re.findall(self.fact_patterns["absolute_claims"], text, re.IGNORECASE)
+        # Check for absolute claims (check both claim and supporting text)
+        absolutes = re.findall(self.fact_patterns["absolute_claims"], full_text, re.IGNORECASE)
         if absolutes:
             score -= 0.1
             issues.append(f"Contains absolute claims: {', '.join(set(absolutes))}")
@@ -263,7 +267,7 @@ class QualityAssurance:
             issues.append("Excessive hedging language")
         
         # Use bias indicators if available
-        if evidence.bias_indicators:
+        if hasattr(evidence, 'bias_indicators') and evidence.bias_indicators:
             bi = evidence.bias_indicators
             if bi.sentiment != "neutral":
                 bias_score += 0.1

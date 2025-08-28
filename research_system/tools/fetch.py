@@ -201,6 +201,9 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     # PDF path with enhanced extraction
     if (html_ct and "pdf" in html_ct) or (url or "").lower().endswith(".pdf"):
         try:
+            # Get settings for PDF processing
+            settings = get_settings()
+            
             # Use new PDF fetch with size limits and timeouts
             from research_system.net.pdf_fetch import download_pdf
             with httpx.Client() as cl:
