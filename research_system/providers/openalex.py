@@ -26,7 +26,7 @@ def search_openalex(query: str, per_page: int = 25) -> List[Dict[str, Any]]:
         
         try:
             # Try search parameter first
-            data = http_json("openalex", "GET", BASE, params=params, timeout=30)
+            data = http_json("openalex", "GET", BASE, params=params)
             return data.get("results", [])
         except Exception as e:
             if "400" in str(e) or "Bad Request" in str(e):
@@ -40,7 +40,7 @@ def search_openalex(query: str, per_page: int = 25) -> List[Dict[str, Any]]:
                     "select": "id,title,doi,authorships,host_venue,publication_year",
                     "mailto": "research@example.com"
                 }
-                data = http_json("openalex", "GET", BASE, params=params, timeout=30)
+                data = http_json("openalex", "GET", BASE, params=params)
                 return data.get("results", [])
             raise
             

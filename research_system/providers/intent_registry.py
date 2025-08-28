@@ -72,7 +72,7 @@ INTENT_REGISTRY: Dict[Intent, Dict[str, List[str]]] = {
     },
     Intent.GENERIC: {
         "free_primary": ["wikipedia", "wikidata"],
-        "free_fallback": ["openalex", "crossref", "wayback"],
+        "free_fallback": ["wayback"],  # Remove verticals from generic
         "paid_primary": ["brave", "serper", "tavily"],
         "paid_fallback": ["serpapi"]
     }

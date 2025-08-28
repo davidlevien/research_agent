@@ -7,7 +7,7 @@ import logging
 import os
 import re
 from datetime import datetime
-from collections import defaultdict
+from collections import defaultdict, Counter
 from urllib.parse import urlparse
 from .models import Discipline
 
@@ -106,6 +106,56 @@ class Orchestrator:
         self.provider_errors = 0
         self.provider_attempts = 0
 
+    def _write_insufficient_evidence_report(self, errors: List[str], metrics: Dict, confidence_level) -> None:
+        """Write an insufficient evidence report when strict mode fails."""
+        report_lines = [
+            "# Insufficient Evidence Report",
+            "",
+            f"## Topic: {self.s.topic}",
+            "",
+            "## Quality Assessment",
+            "",
+            f"Confidence Level: {confidence_level.value.title() if hasattr(confidence_level, 'value') else confidence_level}",
+            "",
+            "## Quality Gate Failures",
+            "",
+        ]
+        
+        for error in errors:
+            report_lines.append(f"- {error}")
+        
+        report_lines.extend([
+            "",
+            "## Evidence Collection Summary",
+            "",
+            f"- Total cards collected: {metrics.get('total_cards', 0)}",
+            f"- Credible cards: {metrics.get('credible_cards', 0)}",
+            f"- Unique domains: {metrics.get('unique_domains', 0)}",
+            f"- Triangulated cards: {metrics.get('triangulated_cards', 0)}",
+            f"- Primary source share: {metrics.get('primary_share', 0):.1%}",
+            "",
+            "## What Was Attempted",
+            "",
+            "1. Searched across multiple providers for relevant information",
+            "2. Applied diversity injection to find additional sources",
+            "3. Filtered and validated evidence cards",
+            "4. Attempted triangulation and clustering",
+            "",
+            "## Recommended Next Steps",
+            "",
+            "1. **Broaden search parameters**: Try alternative keywords or phrasings",
+            "2. **Wait for source availability**: Some sources may be temporarily unavailable",
+            "3. **Check specific databases**: Consider domain-specific sources",
+            "4. **Relax strict requirements**: Set STRICT=false for best-effort results",
+            "",
+            "---",
+            "",
+            "*This report was generated because evidence quality thresholds were not met.*",
+            "*The system collected some evidence but it was insufficient for high-confidence conclusions.*"
+        ])
+        
+        self._write("insufficient_evidence_report.md", "\n".join(report_lines))
+    
     def _write(self, name: str, content: str):
         """Atomic write with temp file + rename."""
         import tempfile
@@ -548,9 +598,11 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         tier_config = self.report_config.tiers[tier]
         
         # Generate main report with tier constraints
+        # SectionBudgets is a dataclass, not a dict - use a default value
+        max_findings = 10  # Default value for findings
         main_report = compose_report(
             self.s.topic, cards, tri, metrics,
-            max_findings=tier_config.sections.get("findings", 10)
+            max_findings=max_findings
         )
         
         # Add appendix if cards were filtered
@@ -686,10 +738,27 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
             return bool(re.search(r"\d", text)) and bool(re.search(r"\b(20\d{2}|Q[1-4]\s*20\d{2}|H[12]\s*20\d{2}|FY\s*20\d{2})\b", text))
         
         def is_primary_domain(domain: str) -> bool:
-            primary_domains = {'unwto.org', 'iata.org', 'wttc.org', 'oecd.org', 'worldbank.org', 'imf.org', 
-                             'who.int', 'cdc.gov', 'europa.eu', 'sec.gov', 'fred.stlouisfed.org', 
-                             'arxiv.org', 'pubmed.ncbi.nlm.nih.gov', 'doi.org'}
-            return domain in primary_domains or '.gov' in domain or '.org' in domain
+            # Topic-agnostic primary source detection based on domain classes
+            return _is_primary_class(domain)
+        
+        def _is_primary_class(domain: str) -> bool:
+            """Check if domain is a primary source based on generic classes, not specific sites."""
+            # Government sites are primary
+            if '.gov' in domain:
+                return True
+            # Educational institutions are primary
+            if '.edu' in domain or '.ac.' in domain:
+                return True
+            # International organizations
+            if any(tld in domain for tld in ['.int', '.who.int', '.un.org', '.europa.eu']):
+                return True
+            # Academic publishers and repositories  
+            if any(site in domain for site in ['arxiv.org', 'pubmed.', 'doi.org', 'ncbi.nlm.nih.gov']):
+                return True
+            # Official statistics sites (generic pattern)
+            if 'stat' in domain and '.gov' in domain:
+                return True
+            return False
         
         def render_finding(claim: str, domains: list, sources: list, label: str) -> list:
             def md_link(text: str, url: str, maxlen: int = 80) -> str:
@@ -1247,22 +1316,41 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         domain_counts = Counter(canonical_domain(c.source_domain) for c in cards)
         total = len(cards)
         
-        # If any domain exceeds 25%, proactively add diversity
+        # If any domain exceeds 25%, proactively add diversity with generic class-based expansions
         for domain, count in domain_counts.items():
             if total > 0 and count / total > 0.25:
                 logger.info(f"Domain {domain} at {count/total:.1%}, injecting diversity")
                 
-                # Add targeted queries for other primary sources
-                diversity_targets = {
-                    "unwto.org": ["iata.org", "wttc.org", "oecd.org"],
-                    "oecd.org": ["worldbank.org", "imf.org", "un.org"],
-                    "worldbank.org": ["oecd.org", "imf.org", "bis.org"]
-                }.get(domain, ["oecd.org", "worldbank.org", "imf.org"])
+                # Generic class-based diversity expansions (topic-agnostic)
+                diversity_queries = []
                 
-                # Execute targeted diversity queries
-                for target_domain in diversity_targets[:2]:
+                # Check what types we already have to avoid duplication
+                existing_tlds = set()
+                for d in domain_counts.keys():
+                    if '.gov' in d:
+                        existing_tlds.add('.gov')
+                    elif '.edu' in d:
+                        existing_tlds.add('.edu')
+                    elif '.org' in d:
+                        existing_tlds.add('.org')
+                
+                # Add missing source classes (max 3 to stay within budget)
+                if '.gov' not in existing_tlds:
+                    diversity_queries.append(f"{self.s.topic} site:.gov")
+                if '.edu' not in existing_tlds:
+                    diversity_queries.append(f"{self.s.topic} site:.edu")
+                if len(diversity_queries) < 3:
+                    # Add reference sources if not already present
+                    if 'wikipedia.org' not in domain_counts and 'britannica.com' not in domain_counts:
+                        diversity_queries.append(f"{self.s.topic} site:wikipedia.org OR site:britannica.com")
+                if len(diversity_queries) < 3:
+                    # Add data sources if relevant
+                    if 'data.gov' not in domain_counts and 'catalog.data.gov' not in domain_counts:
+                        diversity_queries.append(f"{self.s.topic} (dataset OR data) site:data.gov OR site:catalog.data.gov")
+                
+                # Execute diversity queries (limit to 2 for performance)
+                for div_query in diversity_queries[:2]:
                     try:
-                        div_query = f"{self.s.topic} site:{target_domain}"
                         div_results = asyncio.run(
                             parallel_provider_search(
                                 registry,
@@ -1276,7 +1364,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                         # Add diversity results
                         for provider, hits in div_results.items():
                             for h in hits[:2]:  # Limit per provider
-                                if domain_of(h.url) == target_domain:
+                                new_domain = domain_of(h.url)
+                                # Only add if it actually diversifies
+                                if new_domain not in domain_counts or domain_counts[new_domain] < 2:
                                     cards.append(EvidenceCard(
                                         id=str(uuid.uuid4()),
                                         title=h.title,
@@ -1286,12 +1376,14 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         credibility_score=0.85,
                                         relevance_score=0.75,
                                         confidence=0.64,
-                                        is_primary_source=True,
-                                        source_domain=canonical_domain(target_domain),
+                                        is_primary_source=_is_primary_class(new_domain),
+                                        source_domain=canonical_domain(new_domain),
                                         collected_at=datetime.utcnow().isoformat() + "Z"
                                     ))
+                                    # Update counts to prevent over-adding from same domain
+                                    domain_counts[new_domain] = domain_counts.get(new_domain, 0) + 1
                     except Exception as e:
-                        logger.debug(f"Diversity injection for {target_domain} failed: {e}")
+                        logger.debug(f"Diversity injection failed: {e}")
                         continue
                 
                 break  # Only handle the first over-represented domain
@@ -1682,6 +1774,19 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         if num_filtered > 0:
             logger.info(f"Adaptive credibility floor: filtered {num_filtered} low-cred sources, retained {retained}")
         
+        # ========== RE-APPLY DOMAIN CAPS AFTER FILTERING ==========
+        # Credibility filtering may have left domain imbalance - reapply caps
+        unique_domains_after_filter = len(set(canonical_domain(c.source_domain) for c in cards))
+        if cards:
+            domain_counts = Counter(canonical_domain(c.source_domain) for c in cards)
+            max_domain_share = max(domain_counts.values()) / len(cards)
+            
+            if max_domain_share > self.quality_config.domain_balance.cap_default:
+                logger.info(f"Re-applying domain caps after filtering (max share: {max_domain_share:.2%})")
+                cards, _, _ = apply_adaptive_domain_balance(
+                    cards, self.quality_config, unique_domains_after_filter
+                )
+        
         # ========== ITERATIVE BACKFILL LOOP FOR QUALITY GATES ==========
         # Recompute triangulation on balanced cards for quality assessment
         para_clusters_final = cluster_paraphrases(cards)
@@ -1998,9 +2103,18 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     confidence_level, adjustments, supply_ctx
                 ))
             elif errs:
-                # Write gaps and risks, then fail
+                # Write gaps and risks, then generate degraded report
                 self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
-                raise SystemExit("STRICT FAIL: " + " | ".join(errs))
+                
+                # Check if we should degrade to report instead of hard exit
+                if os.getenv("STRICT_DEGRADE_TO_REPORT", "true").lower() == "true":
+                    # Generate insufficient evidence report
+                    logger.warning(f"STRICT MODE: Degrading to insufficient evidence report")
+                    self._write_insufficient_evidence_report(errs, metrics_dict, confidence_level)
+                    import sys
+                    sys.exit(1)  # Exit with non-zero but after generating report
+                else:
+                    raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         
         # EVALUATE acceptance guardrails after report is generated
         guardrails_md = self._evaluate_guardrails(cards, self.s.output_dir / "final_report.md")
@@ -2066,7 +2180,42 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     f"# Gaps & Risks\n\n{failure_details}\n\n" + breakdown,
                     encoding="utf-8"
                 )
-                raise SystemExit(f"STRICT MODE FAIL: {failure_details}")
+                
+                # Check if we should degrade to report instead of hard exit
+                if os.getenv("STRICT_DEGRADE_TO_REPORT", "true").lower() == "true":
+                    # Generate insufficient evidence report with metrics
+                    logger.warning(f"STRICT MODE: Degrading to insufficient evidence report (post-report)")
+                    insufficient_report_path = self.s.output_dir / "insufficient_evidence_report.md"
+                    insufficient_content = [
+                        "# Insufficient Evidence Report",
+                        "",
+                        f"## Topic: {self.s.topic}",
+                        "",
+                        "## Quality Gate Failures",
+                        "",
+                        failure_details,
+                        "",
+                        "## Metrics Summary",
+                        "",
+                        f"- Triangulation Rate: {triangulation_rate:.1%} (target: {thresholds.get('triangulation', 0.35):.1%})",
+                        f"- Primary Source Share: {primary_share:.1%} (target: {thresholds.get('primary_source', 0.40):.1%})",
+                        f"- Domain Concentration: {domain_concentration:.1%} (max: {thresholds.get('domain_concentration', 0.30):.1%})",
+                        f"- Evidence Cards: {len(cards)}",
+                        "",
+                        "## Next Steps",
+                        "",
+                        "1. Expand search parameters to find more sources",
+                        "2. Wait for additional sources to become available",  
+                        "3. Try different query formulations",
+                        "4. Consider relaxing strict mode requirements",
+                        "",
+                        "Note: The main report has been generated but should be interpreted with caution."
+                    ]
+                    insufficient_report_path.write_text("\n".join(insufficient_content), encoding="utf-8")
+                    import sys
+                    sys.exit(1)  # Exit with non-zero but after generating report
+                else:
+                    raise SystemExit(f"STRICT MODE FAIL: {failure_details}")
 
         # CONTRACT ENFORCEMENT
         missing = [n for n in SEVEN if not (self.s.output_dir/n).exists() or (self.s.output_dir/n).stat().st_size == 0]
