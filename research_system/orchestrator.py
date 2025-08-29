@@ -56,7 +56,8 @@ from research_system.strict.adaptive_guard import (
     adaptive_strict_check,
     format_confidence_report,
     should_attempt_last_mile_backfill,
-    SupplyContextData
+    SupplyContextData,
+    ConfidenceLevel
 )
 import json
 
@@ -113,8 +114,6 @@ class Orchestrator:
 
     def _write_insufficient_evidence_report(self, errors: List[str], metrics: Dict, confidence_level) -> None:
         """Write an enhanced insufficient evidence report when strict mode fails."""
-        from research_system.strict.adaptive_guard import ConfidenceLevel
-        
         # Ensure confidence level is set
         if confidence_level is None:
             confidence_level = ConfidenceLevel.LOW
