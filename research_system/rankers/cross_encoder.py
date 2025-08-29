@@ -3,12 +3,61 @@ Cross-Encoder Reranking - Lightweight Local Reranking
 
 Uses sentence-transformers cross-encoder for relevance reranking.
 Falls back gracefully if not available.
+v8.18.0: Added 429 guard with graceful degradation for model download failures.
 """
 
 import logging
 from typing import List, Dict, Any, Tuple, Optional
 
 logger = logging.getLogger(__name__)
+
+# v8.18.0: Module-level cache for cross-encoder model
+_CE_MODEL = None
+_CE_LOAD_ATTEMPTED = False
+_CE_LOAD_FAILED = False
+
+def _load_cross_encoder():
+    """
+    v8.18.0: Safely load cross-encoder model with 429 protection.
+    Returns None if loading fails (e.g., due to rate limits).
+    """
+    global _CE_MODEL, _CE_LOAD_ATTEMPTED, _CE_LOAD_FAILED
+    
+    # If we already tried and failed, don't retry
+    if _CE_LOAD_FAILED:
+        return None
+    
+    # If already loaded, return it
+    if _CE_MODEL is not None:
+        return _CE_MODEL
+    
+    # Mark that we're attempting to load
+    _CE_LOAD_ATTEMPTED = True
+    
+    try:
+        from sentence_transformers import CrossEncoder
+        
+        # Try to load the model (may fail with 429 from HuggingFace)
+        logger.debug("Loading cross-encoder model...")
+        model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+        _CE_MODEL = model
+        logger.debug("Cross-encoder model loaded successfully")
+        return model
+        
+    except ImportError:
+        logger.debug("sentence-transformers not available")
+        _CE_LOAD_FAILED = True
+        return None
+        
+    except Exception as e:
+        # This catches 429s from HuggingFace model hub and other errors
+        error_str = str(e).lower()
+        if "429" in error_str or "rate" in error_str or "too many requests" in error_str:
+            logger.warning(f"Cross-encoder model download rate-limited (429). Falling back to no-op reranker.")
+        else:
+            logger.warning(f"Cross-encoder unavailable ({e}). Falling back to no-op reranker.")
+        _CE_LOAD_FAILED = True
+        return None
 
 def rerank(
     query: str,
@@ -87,59 +136,57 @@ def rerank(
             return ""
     
     # Try cross-encoder reranking
-    try:
-        from sentence_transformers import CrossEncoder
-        
-        # Load model (cached after first load)
-        model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-        
-        # Prepare pairs for scoring
-        pairs = []
-        for c in candidates:
-            title = _get_text(c, 'title')
-            snippet = _get_text(c, 'snippet', 'text')
-            text = f"{title} {snippet}".strip()
-            if not text:
-                text = _get_text(c, 'supporting_text', 'claim', 'url')
-            pairs.append([query, text])
-        
-        # Get scores
-        scores = model.predict(pairs)
-        
-        # Sort by score
-        scored_candidates = list(zip(scores, candidates))
-        scored_candidates.sort(key=lambda x: x[0], reverse=True)
-        
-        # Return top-k
-        reranked = [c for _, c in scored_candidates[:topk]]
-        logger.debug(f"Cross-encoder reranking selected {len(reranked)} from {len(candidates)}")
-        
-        return reranked
-        
-    except ImportError:
-        logger.debug("sentence-transformers not available, using score-based ranking")
-        
-        # Fallback: rank by existing scores if available
-        def _get_score(c, *keys):
-            if isinstance(c, dict):
-                for key in keys:
-                    if key in c:
-                        return c.get(key, 0)
-            else:
-                for key in keys:
-                    if hasattr(c, key):
-                        return getattr(c, key, 0)
-            return 0
-        
-        if candidates:
-            candidates.sort(key=lambda c: _get_score(c, "confidence", "relevance_score", "credibility_score"), reverse=True)
-        
-        return candidates[:topk]
+    # v8.18.0: Use safe loader with 429 protection
+    model = _load_cross_encoder()
     
-    except Exception as e:
-        # v8.16.0: Downgrade to debug level to avoid noise
-        logger.debug(f"Cross-encoder reranking failed: {e}")
-        return candidates[:topk]
+    if model is not None:
+        try:
+            # Prepare pairs for scoring
+            pairs = []
+            for c in candidates:
+                title = _get_text(c, 'title')
+                snippet = _get_text(c, 'snippet', 'text')
+                text = f"{title} {snippet}".strip()
+                if not text:
+                    text = _get_text(c, 'supporting_text', 'claim', 'url')
+                pairs.append([query, text])
+            
+            # Get scores
+            scores = model.predict(pairs)
+            
+            # Sort by score
+            scored_candidates = list(zip(scores, candidates))
+            scored_candidates.sort(key=lambda x: x[0], reverse=True)
+            
+            # Return top-k
+            reranked = [c for _, c in scored_candidates[:topk]]
+            logger.debug(f"Cross-encoder reranking selected {len(reranked)} from {len(candidates)}")
+            
+            return reranked
+            
+        except Exception as e:
+            # v8.18.0: Downgrade to debug level to avoid noise
+            logger.debug(f"Cross-encoder scoring failed: {e}")
+            # Fall through to fallback below
+    
+    # Fallback: rank by existing scores if available
+    logger.debug("Using score-based ranking (cross-encoder unavailable)")
+    
+    def _get_score(c, *keys):
+        if isinstance(c, dict):
+            for key in keys:
+                if key in c:
+                    return c.get(key, 0)
+        else:
+            for key in keys:
+                if hasattr(c, key):
+                    return getattr(c, key, 0)
+        return 0
+    
+    if candidates:
+        candidates.sort(key=lambda c: _get_score(c, "confidence", "relevance_score", "credibility_score"), reverse=True)
+    
+    return candidates[:topk]
 
 def batch_rerank(
     queries: List[str],
@@ -186,80 +233,84 @@ def hybrid_rerank(
     if not candidates or len(candidates) <= topk:
         return candidates
     
-    try:
-        from sentence_transformers import CrossEncoder
-        
-        model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-        
-        # v8.16.0: Helper for safe extraction
-        def _get_value(c, *keys):
-            if isinstance(c, dict):
+    # v8.18.0: Use safe loader with 429 protection
+    model = _load_cross_encoder()
+    
+    if model is not None:
+        try:
+            # v8.16.0: Helper for safe extraction
+            def _get_value(c, *keys):
+                if isinstance(c, dict):
+                    for key in keys:
+                        if key in c:
+                            return c.get(key)
+                else:
+                    for key in keys:
+                        if hasattr(c, key):
+                            return getattr(c, key, None)
+                return None
+            
+            def _get_text_safe(c, *keys):
                 for key in keys:
-                    if key in c:
-                        return c.get(key)
+                    val = _get_value(c, key)
+                    if val:
+                        return str(val)
+                return ""
+            
+            # Get original scores (normalize to 0-1)
+            original_scores = []
+            for c in candidates:
+                score = _get_value(c, "confidence", "relevance_score", "credibility_score") or 0.5
+                original_scores.append(float(score))
+            
+            # Normalize original scores
+            max_orig = max(original_scores) if original_scores else 1.0
+            if max_orig > 0:
+                original_scores = [s / max_orig for s in original_scores]
+            
+            # Get reranker scores
+            pairs = []
+            for c in candidates:
+                title = _get_text_safe(c, 'title')
+                snippet = _get_text_safe(c, 'snippet', 'text', 'supporting_text')
+                text = f"{title} {snippet}".strip()
+                if not text:
+                    text = _get_text_safe(c, 'claim', 'url')
+                pairs.append([query, text])
+            
+            reranker_scores = model.predict(pairs)
+            
+            # Normalize reranker scores to 0-1
+            min_score = min(reranker_scores)
+            max_score = max(reranker_scores)
+            if max_score > min_score:
+                reranker_scores = [(s - min_score) / (max_score - min_score) for s in reranker_scores]
             else:
-                for key in keys:
-                    if hasattr(c, key):
-                        return getattr(c, key, None)
-            return None
+                reranker_scores = [0.5] * len(reranker_scores)
+            
+            # Combine scores
+            hybrid_scores = []
+            for orig, rerank in zip(original_scores, reranker_scores):
+                hybrid = original_weight * orig + (1 - original_weight) * rerank
+                hybrid_scores.append(hybrid)
+            
+            # Sort by hybrid score
+            scored_candidates = list(zip(hybrid_scores, candidates))
+            scored_candidates.sort(key=lambda x: x[0], reverse=True)
+            
+            # Add hybrid score to results
+            results = []
+            for score, candidate in scored_candidates[:topk]:
+                candidate_copy = candidate.copy()
+                candidate_copy["hybrid_score"] = score
+                results.append(candidate_copy)
+            
+            return results
         
-        def _get_text_safe(c, *keys):
-            for key in keys:
-                val = _get_value(c, key)
-                if val:
-                    return str(val)
-            return ""
-        
-        # Get original scores (normalize to 0-1)
-        original_scores = []
-        for c in candidates:
-            score = _get_value(c, "confidence", "relevance_score", "credibility_score") or 0.5
-            original_scores.append(float(score))
-        
-        # Normalize original scores
-        max_orig = max(original_scores) if original_scores else 1.0
-        if max_orig > 0:
-            original_scores = [s / max_orig for s in original_scores]
-        
-        # Get reranker scores
-        pairs = []
-        for c in candidates:
-            title = _get_text_safe(c, 'title')
-            snippet = _get_text_safe(c, 'snippet', 'text', 'supporting_text')
-            text = f"{title} {snippet}".strip()
-            if not text:
-                text = _get_text_safe(c, 'claim', 'url')
-            pairs.append([query, text])
-        
-        reranker_scores = model.predict(pairs)
-        
-        # Normalize reranker scores to 0-1
-        min_score = min(reranker_scores)
-        max_score = max(reranker_scores)
-        if max_score > min_score:
-            reranker_scores = [(s - min_score) / (max_score - min_score) for s in reranker_scores]
-        else:
-            reranker_scores = [0.5] * len(reranker_scores)
-        
-        # Combine scores
-        hybrid_scores = []
-        for orig, rerank in zip(original_scores, reranker_scores):
-            hybrid = original_weight * orig + (1 - original_weight) * rerank
-            hybrid_scores.append(hybrid)
-        
-        # Sort by hybrid score
-        scored_candidates = list(zip(hybrid_scores, candidates))
-        scored_candidates.sort(key=lambda x: x[0], reverse=True)
-        
-        # Add hybrid score to results
-        results = []
-        for score, candidate in scored_candidates[:topk]:
-            candidate_copy = candidate.copy()
-            candidate_copy["hybrid_score"] = score
-            results.append(candidate_copy)
-        
-        return results
-        
-    except Exception as e:
-        logger.debug(f"Hybrid reranking not available: {e}")
-        return candidates[:topk]
+        except Exception as e:
+            logger.debug(f"Hybrid reranking failed: {e}")
+            # Fall through to fallback below
+    
+    # v8.18.0: Fallback when cross-encoder is unavailable
+    logger.debug("Hybrid reranking unavailable, returning top candidates")
+    return candidates[:topk]

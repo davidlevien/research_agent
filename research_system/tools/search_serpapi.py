@@ -2,13 +2,43 @@ import httpx
 import logging
 import os
 import time
+import re
 from typing import Dict, Any, Optional, Set
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+# v8.18.0: Handle RetryError gracefully when tenacity is present
+try:
+    from tenacity import RetryError
+except ImportError:
+    # Fallback type when tenacity doesn't export RetryError
+    class RetryError(Exception):
+        pass
+
 from ..config import Settings
 from ..metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
 from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
+
+# v8.18.0: Redact api_key from noisy httpx INFO logs
+class _RedactApiKeyFilter(logging.Filter):
+    _pat = re.compile(r"(api_key=)[^&\s]+")
+    
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            if isinstance(record.args, tuple):
+                record.args = tuple(
+                    self._pat.sub(r"\1REDACTED", str(a)) for a in record.args
+                )
+            elif isinstance(record.args, dict):
+                record.args = {k: self._pat.sub(r"\1REDACTED", str(v)) for k, v in record.args.items()}
+            record.msg = self._pat.sub(r"\1REDACTED", str(record.msg))
+        except Exception:
+            pass
+        return True
+
+# Apply the redaction filter to httpx logger
+logging.getLogger("httpx").addFilter(_RedactApiKeyFilter())
 
 # v8.16.0: Custom exception for missing API key (allows test mocking)
 class SerpAPIConfigError(Exception):
@@ -204,6 +234,24 @@ def run(req: SearchRequest) -> list[SearchHit]:
                         _serpapi_state["is_open"] = True  # Keep for backward compatibility
                         logger.warning("SERPAPI_CIRCUIT_TRIPPED", extra={"q": req.query, "consecutive_429s": _serpapi_state["consecutive_429s"]})
             logger.error(f"SerpAPI search failed for query '{req.query}': {e}")
+            SEARCH_ERRORS.labels(provider="serpapi").inc()
+            return []
+        except RetryError as e:
+            # v8.18.0: If an outer retry wrapper handled the 429s, propagate to our circuit
+            try:
+                last_exc = e.last_attempt.exception()  # type: ignore[attr-defined]
+            except Exception:
+                last_exc = None
+            
+            if isinstance(last_exc, httpx.HTTPStatusError) and getattr(last_exc.response, "status_code", None) == 429:
+                if use_circuit_breaker:
+                    _serpapi_state["consecutive_429s"] += 1
+                    _serpapi_state["circuit_open_until"] = time.time() + CIRCUIT_COOLDOWN_SEC
+                    _serpapi_state["is_open"] = True  # Keep for backward compatibility
+                    logger.error(f"SerpAPI rate-limited via RetryError (429). consecutive={_serpapi_state['consecutive_429s']}")
+            else:
+                logger.error(f"SerpAPI search failed with RetryError: {e}")
+            
             SEARCH_ERRORS.labels(provider="serpapi").inc()
             return []
         except Exception as e:

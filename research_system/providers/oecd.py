@@ -9,11 +9,15 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.17.0: Correct OECD SDMX-JSON dataflow endpoint 
-# Tests and OECD docs expect fetching dataflows under /ALL/
-# Prior runs 404'd when hitting /dataflow without /ALL/ (see CI failures)
-# Keeping trailing slash is important for some proxies/CDNs
-_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"
+# v8.18.0: Robust OECD SDMX-JSON dataflow endpoint fallback
+# Some CDN edges serve dataflows at /dataflow, others at /dataflow/ALL/
+# Try multiple endpoints with trailing slash variants for CDN compatibility
+_DATAFLOW_CANDIDATES = [
+    "https://stats.oecd.org/SDMX-JSON/dataflow",
+    "https://stats.oecd.org/SDMX-JSON/dataflow/",
+    "https://stats.oecd.org/SDMX-JSON/dataflow/ALL",
+    "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/",
+]
 
 # Circuit breaker state
 _circuit_state = {
@@ -50,42 +54,52 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
         logger.debug("OECD returning cached catalog")
         return _circuit_state["catalog_cache"]
     
-    try:
-        data = http_json("oecd", "GET", _DATAFLOW)
-        
-        # Shape varies; normalize
-        result = {}
-        if "data" in data and "dataflows" in data["data"]:
-            result = data["data"]["dataflows"]
-        elif "Dataflows" in data and "Dataflow" in data["Dataflows"]:
-            for df in data["Dataflows"]["Dataflow"]:
-                key = df.get("Key") or df.get("@id") or df.get("id")
-                name = ""
-                nm = df.get("Name") or df.get("name")
-                if isinstance(nm, list) and nm:
-                    name = nm[0].get("$") or nm[0].get("value") or ""
-                elif isinstance(nm, str):
-                    name = nm
-                result[str(key)] = {"name": name}
-        
-        # Success - cache and reset failures
-        _circuit_state["catalog_cache"] = result
-        _circuit_state["cache_time"] = current_time
-        _circuit_state["consecutive_failures"] = 0
-        return result
-        
-    except Exception as e:
-        logger.warning(f"OECD dataflows fetch failed: {e}")
-        _circuit_state["consecutive_failures"] += 1
-        _circuit_state["last_failure"] = current_time
-        
-        # Trip circuit if threshold reached
-        if _circuit_state["consecutive_failures"] >= CIRCUIT_THRESHOLD:
-            _circuit_state["is_open"] = True
-            logger.warning(f"OECD circuit breaker TRIPPED after {CIRCUIT_THRESHOLD} failures")
-        
-        # Return cached data if available
-        return _circuit_state["catalog_cache"] or {}
+    # v8.18.0: Try multiple endpoints in sequence until one works
+    last_err = None
+    for url in _DATAFLOW_CANDIDATES:
+        try:
+            logger.info(f"Trying OECD dataflows endpoint: {url}")
+            data = http_json("oecd", "GET", url)
+            
+            # Shape varies; normalize
+            result = {}
+            if "data" in data and "dataflows" in data["data"]:
+                result = data["data"]["dataflows"]
+            elif "Dataflows" in data and "Dataflow" in data["Dataflows"]:
+                for df in data["Dataflows"]["Dataflow"]:
+                    key = df.get("Key") or df.get("@id") or df.get("id")
+                    name = ""
+                    nm = df.get("Name") or df.get("name")
+                    if isinstance(nm, list) and nm:
+                        name = nm[0].get("$") or nm[0].get("value") or ""
+                    elif isinstance(nm, str):
+                        name = nm
+                    result[str(key)] = {"name": name}
+            
+            # Success - cache and reset failures
+            _circuit_state["catalog_cache"] = result
+            _circuit_state["cache_time"] = current_time
+            _circuit_state["consecutive_failures"] = 0
+            logger.info(f"OECD dataflows fetched successfully from {url}")
+            return result
+            
+        except Exception as e:
+            last_err = e
+            logger.info(f"OECD dataflows endpoint failed ({url}): {e}")
+            continue
+    
+    # All endpoints failed
+    logger.warning(f"OECD dataflows fetch failed after all fallbacks: {last_err}")
+    _circuit_state["consecutive_failures"] += 1
+    _circuit_state["last_failure"] = current_time
+    
+    # Trip circuit if threshold reached
+    if _circuit_state["consecutive_failures"] >= CIRCUIT_THRESHOLD:
+        _circuit_state["is_open"] = True
+        logger.warning(f"OECD circuit breaker TRIPPED after {CIRCUIT_THRESHOLD} failures")
+    
+    # Return cached data if available
+    return _circuit_state["catalog_cache"] or {}
 
 def search_oecd(query: str, limit: int = 25) -> List[Dict[str, Any]]:
     """Search OECD datasets by relevance to query."""

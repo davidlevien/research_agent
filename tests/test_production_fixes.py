@@ -108,10 +108,13 @@ def test_logging_redaction():
 
 
 def test_oecd_endpoint_fix():
-    """Test OECD uses correct endpoint URL."""
-    from research_system.providers.oecd import _DATAFLOW
-    # Should have trailing slash
-    assert _DATAFLOW.endswith("/ALL/"), f"OECD endpoint should end with /ALL/ but is: {_DATAFLOW}"
+    """Test OECD uses correct endpoint URLs with fallback."""
+    from research_system.providers.oecd import _DATAFLOW_CANDIDATES
+    # v8.18.0: Should have multiple endpoints including /ALL/ variant
+    assert len(_DATAFLOW_CANDIDATES) >= 4, f"Should have at least 4 fallback endpoints"
+    # Should include both with and without /ALL/
+    assert any("/ALL/" in url for url in _DATAFLOW_CANDIDATES), "Should include /ALL/ endpoint"
+    assert any(url.endswith("/dataflow") for url in _DATAFLOW_CANDIDATES), "Should include basic endpoint"
 
 
 def test_pdf_cache_with_redirects():

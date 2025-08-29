@@ -173,7 +173,12 @@ class TestOECDProvider:
     @patch('research_system.providers.oecd.http_json')
     def test_oecd_uses_correct_dataflow_url(self, mock_http):
         """Test that OECD uses correct SDMX-JSON dataflow endpoint."""
-        from research_system.providers.oecd import search_oecd
+        from research_system.providers.oecd import search_oecd, _circuit_state
+        
+        # Reset circuit state to ensure clean test
+        _circuit_state["is_open"] = False
+        _circuit_state["consecutive_failures"] = 0
+        _circuit_state["catalog_cache"] = None
         
         mock_http.return_value = {
             "Dataflows": {
@@ -185,7 +190,44 @@ class TestOECDProvider:
         
         results = search_oecd("GDP", limit=5)
         
-        # v8.17.0: Should use correct endpoint WITH /ALL/ suffix (per OECD docs and CI requirements)
+        # v8.18.0: Robust fallback tries multiple endpoints, starting without /ALL/
+        # The first successful call will be to the first candidate
+        mock_http.assert_called_with(
+            "oecd", 
+            "GET", 
+            "https://stats.oecd.org/SDMX-JSON/dataflow"
+        )
+        assert len(results) > 0
+    
+    @patch('research_system.providers.oecd.http_json')
+    def test_oecd_fallback_to_all_endpoint(self, mock_http):
+        """Test that OECD falls back to /ALL/ endpoint when first fails."""
+        from research_system.providers.oecd import search_oecd, _circuit_state
+        
+        # Reset circuit state to ensure clean test
+        _circuit_state["is_open"] = False
+        _circuit_state["consecutive_failures"] = 0
+        _circuit_state["catalog_cache"] = None
+        
+        # First call fails, second succeeds
+        mock_http.side_effect = [
+            Exception("404 Not Found"),  # First endpoint fails
+            Exception("404 Not Found"),  # Second endpoint fails
+            Exception("404 Not Found"),  # Third endpoint fails
+            {  # Fourth endpoint succeeds
+                "Dataflows": {
+                    "Dataflow": [
+                        {"id": "GDP", "Name": [{"value": "Gross Domestic Product"}]}
+                    ]
+                }
+            }
+        ]
+        
+        results = search_oecd("GDP", limit=5)
+        
+        # v8.18.0: Should have tried all 4 endpoints
+        assert mock_http.call_count == 4
+        # Last call should be to /ALL/ endpoint with trailing slash
         mock_http.assert_called_with(
             "oecd", 
             "GET", 
@@ -351,7 +393,15 @@ class TestContradictionFilter:
         
         # Should drop cluster with strong contradiction
         filtered = filter_contradictory_clusters([cluster], confidence_threshold=0.6)
-        assert len(filtered) == 0
+        # v8.18.0: In non-strict mode, strong contradictions are dropped
+        import os
+        if os.getenv("STRICT_MODE", "0") == "1":
+            # In strict mode, we preserve the best cluster
+            assert len(filtered) == 1
+            assert filtered[0]["meta"].get("preserved_in_strict") is True
+        else:
+            # In normal mode, contradictory clusters are dropped
+            assert len(filtered) == 0
     
     def test_no_contradictions_pass_through(self):
         """Test that clusters without contradictions pass through."""

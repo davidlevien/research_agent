@@ -2018,7 +2018,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Check if we need to backfill from primary sources
         # Create a temporary config for backfill check
         bal_cfg = BalanceConfig(cap=self.quality_config.domain_balance.cap_default, min_cards=24, prefer_primary=True)
-        if need_backfill(balanced_cards, bal_cfg):
+        # v8.18.0: Skip domain balance backfill in strict mode
+        if not self.s.strict and need_backfill(balanced_cards, bal_cfg):
             logger.info(f"Backfilling from primary sources (have {len(balanced_cards)}, need {bal_cfg.min_cards})")
             # Use primary providers for backfill
             for prov in ("oecd", "ec", "eurostat", "imf", "worldbank"):
@@ -2109,7 +2110,11 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         max_attempts = getattr(settings, 'MAX_BACKFILL_ATTEMPTS', 3)
         min_cards = getattr(settings, 'MIN_EVIDENCE_CARDS', 24)
         
-        while backfill_attempts < max_attempts:
+        # v8.18.0: Skip iterative backfill loop entirely in strict mode
+        if self.s.strict:
+            logger.info("Strict mode enabled: skipping iterative/last-mile backfill loop")
+        
+        while not self.s.strict and backfill_attempts < max_attempts:
             needs_backfill = False
             backfill_reason = []
             

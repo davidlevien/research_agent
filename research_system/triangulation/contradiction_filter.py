@@ -1,10 +1,14 @@
 """Contradiction filtering for clusters before representative selection."""
 
 import logging
+import os
 from typing import List, Any, Tuple
 import re
 
 logger = logging.getLogger(__name__)
+
+# v8.18.0: Check strict mode
+STRICT_MODE = os.getenv("STRICT_MODE", "0") == "1"
 
 # Direction indicators for contradiction detection
 INCREASE_WORDS = ("increase", "increased", "up", "rise", "grew", "growth", "higher")
@@ -171,6 +175,52 @@ def filter_contradictory_clusters(clusters: List[Any], confidence_threshold: flo
         logger.info(f"Filtered {removed_count} strongly contradictory clusters from {len(clusters)} total")
     if flagged_count > 0:
         logger.info(f"Flagged {flagged_count} clusters with weak contradictions for review")
+    
+    # v8.18.0: In strict mode, avoid returning zero clusters if at least one was multi-domain
+    # before contradiction checks. Keep the strongest single remaining cluster.
+    if STRICT_MODE and not filtered_clusters and clusters:
+        logger.info("Strict mode: preserving best multi-domain cluster to avoid empty result")
+        
+        # Find the best cluster based on domain diversity and size
+        best_cluster = None
+        best_score = -1
+        
+        for cluster in clusters:
+            # Extract cards and calculate metrics
+            if isinstance(cluster, dict):
+                cluster_cards = cluster.get('cards', [])
+            else:
+                cluster_cards = getattr(cluster, 'cards', [])
+            
+            if not cluster_cards:
+                continue
+            
+            # Count unique domains
+            domains = set()
+            for card in cluster_cards:
+                domain = getattr(card, 'source_domain', '') or getattr(card, 'domain', '')
+                if domain:
+                    domains.add(domain)
+            
+            # Calculate score: prioritize multi-domain, then size
+            domain_count = len(domains)
+            size = len(cluster_cards)
+            
+            # Only consider multi-domain clusters
+            if domain_count >= 2:
+                score = (domain_count * 100) + size  # Heavily weight domain diversity
+                
+                if score > best_score:
+                    best_score = score
+                    best_cluster = cluster
+        
+        # If we found a multi-domain cluster, keep it
+        if best_cluster:
+            logger.info(f"Preserving best multi-domain cluster with score {best_score}")
+            if isinstance(best_cluster, dict):
+                best_cluster['meta'] = best_cluster.get('meta', {})
+                best_cluster['meta']['preserved_in_strict'] = True
+            return [best_cluster]
     
     return filtered_clusters
 

@@ -1,8 +1,8 @@
-# Research System v8.16.0 - Critical Production Fixes & Robustness
+# Research System v8.18.0 - Enterprise-Grade Reliability & Robustness
 
-A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.16.0's **critical runtime fixes**, v8.15.0's **hard quality gating**, **citation-bound numbers**, **sentence-aware trimming**, and **actionable insufficient evidence guidance**.
+A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.18.0's **robust fallback mechanisms**, v8.17.0's **strict mode enforcement**, v8.16.0's **critical runtime fixes**, and v8.15.0's **hard quality gating**.
 
-**Status**: ✅ Production-ready with v8.16.0 critical fixes for runtime stability and v8.15.0 enhanced reporting: single-source metrics, citation safety, concrete next steps, and source strategy transparency
+**Status**: ✅ Enterprise-ready with v8.18.0 robust error handling, strict mode controls, and comprehensive fallback mechanisms for maximum reliability
 
 ## 🚀 Quick Start
 
@@ -780,6 +780,14 @@ PROVIDER_TIMEOUT_SEC=20
 # Feature Flags
 ENABLE_FREE_APIS=true
 USE_LLM_CLAIMS=true
+
+# v8.18.0 Strict Mode & Circuit Breakers
+STRICT_MODE=0  # Set to 1 to disable ALL backfill (deterministic research)
+SERPAPI_MAX_CALLS_PER_RUN=10  # Budget enforcement
+SERPAPI_CIRCUIT_BREAKER=true  # Enable circuit breaker
+SERPAPI_TRIP_ON_429=true  # Trip immediately on rate limit
+OECD_CIRCUIT_COOLDOWN=300  # 5 minutes
+OECD_CIRCUIT_THRESHOLD=2  # Trip after 2 failures
 USE_LLM_SYNTH=true
 MIN_EVIDENCE_CARDS=24
 MAX_BACKFILL_ATTEMPTS=3
@@ -848,7 +856,49 @@ from research_system.strict.adaptive_guard import adaptive_strict_check
 - **Intent-Specific Reporting**: Adaptive report structure by query type
 - **Geographic Disambiguation**: Handles ambiguous city names
 
-### v8.16.0 - Critical Production Fixes (Latest)
+### v8.18.0 - Enterprise Reliability & Robustness (Latest)
+**Released**: January 2025
+**Focus**: Maximum reliability through robust fallbacks and strict mode controls
+
+**Major Enhancements**:
+
+1. **OECD Robust Fallback**: 
+   - Tries multiple endpoint variants (`/dataflow`, `/dataflow/`, `/dataflow/ALL`, `/dataflow/ALL/`)
+   - Handles CDN edge variations gracefully
+   - Automatic circuit breaker integration
+
+2. **SerpAPI Advanced Circuit Breaker**:
+   - Handles `RetryError` from outer retry wrappers
+   - API key redaction in all httpx logs
+   - Immediate circuit trip on 429 responses
+   - Persistent query deduplication and budget enforcement
+
+3. **Strict Mode Enforcement**:
+   - Complete disabling of ALL backfill paths when `STRICT_MODE=1`
+   - Blocks standard backfill, last-mile recovery, and domain balance backfill
+   - Ensures deterministic, source-only research
+
+4. **Triangulation Preservation**:
+   - In strict mode, preserves best multi-domain cluster even with contradictions
+   - Prevents empty results from over-aggressive filtering
+   - Prioritizes domain diversity over perfect consistency
+
+5. **Cross-Encoder 429 Protection**:
+   - Graceful degradation when HuggingFace model hub rate-limits
+   - Module-level caching with one-time load attempt
+   - Falls back to score-based ranking on 429 errors
+
+### v8.17.0 - Strict Mode & State Management
+**Released**: December 2024
+**Focus**: Backfill control and module-level state management
+
+**Key Features**:
+- **Strict Mode Backfill Control**: Honors `--strict` flag to disable backfill
+- **EvidenceCard Labels Field**: Added optional `labels` field for runtime safety
+- **SerpAPI State Functions**: `get_serpapi_state()` and `reset_serpapi_state()` for testing
+- **DateTime Timezone Fixes**: All datetime comparisons use timezone-aware objects
+
+### v8.16.0 - Critical Production Fixes
 
 **Released**: December 2024
 **Focus**: Runtime stability, API robustness, and CI/CD compatibility
