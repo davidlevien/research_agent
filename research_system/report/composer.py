@@ -4,6 +4,9 @@ import re, math, textwrap
 from collections import defaultdict, Counter
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
+from research_system.report.claim_filter import (
+    filter_key_findings, extract_key_numbers, is_numeric_claim, is_on_topic
+)
 
 NUM = re.compile(r"\b(?:[±~]?\d+(?:\.\d+)?%|\d{1,3}(?:,\d{3})+(?:\.\d+)?|\b(?:19|20)\d{2}\b)\b")
 INCR = ("increase","increased","up","rise","grew","growth","higher")
@@ -140,39 +143,59 @@ def compose_report(topic: str, cards, tri: dict, metrics: dict, *, max_findings:
 
     clusters_scored = sorted(clusters, key=lambda t: _score_cluster(t[1]), reverse=True)[:max_findings]
 
-    # 3) Key findings (multi-sentence, with quotes + citations)
-    findings = []
+    # 3) Key findings (multi-sentence, with quotes + citations) - FILTERED
+    findings_raw = []
     for key, cs in clusters_scored:
         # lead sentence: dominant signal
         lead = _pick_quotes(cs, k=1)
         if not lead:
             lead = [_short(_best_text(cs[0]), 280)]
+        
+        # Filter: Skip if not numeric or on-topic
+        lead_text = lead[0]
+        if not is_numeric_claim(lead_text) or not is_on_topic(lead_text, topic):
+            continue
+            
         cites = " ".join(_cit(c, idx) for c in cs[:3])
-        para = f"- **{lead[0]}** {cites}"
+        para = f"- **{lead_text}** {cites}"
         # second sentence: context/number
         q_add = _pick_quotes(cs, k=2)
         if len(q_add) > 1 and q_add[1] != lead[0]:
-            para += f" — {q_add[1]}"
-        findings.append(para)
+            # Also check second sentence
+            if is_numeric_claim(q_add[1]) or is_on_topic(q_add[1], topic):
+                para += f" — {q_add[1]}"
+        findings_raw.append((para, cs))
 
-    # ensure at least 6 findings by appending strongest single-card items
-    if len(findings) < 6:
+    # Filter findings for quality
+    findings = []
+    for para, cs in findings_raw:
+        # Must have multiple independent sources
+        domains = set(c.source_domain for c in cs if hasattr(c, 'source_domain'))
+        if len(domains) >= 2:
+            findings.append(para)
+    
+    # ensure at least 3 findings by appending strongest numeric single-card items
+    if len(findings) < 3:
         extras = []
         for c in sorted(cards, key=lambda x: (1 if _is_primary(x) else 0, x.credibility_score or 0.5, len(_best_text(x))), reverse=True):
-            extras.append(f"- {_short(_best_text(c), 260)} {_cit(c, idx)}")
-            if len(findings)+len(extras) >= 6: break
+            text = _short(_best_text(c), 260)
+            # Must be numeric and on-topic
+            if is_numeric_claim(text) and is_on_topic(text, topic):
+                extras.append(f"- {text} {_cit(c, idx)}")
+                if len(findings)+len(extras) >= 6: break
         findings.extend(extras)
 
-    # 4) Key numbers (pull top numeric sentences across all cards)
-    numeric = []
-    for c in cards:
-        txt = _best_text(c)
-        if _has_numbers(txt):
-            sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", txt) if _has_numbers(s)]
-            if sents:
-                numeric.append((len(NUM.findall(txt)), sents[0], c))
-    numeric.sort(reverse=True, key=lambda t: t[0])
-    key_numbers = [f"- {s} {_cit(c, idx)}" for _, s, c in numeric[:8]]
+    # 4) Key numbers (pull top numeric sentences across all cards) - ENHANCED
+    key_numbers_raw = extract_key_numbers(cards, topic, max_numbers=15)
+    key_numbers = []
+    
+    for sent, c in key_numbers_raw:
+        # Additional validation - exclude metadata/citations
+        if any(pat in sent.lower() for pat in ['isbn', 'doi:', '©', 'retrieved', 'accessed']):
+            continue
+        key_numbers.append(f"- {sent} {_cit(c, idx)}")
+        if len(key_numbers) >= 8:
+            break
 
     # 5) Contradictions & uncertainties
     contra = []

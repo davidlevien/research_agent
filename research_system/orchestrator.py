@@ -538,7 +538,8 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         
         para_clusters = tri_data.get("paraphrase_clusters", [])
         from research_system.tools.aggregates import triangulation_rate_from_clusters
-        triangulation_rate = triangulation_rate_from_clusters(para_clusters)
+        # FIX: Pass total card count to get correct triangulation rate
+        triangulation_rate = triangulation_rate_from_clusters(para_clusters, total_cards=len(cards))
         
         # Count triangulated vs single-source cards
         triangulated_cards = sum(len(c.get("indices", [])) for c in para_clusters if len(c.get("indices", [])) >= 2)
@@ -2175,33 +2176,18 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         logger.info(f"Selected report tier: {tier.value} (confidence: {report_confidence:.2f}, {tier_explanation})")
         
-        # SYNTHESIZE - write defensively to ensure output even on failures
-        try:
-            # Calculate appendix: raw cards minus balanced cards
-            balanced_ids = {c.id for c in cards}
-            appendix_cards = [c for c in raw_cards if c.id not in balanced_ids]
-            
-            # Generate report with tier-specific configuration
-            report = self._generate_adaptive_report(cards, appendix_cards, detector, tier, max_tokens)
-            
-            # Add adaptive metadata to report
-            metadata = generate_adaptive_report_metadata(
-                current_metrics, confidence_level if 'confidence_level' in locals() else None,
-                adjustments if 'adjustments' in locals() else {},
-                tier.value, report_confidence, tier_explanation
-            )
-            report = metadata + "\n\n---\n\n" + report
-            
-            self._write("final_report.md", report)
-        except Exception as e:
-            self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
-            logger.error(f"Report generation failed: {e}")
+        # CRITICAL FIX: Check quality gates BEFORE generating report
+        should_generate_final_report = True
+        confidence_level = None
+        adjustments = {}
         
-        error_file_path = self.s.output_dir / "evidence_cards.errors.jsonl"
-        self._write("citation_checklist.md", self._generate_citation_checklist(cards, error_file_path))
+        # First check: Basic metric thresholds
+        if metrics_dict.get("primary_share_in_union", 0) < 0.40 or metrics_dict.get("union_triangulation", 0) < 0.25:
+            should_generate_final_report = False
+            logger.warning(f"Quality gates failed: primary_share={metrics_dict.get('primary_share_in_union', 0):.2f}, triangulation={metrics_dict.get('union_triangulation', 0):.2f}")
         
-        # Check strict mode with adaptive guard
-        if self.s.strict:
+        # Second check: Strict mode with adaptive guard
+        if self.s.strict and should_generate_final_report:
             errs, confidence_level, adjustments = adaptive_strict_check(
                 self.s.output_dir, self.quality_config
             )
@@ -2219,21 +2205,59 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     confidence_level, adjustments, supply_ctx
                 ))
             elif errs:
-                # Write gaps and risks, then generate degraded report
+                should_generate_final_report = False
                 self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
-                
-                # Check if we should degrade to report instead of hard exit
-                if os.getenv("STRICT_DEGRADE_TO_REPORT", "true").lower() == "true":
-                    # Generate insufficient evidence report
-                    logger.warning(f"STRICT MODE: Degrading to insufficient evidence report")
-                    self._write_insufficient_evidence_report(errs, metrics_dict, confidence_level)
-                    # Raise a proper exception instead of sys.exit
-                    raise RuntimeError("Strict mode quality gates not met - generated insufficient evidence report")
-                else:
-                    raise SystemExit("STRICT FAIL: " + " | ".join(errs))
         
-        # EVALUATE acceptance guardrails after report is generated
-        guardrails_md = self._evaluate_guardrails(cards, self.s.output_dir / "final_report.md")
+        # Generate appropriate report based on quality gates
+        if should_generate_final_report:
+            # SYNTHESIZE - Generate final report
+            try:
+                # Calculate appendix: raw cards minus balanced cards
+                balanced_ids = {c.id for c in cards}
+                appendix_cards = [c for c in raw_cards if c.id not in balanced_ids]
+                
+                # Generate report with tier-specific configuration
+                report = self._generate_adaptive_report(cards, appendix_cards, detector, tier, max_tokens)
+                
+                # Add adaptive metadata to report - FIX: Use metrics_dict which has correct values
+                # Merge current_metrics with metrics_dict for complete data
+                combined_metrics = {**metrics_dict, **current_metrics}
+                combined_metrics['total_cards'] = len(cards)
+                combined_metrics['credible_cards'] = len([c for c in cards if (c.credibility_score or 0.5) >= 0.5])
+                combined_metrics['triangulated_cards'] = len(triangulated_indices)
+                combined_metrics['unique_domains'] = unique_domains
+                combined_metrics['provider_error_rate'] = self.provider_errors / max(1, self.provider_attempts)
+                
+                metadata = generate_adaptive_report_metadata(
+                    combined_metrics, confidence_level,
+                    adjustments,
+                    tier.value, report_confidence, tier_explanation
+                )
+                report = metadata + "\n\n---\n\n" + report
+                
+                self._write("final_report.md", report)
+            except Exception as e:
+                self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
+                logger.error(f"Report generation failed: {e}")
+        else:
+            # Generate insufficient evidence report instead
+            logger.warning(f"Quality gates not met - generating insufficient evidence report only")
+            self._write_insufficient_evidence_report(
+                [f"Primary share: {metrics_dict.get('primary_share_in_union', 0):.1%} < 40%",
+                 f"Triangulation: {metrics_dict.get('union_triangulation', 0):.1%} < 25%"],
+                metrics_dict, 
+                confidence_level or ConfidenceLevel.LOW
+            )
+            # Don't raise exception yet - let other artifacts be generated
+        
+        error_file_path = self.s.output_dir / "evidence_cards.errors.jsonl"
+        self._write("citation_checklist.md", self._generate_citation_checklist(cards, error_file_path))
+        
+        # Generate acceptance guardrails (even if no final report)
+        if should_generate_final_report:
+            guardrails_md = self._evaluate_guardrails(cards, self.s.output_dir / "final_report.md")
+        else:
+            guardrails_md = self._evaluate_guardrails(cards, None)
         self._write("acceptance_guardrails.md", guardrails_md)
         
         # OBSERVABILITY: Generate triangulation breakdown
@@ -2244,8 +2268,13 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         )
         self._write("triangulation_breakdown.md", breakdown)
         
-        # STRICT GUARDRAILS (fail fast in --strict using discipline policy)
-        if getattr(settings, "STRICT", False) or self.s.strict:
+        # Final check: Raise exception if quality gates not met
+        if not should_generate_final_report:
+            if self.s.strict:
+                raise RuntimeError("Strict mode quality gates not met - generated insufficient evidence report")
+        
+        # STRICT GUARDRAILS (additional checks for discipline policy)
+        if should_generate_final_report and (getattr(settings, "STRICT", False) or self.s.strict):
             # Calculate rates with both paraphrase and structured triangulation
             # Use the already calculated union rate
             triangulation_rate = tri_union

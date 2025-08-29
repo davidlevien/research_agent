@@ -3572,3 +3572,719 @@ INFO:research_system.tools.search_tavily:Tavily search returned 3 results for qu
 INFO:research_system.enrich.primary_fill:Added 0 primary source cards across families
 
 Unexpected error: "EvidenceCard" object has no field "is_triangulated"
+==================================
+Research System v8.8.0 - SURGICAL PRODUCTION FIXES
+==================================
+Topic: tax rates and economic class relationships
+Output: outputs
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Adaptive domain balancing (25-40% cap)
+  ✓ Adaptive triangulation (25-35% threshold)
+  ✓ Adaptive strict quality gates
+
+v8.7.0 Intent-Aware Features:
+  ✓ Three-stage hybrid intent classification
+  ✓ Intent-based provider routing
+  ✓ Intent-specific quality thresholds
+  ✓ Geographic disambiguation
+  ✓ New providers: Nominatim, Wikivoyage, OSMTags
+
+v8.6.0 Adaptive Features:
+  ✓ Supply-aware quality gates
+  ✓ Adaptive report length (Brief/Standard/Deep)
+  ✓ Evidence snippet repair chains
+  ✓ Confidence scoring and reporting
+  ✓ Last-mile backfill optimization
+  ✓ Singleton whitelisting for authorities
+
+Previous Improvements:
+  ✓ Unified architecture & deduplication
+  ✓ HTML cleaning & citation validation
+  ✓ Triangulation consistency
+  ✓ Pack-aware primary detection
+
+Starting in 3 seconds...
+INFO:research_system.orchestrator:Set global time budget: 1800s
+INFO:research_system.intent.semantic:Initializing semantic classifier with model: sentence-transformers/all-MiniLM-L6-v2
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.intent.semantic:Loaded 11 intent labels from research_system/intent/labels.yaml
+INFO:research_system.intent.semantic:Prepared embeddings for 11 labels
+INFO:research_system.intent.classifier:Query 'tax rates and economic class relationships...' classified as stats (semantic)
+INFO:research_system.orchestrator:Query classified as intent: stats
+INFO:research_system.orchestrator:Intent thresholds: triangulation=0.3, sources=3
+INFO:research_system.providers.intent_registry:Intent stats -> providers: ['worldbank', 'oecd', 'imf', 'eurostat', 'ec']
+INFO:research_system.orchestrator:Intent stats selected providers: ['worldbank', 'oecd', 'imf', 'eurostat', 'ec']
+INFO:research_system.orchestrator:Routing: categories=['general'], providers=['wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall', 'wayback']
+INFO:research_system.orchestrator:Filtered out NPS provider for non-parks topic: tax rates and economic class relationships
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+site%3Adoi.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: tax rates and economic class relationships site:doi.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: tax rates and economic class relationships site:doi.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: tax rates and economic class relationships site:doi.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+site%3Adoi.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'tax rates and economic class relationships site:doi.org': RetryError[<Future at 0x151cc1c10 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: tax rates and economic class relationships 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+2024..2025+filetype%3Apdf&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: tax rates and economic class relationships 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: tax rates and economic class relationships 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+2024..2025+filetype%3Apdf&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'tax rates and economic class relationships 2024..2025 filetype:pdf': RetryError[<Future at 0x151cbfd50 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+site%3A%2A.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: tax rates and economic class relationships site:*.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: tax rates and economic class relationships site:*.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: tax rates and economic class relationships site:*.gov
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+site%3A%2A.gov&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'tax rates and economic class relationships site:*.gov': RetryError[<Future at 0x151ccc390 state=finished raised HTTPStatusError>]
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: tax rates and economic class relationships 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: tax rates and economic class relationships 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: tax rates and economic class relationships 2024..2025
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=tax+rates+and+economic+class+relationships+2024..2025&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI search failed for query 'tax rates and economic class relationships 2024..2025': RetryError[<Future at 0x151cbe810 state=finished raised HTTPStatusError>]
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: tax rates and economic class relationships filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+filetype%3Apdf+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: tax rates and economic class relationships filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: tax rates and economic class relationships filetype:pdf 2024..2025
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 19 results for query: tax rates and economic class relationships
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 19 results for query: tax rates and economic class relationships
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 19 results for query: tax rates and economic class relationships
+INFO:research_system.orchestrator:Expanded query 'tax rates and economic class relationships' returned 57 results
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 20 results for query: tax rates and economic class relationships statistics
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+statistics&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 19 results for query: tax rates and economic class relationships statistics
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 20 results for query: tax rates and economic class relationships statistics
+INFO:research_system.orchestrator:Expanded query 'tax rates and economic class relationships statistics' returned 59 results
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 20 results for query: tax rates and economic class relationships data
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=tax+rates+and+economic+class+relationships+data&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 18 results for query: tax rates and economic class relationships data
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 20 results for query: tax rates and economic class relationships data
+INFO:research_system.orchestrator:Expanded query 'tax rates and economic class relationships data' returned 58 results
+INFO:research_system.orchestrator:Collecting from free APIs for topic: tax rates and economic class relationships
+INFO:research_system.providers.intent_registry:Intent stats -> providers: ['worldbank', 'oecd', 'imf', 'eurostat', 'ec']
+INFO:research_system.orchestrator:Router selected providers: ['wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall', 'wayback'] for categories: ['general']
+INFO:research_system.collection_enhanced:Executing 10 providers in parallel: ['worldbank', 'oecd', 'imf', 'eurostat', 'ec', 'wikipedia', 'wikidata', 'openalex', 'crossref', 'unpaywall']
+INFO:httpx:HTTP Request: GET https://en.wikipedia.org/w/rest.php/v1/search/title?q=tax+rates+and+economic+class+relationships&limit=10 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?search=tax+rates+and+economic+class+relationships&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://api.worldbank.org/v2/indicator?format=json&per_page=1000&page=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://data.europa.eu/api/hub/search/search?query=tax+rates+and+economic+class+relationships&limit=50&lang=en "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://data.europa.eu/api/hub/search/search?query=tax+rates+and+economic+class+relationships&limit=25&lang=en "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?search=tax+rates+and+economic+class+relationships&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works?query=tax+rates+and+economic+class+relationships&rows=25 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?search=tax+rates+and+economic+class+relationships&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://api.openalex.org/works
+INFO:research_system.providers.openalex:OpenAlex search failed, trying filter fallback
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?filter=title.search%3Atax+rates+and&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow/ALL/
+WARNING:research_system.providers.oecd:OECD dataflows fetch failed: Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/ALL/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?filter=title.search%3Atax+rates+and&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+INFO:httpx:HTTP Request: GET https://api.openalex.org/works?filter=title.search%3Atax+rates+and&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com "HTTP/1.1 400 BAD REQUEST"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://api.openalex.org/works
+WARNING:research_system.providers.openalex:OpenAlex search failed: Client error '400 BAD REQUEST' for url 'https://api.openalex.org/works?filter=title.search%3Atax+rates+and&per_page=10&select=id%2Ctitle%2Cdoi%2Cauthorships%2Chost_venue%2Cpublication_year&mailto=research%40example.com'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://dataservices.imf.org/REST/SDMX_JSON.svc/Dataflow
+WARNING:research_system.providers.imf:IMF dataflows fetch failed: timed out
+INFO:research_system.orchestrator:Collected 0 cards from free APIs
+INFO:research_system.orchestrator:Enriching 204 cards with ENABLE_EXTRACT=True
+INFO:httpx:HTTP Request: GET https://doi.org/robots.txt "HTTP/1.1 301 Moved Permanently"
+INFO:httpx:HTTP Request: GET https://www.doi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.17261/pressacademia.2020.1220 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.pressacademia.org/archives/jbef/v9/i2/7.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.17261/pressacademia.2020.1220 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://www.pressacademia.org/archives/jbef/v9/i2/7.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.17261/pressacademia.2020.1220 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.pressacademia.org/archives/jbef/v9/i2/7.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://dx.doi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://dx.doi.org/10.2139/ssrn.4067568 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.ssrn.com/abstract=4067568 "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4067568 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.3390/su15097146 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.mdpi.com/2071-1050/15/9/7146 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.3390/su15097146, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.3390/su15097146 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.3390/su15097146?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://digitalcommons.ursinus.edu/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://digitalcommons.ursinus.edu/cgi/viewcontent.cgi?article=1064&context=bus_econ_hon "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.clevelandfed.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.clevelandfed.org/-/media/project/clevelandfedtenant/clevelandfedsite/publications/working-papers/2024/wp2427.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.clevelandfed.org/-/media/project/clevelandfedtenant/clevelandfedsite/publications/working-papers/2024/wp2427.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.clevelandfed.org/-/media/project/clevelandfedtenant/clevelandfedsite/publications/working-papers/2024/wp2427.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ctvoices.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ctvoices.org/wp-content/uploads/2020/12/Advancing-Economic-Justice-Through-Tax-Reform-Just-Research.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://ctvoices.org/wp-content/uploads/2020/12/Advancing-Economic-Justice-Through-Tax-Reform-Just-Research.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ctvoices.org/wp-content/uploads/2020/12/Advancing-Economic-Justice-Through-Tax-Reform-Just-Research.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.congress.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.congress.gov/crs-product/R42111 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.dpc.senate.gov/robots.txt "HTTP/1.1 503 Service Unavailable"
+INFO:httpx:HTTP Request: GET https://www.dpc.senate.gov/docs/fs-112-2-158.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.dpc.senate.gov/docs/fs-112-2-158.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dpc.senate.gov/docs/fs-112-2-158.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.finance.senate.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.finance.senate.gov/imo/media/doc/Boushey%20Testimony%20for%20Senate%20Finance.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.finance.senate.gov/imo/media/doc/Boushey%20Testimony%20for%20Senate%20Finance.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.finance.senate.gov/imo/media/doc/Boushey%20Testimony%20for%20Senate%20Finance.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.congress.gov/crs-product/R42111 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/blog/super-rich-pay-effective-tax-rates/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanprogress.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanprogress.org/article/forbes-400-pay-lower-tax-rates-many-ordinary-americans/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.clevelandfed.org/-/media/project/clevelandfedtenant/clevelandfedsite/publications/working-papers/2024/wp2427.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.clevelandfed.org/-/media/project/clevelandfedtenant/clevelandfedsite/publications/working-papers/2024/wp2427.pdf (hash: 732d4355...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://ctvoices.org/wp-content/uploads/2020/12/Advancing-Economic-Justice-Through-Tax-Reform-Just-Research.pdf (hash: faa4a961...)
+WARNING:research_system.tools.fetch:Circuit open for www.congress.gov, skipping
+INFO:httpx:HTTP Request: GET https://sgp.fas.org/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://sgp.fas.org/crs/misc/R42111.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://sgp.fas.org/crs/misc/R42111.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://sgp.fas.org/crs/misc/R42111.pdf "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.congress.gov, skipping
+INFO:httpx:HTTP Request: GET https://equitablegrowth.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://equitablegrowth.org/wp-content/uploads/2021/07/063021-tax-econgrowth-ib.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://equitablegrowth.org/wp-content/uploads/2021/07/063021-tax-econgrowth-ib.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://equitablegrowth.org/wp-content/uploads/2021/07/063021-tax-econgrowth-ib.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://equitablegrowth.org/the-relationship-between-taxation-and-u-s-economic-growth/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ocpp.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ocpp.org/2013/03/26/fs2013032-no-correlation-economic-growth-taxes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/abs/pii/S0047272704001343 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.investopedia.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.investopedia.com/terms/l/laffercurve.asp "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.epi.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.epi.org/publication/ib364-corporate-tax-rates-and-economic-growth/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.cfr.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cfr.org/backgrounder/inequality-and-tax-rates-global-comparison "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/research/all/global/marginal-tax-rates-economic-opportunity/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://budgetlab.yale.edu/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://budgetlab.yale.edu/research/who-paying-their-fair-share-taxes-new-analysis-and-interactive-tool "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/research/all/state/income-taxes-affect-economy/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://siepr.stanford.edu/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://siepr.stanford.edu/publications/policy-brief/how-do-tax-policies-affect-individuals-and-businesses "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.urban.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.brookings.edu/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.brookings.edu/articles/effects-of-income-tax-changes-on-economic-growth/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/reporter/2023number3/how-do-corporate-taxes-affect-economic-activity "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://academic.oup.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://academic.oup.com/ser/article/20/2/539/6500315 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.minneapolisfed.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.minneapolisfed.org/article/2021/first-comes-love-then-come-taxes "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://sgp.fas.org/crs/misc/R42111.pdf (hash: 418338a4...)
+INFO:httpx:HTTP Request: GET https://journals.sagepub.com/robots.txt "HTTP/1.1 200 "
+INFO:httpx:HTTP Request: GET https://journals.sagepub.com/doi/full/10.1177/21582440221114324 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://journals.sagepub.com/doi/full/10.1177/21582440221114324, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1177/21582440221114324 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1177/21582440221114324?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dallasfed.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dallasfed.org/research/economics/2024/1119 "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf (hash: 223b64f3...)
+INFO:httpx:HTTP Request: GET https://www.concordcoalition.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.concordcoalition.org/deep-dives/issue-brief/historical-tax-rates-the-rhetoric-and-reality-of-taxing-the-rich/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://itep.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://itep.org/who-pays-taxes-in-america-in-2024/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanprogress.org/article/5-little-known-facts-about-taxes-and-inequality-in-america/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S0304393223001010 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/data/all/global/tax-burden-on-labor-oecd-2024/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/programs-projects/projects-and-centers/6928-behavioral-responses-taxation-and-inequality-evidence-policy-variation-using-administrative "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://academic.oup.com/ser/article/20/2/539/6500315 "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.minneapolisfed.org/article/2021/first-comes-love-then-come-taxes "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.congress.gov, skipping
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://sgp.fas.org/crs/misc/R42111.pdf (hash: 418338a4...)
+INFO:httpx:HTTP Request: GET https://journals.sagepub.com/doi/full/10.1177/21582440221114324 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://journals.sagepub.com/doi/full/10.1177/21582440221114324, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1177/21582440221114324 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1177/21582440221114324?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://equitablegrowth.org/wp-content/uploads/2021/07/063021-tax-econgrowth-ib.pdf (hash: c4ce750d...)
+INFO:httpx:HTTP Request: GET https://link.springer.com/robots.txt "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://link.springer.com/article/10.1007/s10797-025-09901-z, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.ocpp.org/2013/03/26/fs2013032-no-correlation-economic-growth-taxes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/abs/pii/S0047272704001343 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.epi.org/publication/ib364-corporate-tax-rates-and-economic-growth/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.everycrsreport.com/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.everycrsreport.com/reports/R42729.epub "HTTP/1.1 200 OK"
+ERROR:trafilatura.utils:parsed tree length: 1, wrong data type or not valid HTML
+ERROR:trafilatura.core:empty HTML tree: None
+WARNING:trafilatura.core:discarding data: None
+ERROR:trafilatura.utils:parsed tree length: 1, wrong data type or not valid HTML
+INFO:httpx:HTTP Request: GET https://ourworldindata.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ourworldindata.org/taxation "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf (hash: 223b64f3...)
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S0304393223001010 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/reporter/2023number3/how-do-corporate-taxes-affect-economic-activity "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.tandfonline.com/robots.txt "HTTP/1.1 200 "
+INFO:httpx:HTTP Request: GET https://www.tandfonline.com/doi/full/10.1080/13504851.2023.2208328 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.tandfonline.com/doi/full/10.1080/13504851.2023.2208328, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1080/13504851.2023.2208328 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1080/13504851.2023.2208328?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:research_system.tools.doi_fallback:Attempting to fetch PDF from Unpaywall OA URL: https://publishup.uni-potsdam.de/frontdoor/index/index/docId/63238
+WARNING:research_system.tools.fetch:Circuit open for academic.oup.com, skipping
+INFO:httpx:HTTP Request: GET https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://static.aviva.io/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://static.aviva.io/content/dam/document-library/adviser/adviserplatform/lf01115c.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://static.aviva.io/content/dam/document-library/adviser/adviserplatform/lf01115c.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://static.aviva.io/content/dam/document-library/adviser/adviserplatform/lf01115c.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://assets-eu-01.kc-usercontent.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://assets-eu-01.kc-usercontent.com/220a4c02-94bf-019b-9bac-51cdc7bf0d99/4a4ef5a9-ca38-4e4b-808c-5dd9f7343e0b/CTA-Tax-Tables-2024_F3.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://assets-eu-01.kc-usercontent.com/220a4c02-94bf-019b-9bac-51cdc7bf0d99/4a4ef5a9-ca38-4e4b-808c-5dd9f7343e0b/CTA-Tax-Tables-2024_F3.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://assets-eu-01.kc-usercontent.com/220a4c02-94bf-019b-9bac-51cdc7bf0d99/4a4ef5a9-ca38-4e4b-808c-5dd9f7343e0b/CTA-Tax-Tables-2024_F3.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.irs.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.irs.gov/filing/federal-income-tax-rates-and-brackets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nerdwallet.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nerdwallet.com/article/taxes/federal-income-tax-brackets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/data/all/federal/2025-tax-brackets/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf (hash: 21561ff3...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://static.aviva.io/content/dam/document-library/adviser/adviserplatform/lf01115c.pdf (hash: a2f32024...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://assets-eu-01.kc-usercontent.com/220a4c02-94bf-019b-9bac-51cdc7bf0d99/4a4ef5a9-ca38-4e4b-808c-5dd9f7343e0b/CTA-Tax-Tables-2024_F3.pdf (hash: 4ca14727...)
+INFO:httpx:HTTP Request: GET https://www.jec.senate.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.jec.senate.gov/public/index.cfm/democrats/2024/8/how-project-2025-s-economic-policies-hurt-families "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.pewresearch.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.pewresearch.org/short-reads/2023/04/18/who-pays-and-doesnt-pay-federal-income-taxes-in-the-us/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://finance.yahoo.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://finance.yahoo.com/news/asked-chatgpt-happen-upper-class-120316090.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.gobankingrates.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.gobankingrates.com/taxes/tax-laws/billionaires-vs-middle-class-america-who-pays-more-in-taxes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oxfamamerica.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oxfamamerica.org/explore/stories/do-the-rich-pay-their-fair-share/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ourworldindata.org/taxation "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.investopedia.com/terms/m/marginaltaxrate.asp "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/research/all/eu/laffer-curve-statutory-effective-tax-rates-europe/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.epi.org/publication/ib364-corporate-tax-rates-and-economic-growth/ "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.everycrsreport.com/reports/R42729.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.toolazytostudy.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.toolazytostudy.com/economics-notes/relationship-between-taxes-and-income "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/1997/01/taxation-and-economic-performance_g17a13cb/668811115745.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/1997/01/taxation-and-economic-performance_g17a13cb/668811115745.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/1997/01/taxation-and-economic-performance_g17a13cb/668811115745.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/data/all/federal/historical-income-tax-rates-brackets/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ideas.repec.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ideas.repec.org/a/bla/coecpo/v17y1999i2p177-188.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxpolicycenter.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxpolicycenter.org/statistics/historical-average-federal-tax-rates-all-households "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf (hash: 21561ff3...)
+WARNING:research_system.tools.fetch:Circuit open for www.epi.org, skipping
+INFO:httpx:HTTP Request: GET https://www.ntu.org/robots.txt "HTTP/1.1 302 Redirect"
+INFO:httpx:HTTP Request: GET http://www.ntu.org/search/pnf "HTTP/1.1 302 Found "
+INFO:httpx:HTTP Request: GET https://www.ntu.org/search/pnf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ntu.org/foundation/tax-page/who-pays-income-taxes "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/data/all/federal/latest-federal-income-tax-data-2024/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.wolterskluwer.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.wolterskluwer.com/en/expert-insights/whole-ball-of-tax-historical-income-tax-rates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ourworldindata.org/taxation "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://taxfoundation.org/data/all/federal/latest-federal-income-tax-data-2025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ourworldindata.org/taxation "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for academic.oup.com, skipping
+INFO:httpx:HTTP Request: GET https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://home.treasury.gov/system/files/131/Graph-Distributional-Analysis-2024-11162023.pdf (hash: 21561ff3...)
+WARNING:research_system.tools.fetch:Circuit open for www.epi.org, skipping
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/1997/01/taxation-and-economic-performance_g17a13cb/668811115745.pdf (hash: b3b68afe...)
+INFO:httpx:HTTP Request: GET https://www.nber.org/reporter/2023number3/how-do-corporate-taxes-affect-economic-activity "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.imf.org/external/pubs/ft/issues/issues27/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://itep.org/whopays-7th-edition/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://doi.org/10.1093/ser/mwab061 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://academic.oup.com/ser/article/20/2/539/6500315 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/10.1093/ser/mwab061, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1093/ser/mwab061 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1093/ser/mwab061?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://doi.org/10.17261/pressacademia.2020.1220 (hash: b3ce0e62...)
+INFO:httpx:HTTP Request: GET https://doi.org/https://doi.org/10.1080/13501763.2021.1993313 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.tandfonline.com/doi/full/10.1080/13501763.2021.1993313 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://doi.org/https://doi.org/10.1080/13501763.2021.1993313, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1080/13501763.2021.1993313 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1080/13501763.2021.1993313?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dallasfed.org/~/media/documents/research/papers/2025/wp2514.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.dallasfed.org/~/media/documents/research/papers/2025/wp2514.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dallasfed.org/~/media/documents/research/papers/2025/wp2514.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/taxation-and-inequality_b7cf450c/8dbf9a62-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/taxation-and-inequality_b7cf450c/8dbf9a62-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/taxation-and-inequality_b7cf450c/8dbf9a62-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://digitalcommons.ursinus.edu/cgi/viewcontent.cgi?article=1064&context=bus_econ_hon "HTTP/1.1 403 Forbidden"
+WARNING:research_system.tools.fetch:Circuit open for www.congress.gov, skipping
+INFO:httpx:HTTP Request: GET https://iqconnect.house.gov/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://iqconnect.house.gov/iqextranet/iqClickTrk.aspx?&cid=AZ06DS&crop=0000.0000.0000.0000&report_id=&redirect=https%3A%2F%2Fmanhattan.institute%2Farticle%2Fthe-limits-of-taxing-the-rich&redir_log=049778469919457 "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://manhattan.institute/article/the-limits-of-taxing-the-rich "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pmc.ncbi.nlm.nih.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pmc.ncbi.nlm.nih.gov/articles/PMC8357169/ "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.dallasfed.org/~/media/documents/research/papers/2025/wp2514.pdf (hash: 5c809ae5...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/taxation-and-inequality_b7cf450c/8dbf9a62-en.pdf (hash: 4943e600...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://ctvoices.org/wp-content/uploads/2020/12/Advancing-Economic-Justice-Through-Tax-Reform-Just-Research.pdf (hash: faa4a961...)
+WARNING:research_system.tools.fetch:Circuit open for www.congress.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for academic.oup.com, skipping
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf (hash: 223b64f3...)
+INFO:httpx:HTTP Request: GET https://www.americanprogress.org/article/forbes-400-pay-lower-tax-rates-many-ordinary-americans/ "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://sgp.fas.org/crs/misc/R42111.pdf (hash: 418338a4...)
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/abs/pii/S0047272704001343 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://siepr.stanford.edu/publications/policy-brief/how-do-tax-policies-affect-individuals-and-businesses "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.minneapolisfed.org/article/2021/first-comes-love-then-come-taxes "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.epi.org, skipping
+INFO:httpx:HTTP Request: GET https://www.ocpp.org/2013/03/26/fs2013032-no-correlation-economic-growth-taxes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/reporter/2023number3/how-do-corporate-taxes-affect-economic-activity "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://equitablegrowth.org/wp-content/uploads/2021/07/063021-tax-econgrowth-ib.pdf (hash: c4ce750d...)
+WARNING:research_system.tools.fetch:Circuit open for academic.oup.com, skipping
+INFO:httpx:HTTP Request: GET https://www.dallasfed.org/research/economics/2024/1119 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.minneapolisfed.org/article/2021/first-comes-love-then-come-taxes "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://sgp.fas.org/crs/misc/R42111.pdf (hash: 418338a4...)
+INFO:httpx:HTTP Request: GET https://www.americanprogress.org/article/5-little-known-facts-about-taxes-and-inequality-in-america/ "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf (hash: 223b64f3...)
+INFO:httpx:HTTP Request: GET https://www.ocpp.org/2013/03/26/fs2013032-no-correlation-economic-growth-taxes/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/reporter/2023number3/how-do-corporate-taxes-affect-economic-activity "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cbpp.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cbpp.org/research/federal-tax/after-decades-of-costly-regressive-and-ineffective-tax-cuts-a-new-course-is "HTTP/1.1 403 Forbidden"
+WARNING:research_system.tools.fetch:Circuit open for www.congress.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for academic.oup.com, skipping
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://sgp.fas.org/crs/misc/R42111.pdf (hash: 418338a4...)
+WARNING:research_system.tools.fetch:Circuit open for www.epi.org, skipping
+INFO:httpx:HTTP Request: GET https://journals.sagepub.com/doi/full/10.1177/21582440221114324 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://journals.sagepub.com/doi/full/10.1177/21582440221114324, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1177/21582440221114324 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1177/21582440221114324?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.urban.org/sites/default/files/publication/79201/2000714-The-Relationship-Between-Taxes-and-Growth-at-the-State-Level-New-Evidence.pdf (hash: 223b64f3...)
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/abs/pii/S0047272704001343 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nber.org/reporter/2023number3/how-do-corporate-taxes-affect-economic-activity "HTTP/1.1 200 OK"
+ERROR:trafilatura.utils:parsed tree length: 1, wrong data type or not valid HTML
+ERROR:trafilatura.core:empty HTML tree: None
+WARNING:trafilatura.core:discarding data: None
+ERROR:trafilatura.utils:parsed tree length: 1, wrong data type or not valid HTML
+INFO:httpx:HTTP Request: GET https://ourworldindata.org/taxation "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ocpp.org/2013/03/26/fs2013032-no-correlation-economic-growth-taxes/ "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://link.springer.com/article/10.1007/s10797-025-09901-z, trying DOI/mirror fallback
+INFO:httpx:HTTP Request: GET https://www.tandfonline.com/doi/full/10.1080/13504851.2023.2208328 "HTTP/1.1 403 Forbidden"
+INFO:research_system.tools.fetch:Got 403 for https://www.tandfonline.com/doi/full/10.1080/13504851.2023.2208328, trying DOI metadata fallback
+INFO:httpx:HTTP Request: GET https://api.crossref.org/works/10.1080/13504851.2023.2208328 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.unpaywall.org/v2/10.1080/13504851.2023.2208328?email=ci%40example.org "HTTP/1.1 200 OK"
+INFO:research_system.tools.doi_fallback:Attempting to fetch PDF from Unpaywall OA URL: https://publishup.uni-potsdam.de/frontdoor/index/index/docId/63238
+INFO:httpx:HTTP Request: GET https://www.sciencedirect.com/science/article/pii/S0304393223001010 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cbo.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cbo.gov/publication/58781 "HTTP/1.1 200 OK"
+INFO:research_system.enrich.ensure_quotes:Quote rescue: 204 primary cards need quotes
+INFO:research_system.enrich.ensure_quotes:Quote rescue complete: added 193 quotes
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 60 cards, 20 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 0: domain=senate.gov, text='Project 2025 would raise taxes on the working class and provide corporate welfare for the rich by: S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'project would raise taxes on the working class and provide corporate welfare for the rich by shiftin...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 12: domain=congress.gov, text='Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Research Service https://c...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'economic effects of the tax cuts and jobs act april congressional research service https crsreports...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 16: domain=taxfoundation.org, text='For example, Treasury estimates that the average tax unit in the top 0.0002 percent pays $19.8 milli...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'for example treasury estimates that the average tax unit in the top percent pays million in us feder...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 17: domain=equitablegrowth.org, text='economic growth 10 Economic Policy Institute, 2013), available at https://www....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'economic growth economic policy institute available at https www...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 21: domain=dallasfed.org, text='After 2001 and 2003 reforms, the average tax rate for the median-income married couple decreased fro...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'after and reforms the average tax rate for the median-income married couple decreased from...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.451 0.349 0.245 0.309
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.451 1.000 0.340 0.316 0.357
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.349 0.340 1.000 0.173 0.318
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.245 0.316 0.173 1.000 0.154
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.309 0.357 0.318 0.154 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.349 between cards 0 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.309 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.322 between cards 0 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 0 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.371 between cards 0 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 0 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 0 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.321 between cards 0 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.365 between cards 0 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.302 between cards 0 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 1 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.316 between cards 1 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 1 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.325 between cards 1 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.331 between cards 1 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 1 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.361 between cards 1 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.347 between cards 1 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.354 between cards 1 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 1 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.317 between cards 1 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 2 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.314 between cards 2 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.312 between cards 2 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.386 between cards 2 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 3 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 3 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.319 between cards 4 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 4 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.367 between cards 5 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.373 between cards 6 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.322 between cards 6 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 6 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.342 between cards 7 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 7 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.376 between cards 8 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.388 between cards 9 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.310 between cards 9 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.342 between cards 9 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 9 and 18
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.384 between cards 9 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.322 between cards 10 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 10 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.303 between cards 11 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 11 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.360 between cards 11 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.335 between cards 12 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.309 between cards 13 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 13 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.370 between cards 14 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.309 between cards 14 and 17
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 15 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.320 between cards 15 and 19
+INFO:research_system.triangulation.paraphrase_cluster:Found 92 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,1): similarity=0.451
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Project 2025 would raise taxes on the working class and provide corporate welfar...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,11): similarity=0.522
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Project 2025 would raise taxes on the working class and provide corporate welfar...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 11: As the 2020 campaign for the presidency of the United States gets underway, cand...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,18): similarity=0.405
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Project 2025 would raise taxes on the working class and provide corporate welfar...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 18: The 2017 Trump tax cuts again lowered individual income tax rates (including the...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,8): similarity=0.494
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: Our results indicate that, under current law in 2026 after the expiration of TCJ...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,10): similarity=0.455
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 10: [EPUB] An Economic Analysis of the Top Tax Rates Since 1945 (Updated)...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 2 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 4: 19 members from domains {'senate.gov', 'pewresearch.org', 'nber.org', 'yale.edu', 'investopedia.com', 'dallasfed.org', 'treasury.gov', 'cbo.gov', 'cbpp.org', 'cfr.org', 'congress.gov', 'equitablegrowth.org', 'repec.org', 'everycrsreport.com', 'concordcoalition.org', 'taxfoundation.org', 'epi.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 19 cards from ['cbo.gov', 'cbpp.org', 'cfr.org', 'concordcoalition.org', 'congress.gov', 'dallasfed.org', 'epi.org', 'equitablegrowth.org', 'everycrsreport.com', 'investopedia.com', 'nber.org', 'pewresearch.org', 'repec.org', 'senate.gov', 'taxfoundation.org', 'treasury.gov', 'yale.edu']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Project 2025 would raise taxes on the working class and provide corporate welfare for the rich by: S...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 60 total cards
+INFO:research_system.triangulation.post:Cluster 0: 19 cards from 17 domains ['cbo.gov', 'cbpp.org', 'cfr.org']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.triangulation.post:Structured triangle: gdp_growth @ unknown with 11 cards from {'fas.org', 'sagepub.com', 'sciencedirect.com', 'ocpp.org', 'congress.gov', 'doi.org', 'equitablegrowth.org', 'taxfoundation.org', 'oecd.org', 'springer.com'}
+INFO:research_system.triangulation.post:Structured triangle: gdp_growth @ 1947 with 2 cards from {'equitablegrowth.org', 'epi.org'}
+INFO:research_system.orchestrator:Primary share 19.35% < 50%, running backfill
+INFO:research_system.enrich.primary_fill:Found 2 families needing primary sources
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=gdp_growth+1947+world+site%3Aiata.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 2 results for query: gdp_growth 1947 world site:iata.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: gdp_growth 1947 world site:iata.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: gdp_growth 1947 world site:iata.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=gdp_growth+1947+world+site%3Aworldbank.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: gdp_growth 1947 world site:worldbank.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: gdp_growth 1947 world site:worldbank.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: gdp_growth 1947 world site:worldbank.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=gdp_growth+1947+world+site%3Asec.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: gdp_growth 1947 world site:sec.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: gdp_growth 1947 world site:sec.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: gdp_growth 1947 world site:sec.gov
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=gdp_growth+1947+world+site%3Aunwto.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: gdp_growth 1947 world site:unwto.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 1 results for query: gdp_growth 1947 world site:unwto.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 1 results for query: gdp_growth 1947 world site:unwto.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=gdp_growth+1947+world+site%3Aun.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: gdp_growth 1947 world site:un.org
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: gdp_growth 1947 world site:un.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: gdp_growth 1947 world site:un.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=united+states%7Cgdp_growth+site%3Aiata.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: united states|gdp_growth site:iata.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: united states|gdp_growth site:iata.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: united states|gdp_growth site:iata.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=united+states%7Cgdp_growth+site%3Aworldbank.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: united states|gdp_growth site:worldbank.org
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: united states|gdp_growth site:worldbank.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: united states|gdp_growth site:worldbank.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=united+states%7Cgdp_growth+site%3Asec.gov&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: united states|gdp_growth site:sec.gov
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: united states|gdp_growth site:sec.gov
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: united states|gdp_growth site:sec.gov
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=united+states%7Cgdp_growth+site%3Aunwto.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: united states|gdp_growth site:unwto.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: united states|gdp_growth site:unwto.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: united states|gdp_growth site:unwto.org
+INFO:research_system.tools.search_serpapi:SERPAPI_SKIPPED_BUDGET
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=united+states%7Cgdp_growth+site%3Aun.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: united states|gdp_growth site:un.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: united states|gdp_growth site:un.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: united states|gdp_growth site:un.org
+INFO:research_system.enrich.primary_fill:Added 0 primary source cards across families
+INFO:research_system.orchestrator_adaptive:Adaptive domain balance: cap=0.25 kept=60 from 60 cards across 39 domains
+INFO:research_system.orchestrator:Standard domain cap 25% applied
+INFO:research_system.orchestrator_adaptive:Adaptive credibility floor: filtered 26 low-cred singletons, retained 2 whitelisted/high-cred singletons
+INFO:research_system.orchestrator:Adaptive credibility floor: filtered 26 low-cred sources, retained {'nih.gov', 'imf.org'}
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 34 cards, 10 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=senate.gov, text='Project 2025 would raise taxes on the working class and provide corporate welfare for the rich by: S...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'project would raise taxes on the working class and provide corporate welfare for the rich by shiftin...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=congress.gov, text='Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Research Service https://c...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'economic effects of the tax cuts and jobs act april congressional research service https crsreports...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 15: domain=taxfoundation.org, text='<strong>The personal exemption for 2025 remains at $0</strong> (eliminating the personal exemption w...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'strong the personal exemption for remains at strong eliminating the personal exemption was part of t...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 16: domain=taxfoundation.org, text='For example, Treasury estimates that the average tax unit in the top 0.0002 percent pays $19.8 milli...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'for example treasury estimates that the average tax unit in the top percent pays million in us feder...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 19: domain=taxfoundation.org, text='8 percent in 2023....'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'percent in...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.451 0.292 0.349 0.208
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.451 1.000 0.454 0.340 0.123
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.292 0.454 1.000 0.272 0.122
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.349 0.340 0.272 1.000 0.312
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.208 0.123 0.122 0.312 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.349 between cards 0 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.309 between cards 0 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.365 between cards 0 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 0 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 0 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.340 between cards 1 and 3
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.316 between cards 1 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 1 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.368 between cards 1 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 2 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.338 between cards 2 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 2 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.312 between cards 3 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.318 between cards 3 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 5 and 8
+INFO:research_system.triangulation.paraphrase_cluster:Found 14 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,1): similarity=0.451
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: Project 2025 would raise taxes on the working class and provide corporate welfar...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,2): similarity=0.454
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: <strong>The personal exemption for 2025 remains at $0</strong> (eliminating the ...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,8): similarity=0.455
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: [EPUB] An Economic Analysis of the Top Tax Rates Since 1945 (Updated)...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,9): similarity=0.433
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Economic Effects of the Tax Cuts and Jobs Act April 7, 2025 Congressional Resear...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 9: This paper provides preliminary evidence on behavioral responses to taxation aro...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (2,7): similarity=0.432
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: <strong>The personal exemption for 2025 remains at $0</strong> (eliminating the ...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: by LE Jackson · 2025 · Cited by 8 — We propose a method to decompose changes in ...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 3 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 6: 8 members from domains {'senate.gov', 'nber.org', 'dallasfed.org', 'congress.gov', 'everycrsreport.com', 'taxfoundation.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 8 cards from ['congress.gov', 'dallasfed.org', 'everycrsreport.com', 'nber.org', 'senate.gov', 'taxfoundation.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: [EPUB] An Economic Analysis of the Top Tax Rates Since 1945 (Updated)...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 34 total cards
+INFO:research_system.triangulation.post:Cluster 0: 8 cards from 6 domains ['congress.gov', 'dallasfed.org', 'everycrsreport.com']...
+INFO:research_system.triangulation.post:  -> ACCEPTED
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.triangulation.post:Structured triangle: gdp_growth @ unknown with 7 cards from {'sciencedirect.com', 'congress.gov', 'equitablegrowth.org', 'doi.org', 'taxfoundation.org', 'oecd.org'}
+INFO:research_system.orchestrator:Quality gates passed after 0 backfill attempts
+INFO:research_system.tools.evidence_io:JSONL write complete: 34 successful, 0 failed
+INFO:research_system.orchestrator:Evidence write: ok=34 bad=0
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.orchestrator:Selected report tier: brief (confidence: 0.47, Low confidence (0.47))
+INFO:research_system.strict.adaptive_guard:Low supply detected: domains=0, credible=34, error_rate=0.00
+WARNING:research_system.orchestrator:Strict checks relaxed due to supply constraints: ['TRIANGULATED_COUNT(0) < 8', 'PRIMARY_SHARE(26%) < 30%', 'DOMAINS(0) < 3 minimum', 'CRITICAL: Single-source evidence']
+INFO:httpx:HTTP Request: HEAD https://www.congress.gov/crs-product/R42111 "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://www.congress.gov/crs-product/R42111
+INFO:httpx:HTTP Request: HEAD https://www.jec.senate.gov/public/index.cfm/democrats/2024/8/how-project-2025-s-economic-policies-hurt-families "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.congress.gov/crs_external_products/R/PDF/R48485/R48485.2.pdf "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://www.congress.gov/crs_external_products/R/PDF/R48485/R48485.2.pdf
+INFO:httpx:HTTP Request: HEAD https://pmc.ncbi.nlm.nih.gov/articles/PMC8357169/ "HTTP/1.1 403 Forbidden"
+INFO:research_system.orchestrator:Paywall/blocked domain (403): https://pmc.ncbi.nlm.nih.gov/articles/PMC8357169/
+INFO:httpx:HTTP Request: HEAD https://www.dpc.senate.gov/docs/fs-112-2-158.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.finance.senate.gov/imo/media/doc/Boushey%20Testimony%20for%20Senate%20Finance.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/taxation-and-inequality_b7cf450c/8dbf9a62-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/1997/01/taxation-and-economic-performance_g17a13cb/668811115745.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.imf.org/external/pubs/ft/issues/issues27/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://doi.org/10.17261/pressacademia.2020.1220 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: HEAD https://www.pressacademia.org/archives/jbef/v9/i2/7.pdf "HTTP/1.1 200 OK"
+WARNING:research_system.orchestrator:STRICT MODE: Degrading to insufficient evidence report (post-report)
+
+Strict mode: Strict mode post-report quality gates not met - see insufficient_evidence_report.md

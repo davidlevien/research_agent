@@ -133,13 +133,14 @@ def source_quality(cards: List) -> List[Dict]:
     return rows
 
 
-def triangulation_rate_from_clusters(clusters: List[Dict]) -> float:
+def triangulation_rate_from_clusters(clusters: List[Dict], total_cards: int = None) -> float:
     """
     Calculate the triangulation rate from paraphrase clusters.
-    This is the fraction of cards that belong to clusters with size >= 2.
+    This is the fraction of ALL cards that belong to clusters with size >= 2.
     
     Args:
         clusters: List of cluster dicts with 'size' or 'indices' field
+        total_cards: Total number of cards (if None, uses sum of cluster sizes - INCORRECT)
         
     Returns:
         Triangulation rate [0, 1]
@@ -147,15 +148,23 @@ def triangulation_rate_from_clusters(clusters: List[Dict]) -> float:
     if not clusters:
         return 0.0
     
-    # Count cards in multi-card clusters
-    total_cards = 0
+    # Count cards in multi-card clusters (triangulated)
     triangulated_cards = 0
     
     for cluster in clusters:
         size = cluster.get('size', 0) or len(cluster.get('indices', []))
-        total_cards += size
-        if size >= 2:
+        # Only clusters with 2+ cards from different sources count as triangulated
+        if size >= 2 and len(cluster.get('domains', [])) >= 2:
             triangulated_cards += size
+    
+    # If total_cards not provided, we can't calculate correctly
+    if total_cards is None:
+        # This is the OLD BROKEN behavior - should be avoided
+        total_in_clusters = sum(
+            cluster.get('size', 0) or len(cluster.get('indices', []))
+            for cluster in clusters
+        )
+        return triangulated_cards / max(total_in_clusters, 1)
     
     return triangulated_cards / max(total_cards, 1)
 
