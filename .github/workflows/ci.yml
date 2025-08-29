@@ -76,3 +76,6 @@ jobs:
     - name: Run triangulation flag tests
       run: |
         PYTHONPATH=. pytest tests/test_triangulation_flag.py -q --tb=no
+    - name: Run output directory tests
+      run: |
+        PYTHONPATH=. pytest tests/test_output_directory.py -q --tb=no

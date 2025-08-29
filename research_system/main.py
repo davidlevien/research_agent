@@ -36,10 +36,29 @@ def main():
     # Validate env per blueprint (provider gating)
     settings = Settings()  # instantiation triggers validators
     
+    # Create a proper subdirectory for this run
+    from datetime import datetime
+    import re
+    
+    # Generate subdirectory name from topic and timestamp
+    topic_slug = re.sub(r'[^\w\s-]', '', args.topic.lower())
+    topic_slug = re.sub(r'[\s_-]+', '_', topic_slug)[:50]  # Limit length
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Create subdirectory path
+    base_output_dir = Path(args.output_dir)
+    run_output_dir = base_output_dir / f"{topic_slug}_{timestamp}"
+    
+    # Ensure base directory exists
+    base_output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Log where outputs will be saved
+    print(f"Output directory: {run_output_dir}", file=sys.stderr)
+    
     s = OrchestratorSettings(
         topic=args.topic,
         depth=args.depth,
-        output_dir=Path(args.output_dir),
+        output_dir=run_output_dir,  # Use the subdirectory
         strict=args.strict,
         resume=args.resume,
         verbose=args.verbose,
