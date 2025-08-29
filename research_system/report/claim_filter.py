@@ -176,7 +176,13 @@ def filter_key_findings(
 
 def extract_key_numbers(cards: List[Any], topic: str, max_numbers: int = 10) -> List[str]:
     """
-    Extract key numeric facts from evidence cards.
+    Extract key numeric facts from evidence cards with strict validation.
+    
+    Only includes numbers that:
+    - Have clear units (%, USD, etc.)
+    - Have time context (year/period)
+    - Have geographic context
+    - Come from triangulated sources
     
     Args:
         cards: List of evidence cards
@@ -184,50 +190,99 @@ def extract_key_numbers(cards: List[Any], topic: str, max_numbers: int = 10) -> 
         max_numbers: Maximum number of key numbers to extract
         
     Returns:
-        List of formatted key numbers with citations
+        List of formatted key numbers with context
     """
+    # Import claim schema
+    try:
+        from research_system.reporting.claim_schema import (
+            extract_claims_from_cards, 
+            is_publishable_number,
+            Claim
+        )
+    except ImportError:
+        logger.warning("Claim schema not available, using fallback")
+        return _extract_key_numbers_fallback(cards, topic, max_numbers)
+    
+    # Extract structured claims
+    claims = extract_claims_from_cards(cards, topic)
+    
+    # Filter for publishable numbers only
+    valid_numbers = [c for c in claims if is_publishable_number(c)]
+    
+    # Sort by confidence and relevance
+    valid_numbers.sort(key=lambda c: (c.confidence, c.triangulated), reverse=True)
+    
+    # Format results with full context
+    results = []
+    seen_metrics = set()
+    
+    for claim in valid_numbers[:max_numbers]:
+        # Deduplicate by metric+geo+time
+        key = (claim.metric, claim.geo, claim.time)
+        if key in seen_metrics:
+            continue
+        seen_metrics.add(key)
+        
+        # Format with unit, geo, and time
+        if claim.unit in ["$", "€", "£"]:
+            value_str = f"{claim.unit}{claim.value:,.0f}"
+        elif claim.unit == "%":
+            value_str = f"{claim.value:.1f}%"
+        elif claim.unit == "pp":
+            value_str = f"{claim.value:.1f}pp"
+        else:
+            value_str = f"{claim.value:g} {claim.unit}"
+        
+        # Build formatted string with context
+        formatted = f"**{value_str}** — {claim.metric} ({claim.geo}, {claim.time})"
+        
+        # Add source count if triangulated
+        if claim.triangulated:
+            source_count = len(set(s.domain for s in claim.sources))
+            formatted += f" [{source_count} sources]"
+        
+        results.append(formatted)
+    
+    # Return empty list if no valid numbers found
+    # This allows the template guard to skip the section
+    return results
+
+
+def _extract_key_numbers_fallback(cards: List[Any], topic: str, max_numbers: int) -> List[str]:
+    """Fallback extraction when claim schema is not available."""
     numeric_claims = []
+    
+    # Pattern to extract number with unit and context
+    CONTEXT_PATTERN = re.compile(
+        r'(\d+(?:\.\d+)?)\s*(%|percent|pp|USD|\$|€|billion|million|trillion)'
+        r'[^.]*?'
+        r'\b(19|20)\d{2}\b'
+    )
     
     for card in cards:
         # Get text content
-        if hasattr(card, 'claim'):
-            text = card.claim
-        elif hasattr(card, 'snippet'):
-            text = card.snippet
-        elif isinstance(card, dict):
-            text = card.get('claim', card.get('snippet', ''))
-        else:
-            continue
-        
+        text = getattr(card, 'claim', '') or getattr(card, 'snippet', '')
         if not text:
             continue
         
-        # Split into sentences
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        
-        for sent in sentences:
-            if is_numeric_claim(sent) and is_on_topic(sent, topic):
-                # Count numbers in sentence for ranking
-                num_count = len(NUMERIC_PATTERN.findall(sent))
-                numeric_claims.append((num_count, sent.strip(), card))
+        # Look for numbers with context
+        matches = CONTEXT_PATTERN.findall(text)
+        for match in matches:
+            if is_on_topic(text, topic):
+                numeric_claims.append((text.strip(), card))
     
-    # Sort by number count (more numbers = likely more specific)
-    numeric_claims.sort(reverse=True, key=lambda x: x[0])
+    # Return empty if insufficient quality
+    if len(numeric_claims) < 2:
+        return []
     
-    # Format top claims
+    # Format with basic deduplication
     results = []
     seen = set()
     
-    for _, sent, card in numeric_claims:
-        # Deduplicate
-        sent_key = sent[:100].lower()
-        if sent_key in seen:
-            continue
-        seen.add(sent_key)
-        
-        results.append((sent, card))
-        
-        if len(results) >= max_numbers:
-            break
+    for text, card in numeric_claims[:max_numbers]:
+        key = text[:100].lower()
+        if key not in seen:
+            seen.add(key)
+            results.append(f"- {text}")
     
     return results

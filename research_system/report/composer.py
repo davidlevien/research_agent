@@ -219,20 +219,38 @@ def compose_report(topic: str, cards, tri: dict, metrics: dict, *, max_findings:
     # 7) Compose markdown
     md = []
     md.append(f"# Final Report: {topic}\n")
+    
+    # Executive Summary - always include
     md.append("## Executive Summary")
-    md.extend([f"- {b}" for b in summary])
+    if summary and any(summary):
+        md.extend([f"- {b}" for b in summary if b])
+    else:
+        md.append("- Insufficient high-quality evidence to generate executive summary")
 
-    md.append("\n## Key Findings")
-    md.extend(findings)
+    # Key Findings - only include if we have valid findings
+    if findings and any(f for f in findings if f and not f.startswith("- N/A")):
+        md.append("\n## Key Findings")
+        md.extend([f for f in findings if f and not f.startswith("- N/A")])
+    else:
+        md.append("\n## Key Findings")
+        md.append("No publishable findings met evidence thresholds for this query.")
 
-    md.append("\n## Key Numbers")
-    md.extend(key_numbers if key_numbers else ["- No robust, directly quotable numbers extracted."])
+    # Key Numbers - only include if we have actual numbers
+    if key_numbers and len(key_numbers) > 0:
+        md.append("\n## Key Numbers")
+        md.extend(key_numbers)
+    # Skip Key Numbers section entirely if no valid numbers
 
-    md.append("\n## Contradictions & Uncertainties")
-    md.extend(contra)
+    # Contradictions - only include if found
+    if contra and any(c for c in contra if c and not c.startswith("- None")):
+        md.append("\n## Contradictions & Uncertainties")
+        md.extend([c for c in contra if c and not c.startswith("- None")])
+    # Skip contradictions section if none found
 
-    md.append("\n## Outlook (Next 4–6 weeks)")
-    md.extend(outlook)
+    # Outlook - only include if meaningful
+    if outlook and any(o for o in outlook if o and len(o) > 20):
+        md.append("\n## Outlook (Next 4–6 weeks)")
+        md.extend([o for o in outlook if o and len(o) > 20])
 
     md.append("\n## Methodology (Brief)")
     md.append("- Multi-provider search with domain caps; triangulation favors multi-domain agreement.")

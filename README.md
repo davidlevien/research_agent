@@ -1,8 +1,8 @@
-# Research System v8.10.1 - Universal Research Intelligence Platform
+# Research System v8.11.0 - Universal Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.10.1's fixed timing management and improved test coverage.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.11.0's comprehensive quality improvements preventing nonsense reports and ensuring only validated findings are published.
 
-**Status**: ✅ Production-ready with circuit breakers, evidence validation, and triangulation safety
+**Status**: ✅ Production-ready with strict quality gates, source-aware clustering, and validated claim extraction
 
 ## 🚀 Quick Start
 
@@ -264,6 +264,66 @@ pytest tests/test_evidence_repair.py
 - Evidence repair validation
 - Lazy Settings initialization for proper env var loading
 - CONTACT_EMAIL compliance for API requirements
+
+## 🆕 v8.11.0 Comprehensive Quality Improvements
+
+### 1. Quality Gate Logic Fix
+- **Never emit Final Report when gates fail**: Fixed critical logic flaw where both insufficient evidence report AND final report were generated
+- **Single source of truth**: When quality gates fail (primary_share < 40% or triangulation < 25%), ONLY insufficient evidence report is created
+- **Early return logic**: Prevents downstream report generation when evidence quality is insufficient
+
+### 2. Safe Datetime Formatting
+- **New utility module**: `utils/datetime_safe.py` handles all datetime formatting robustly
+- **Handles all input types**: float (epoch), datetime objects, None, strings
+- **No more crashes**: Prevents `'float' object has no attribute 'strftime'` errors
+- **Duration formatting**: Human-readable duration strings (e.g., "5m 23s", "1h 15m")
+
+### 3. Strict Claim Schema & Validation
+- **New claim schema**: `reporting/claim_schema.py` enforces structured claim validation
+- **Required fields for numbers**: Must have value, unit, geography, time period, and definition
+- **Source classification**: Official stats, peer review, gov memo, think tank, media, blog
+- **Partisan detection**: Automatically tags claims by source alignment
+- **Confidence scoring**: Claims scored by triangulation, source quality, and credibility
+
+### 4. Enhanced Key Numbers Extraction
+- **Context required**: Numbers must have units, time period, and geographic context
+- **Triangulation required**: Only numbers from 2+ independent sources
+- **Proper formatting**: "**25.1%** — effective federal tax rate (US, 2023) [2 sources]"
+- **No placeholders**: Returns empty list if no valid numbers found (allows template guards)
+
+### 5. Template Guards for Report Sections
+- **No empty sections**: Sections only rendered if they have valid content
+- **No placeholder text**: Removes "N/A", "No robust numbers", etc.
+- **Conditional rendering**: Key Numbers section skipped entirely if no valid numbers
+- **Meaningful fallbacks**: "No publishable findings met evidence thresholds" when appropriate
+
+### 6. Source-Aware Clustering
+- **Prevents mixing**: Statistical sources not mixed with advocacy/opinion sources
+- **Claim type classification**: numeric_measure, mechanism_or_theory, opinion_advocacy, news_context
+- **Source compatibility**: Official stats don't cluster with think tanks for numeric claims
+- **Stricter thresholds**: 0.62 similarity for numeric claims (vs 0.40 for others)
+- **Quality scoring**: Clusters ranked by domain diversity, source quality, triangulation
+
+### 7. Comprehensive Test Suite
+- **10 focused tests**: Cover all critical paths and edge cases
+- **Quality gate test**: Verifies no final report when metrics fail
+- **Datetime safety test**: Tests all input types and edge cases
+- **Claim validation test**: Ensures only valid claims pass filters
+- **Template guard test**: Verifies no empty/placeholder sections
+- **Integration tests**: Full pipeline validation
+
+### Technical Implementation Details
+
+#### Files Added
+- `/research_system/utils/datetime_safe.py` - Safe datetime formatting utilities
+- `/research_system/reporting/claim_schema.py` - Strict claim validation schema
+- `/research_system/triangulation/source_aware_clustering.py` - Source-aware clustering
+- `/tests/test_v811_comprehensive_fixes.py` - Comprehensive test suite
+
+#### Files Modified
+- `/research_system/orchestrator.py` - Fixed quality gate logic, use safe datetime
+- `/research_system/report/claim_filter.py` - Enhanced number extraction with validation
+- `/research_system/report/composer.py` - Added template guards for empty sections
 
 ## 🆕 v8.10.1 Critical Timing Fix
 

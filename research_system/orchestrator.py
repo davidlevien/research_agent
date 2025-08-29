@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from .models import Discipline
 
 from research_system.models import EvidenceCard, RelatedTopic
+from research_system.utils.datetime_safe import safe_format_dt, format_duration
 from research_system.tools.evidence_io import write_jsonl
 from research_system.tools.registry import tool_registry as registry
 from research_system.tools.search_registry import register_search_tools
@@ -201,7 +202,7 @@ class Orchestrator:
             "4. **Retry later** - If providers are down",
             "",
             "---",
-            f"*Generated: {datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M')}*",
+            f"*Generated: {safe_format_dt(self.start_time, '%Y-%m-%d %H:%M')}*",
             f"*Provider attempts: {metrics.get('provider_attempts', 0)}*"
         ])
         
@@ -2213,8 +2214,18 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
         
         # Generate appropriate report based on quality gates
-        if should_generate_final_report:
-            # SYNTHESIZE - Generate final report
+        if not should_generate_final_report:
+            # Quality gates failed - ONLY generate insufficient evidence report, NO final report
+            logger.warning(f"Quality gates not met - generating insufficient evidence report only")
+            self._write_insufficient_evidence_report(
+                [f"Primary share: {metrics.get('primary_share_in_union', 0):.1%} < 40%",
+                 f"Triangulation: {metrics.get('union_triangulation', 0):.1%} < 25%"],
+                metrics, 
+                confidence_level or ConfidenceLevel.LOW
+            )
+            # CRITICAL: Do NOT generate final_report.md when quality gates fail
+        else:
+            # Quality gates passed - generate final report ONLY
             try:
                 # Calculate appendix: raw cards minus balanced cards
                 balanced_ids = {c.id for c in cards}
@@ -2243,15 +2254,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             except Exception as e:
                 self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
                 logger.error(f"Report generation failed: {e}")
-        else:
-            # Generate insufficient evidence report instead
-            logger.warning(f"Quality gates not met - generating insufficient evidence report only")
-            self._write_insufficient_evidence_report(
-                [f"Primary share: {metrics.get('primary_share_in_union', 0):.1%} < 40%",
-                 f"Triangulation: {metrics.get('union_triangulation', 0):.1%} < 25%"],
-                metrics, 
-                confidence_level or ConfidenceLevel.LOW
-            )
             # Don't raise exception yet - let other artifacts be generated
         
         error_file_path = self.s.output_dir / "evidence_cards.errors.jsonl"
