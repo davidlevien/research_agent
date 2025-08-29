@@ -1,0 +1,37 @@
+version: 1
+metrics:
+  # single source of truth — used everywhere
+  primary_share_floor: 0.50
+  triangulation_floor: 0.45
+  domain_concentration_cap: 0.25   # max share of any one domain in accepted set
+  numeric_quote_min_density: 0.03  # numerals per token for quote rescue
+  topic_similarity_floor: 0.50     # for cluster representative sentences
+
+tiers:
+  # scholarly-aligned weighting
+  TIER1: 1.00   # official stats (gov, intl org), peer-reviewed journals
+  TIER2: 0.75   # CRS/CBO/GAO, working papers (NBER), national statistics mirrors
+  TIER3: 0.40   # reputable think tanks, curated aggregators (e.g., OWID)
+  TIER4: 0.20   # media, encyclopedias, blogs
+
+sources:
+  # (overrides)
+  treat_as_secondary:
+    - ourworldindata.org   # still allowed; not counted as primary unless bound to a TIER1/peer-reviewed DOI
+  partisan_exclude_default:
+    - www.jec.senate.gov/public/index.cfm/democrats
+    - www.jec.senate.gov/public/index.cfm/republicans
+    - www.americanprogress.org
+    - www.heritage.org
+  # mirrors that must canonicalize
+  mirrors:
+    - sgp.fas.org    # CRS mirror
+    - www.everycrsreport.com
+
+intents:
+  stats:
+    providers_hard_prefer: [ 'worldbank', 'oecd', 'imf', 'eurostat', 'ec', 'un' ]
+    require_numeric_evidence: true
+    demote_general_to_context: true
+    # if official providers fail, run this fallback before accepting TIER3/TIER4
+    data_fallback: [ 'treasury', 'irs', 'census', 'cbo', 'crs', 'bls', 'bea', 'crossref', 'openalex' ]

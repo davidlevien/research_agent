@@ -60,6 +60,23 @@ from research_system.strict.adaptive_guard import (
     SupplyContextData,
     ConfidenceLevel
 )
+
+# v8.13.0 imports for scholarly-grade improvements
+from research_system.utils.file_ops import run_transaction, atomic_write_text, atomic_write_json
+from research_system.config_v2 import load_quality_config
+from research_system.quality.metrics_v2 import compute_metrics, gates_pass, write_metrics, FinalMetrics
+from research_system.evidence.canonicalize import dedup_by_canonical, get_canonical_domain
+from research_system.quality.domain_weights import mark_primary, credibility_weight
+from research_system.retrieval.filters import filter_for_intent, detect_jurisdiction_from_query
+from research_system.orchestrator_stats import run_stats_pipeline, prioritize_stats_sources
+from research_system.report.insufficient import write_insufficient_evidence_report, format_gate_failure_message
+from research_system.report.binding import (
+    enforce_number_bindings, build_evidence_bindings, 
+    assert_no_placeholders, validate_references_section
+)
+from research_system.triangulation.representative import pick_cluster_representative_card
+from research_system.quality.quote_rescue import rescue_quotes, extract_key_numbers
+
 import json
 
 logger = logging.getLogger(__name__)
@@ -106,7 +123,10 @@ class Orchestrator:
             from research_system.config import get_settings
             self.s.max_cost_usd = get_settings().MAX_COST_USD
         
-        # Initialize adaptive quality configuration
+        # Initialize v8.13.0 quality configuration - single source of truth
+        self.v813_config = load_quality_config()
+        
+        # Keep legacy configs for backward compatibility during transition
         self.quality_config = QualityConfig.load(self.s.output_dir / "quality.json")
         self.report_config = ReportConfig()
         
@@ -123,6 +143,48 @@ class Orchestrator:
         """Check if domain is a primary source based on intent"""
         from research_system.selection.domain_balance import is_primary_source
         return is_primary_source(domain, intent=self.context.get("intent", "generic"))
+    
+    def _collect_from_providers(self, providers: List[str], query: str) -> List:
+        """Helper method for v8.13.0 stats pipeline to collect from specific providers."""
+        try:
+            # Use existing collection infrastructure
+            results = asyncio.run(
+                parallel_provider_search(
+                    registry, 
+                    query=query, 
+                    count=5,
+                    freshness=Settings().FRESHNESS_WINDOW, 
+                    region="US"
+                )
+            )
+            
+            # Filter to requested providers
+            filtered_results = {p: results.get(p, []) for p in providers if p in results}
+            
+            # Convert to cards
+            cards = []
+            for provider, hits in filtered_results.items():
+                for h in hits:
+                    # Create basic EvidenceCard
+                    from research_system.models import EvidenceCard
+                    
+                    card = EvidenceCard(
+                        id=str(uuid.uuid4()),
+                        url=h.url,
+                        title=h.title,
+                        snippet=h.snippet or h.title,
+                        source_domain=domain_of(h.url),
+                        search_provider=provider,
+                        credibility_score=0.5  # Default, will be updated by mark_primary
+                    )
+                    cards.append(card)
+            
+            logger.info(f"v8.13.0 Collected {len(cards)} cards from providers: {list(filtered_results.keys())}")
+            return cards
+            
+        except Exception as e:
+            logger.error(f"v8.13.0 Collection from providers failed: {e}")
+            return []
 
     def _write_insufficient_evidence_report(self, errors: List[str], metrics: Dict, confidence_level) -> None:
         """Write an enhanced insufficient evidence report when strict mode fails."""
@@ -1119,6 +1181,25 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         return checklist
 
     def run(self):
+        """Main orchestrator run method with v8.13.0 transaction support."""
+        
+        # Load v8.13.0 configuration
+        cfg = self.v813_config
+        
+        # Log v8.13.0 configuration once at start
+        logger.info(
+            "v8.13.0 Quality thresholds: primary_share=%.0f%%, triangulation=%.0f%%, domain_cap=%.0f%%",
+            cfg.primary_share_floor * 100,
+            cfg.triangulation_floor * 100,
+            cfg.domain_concentration_cap * 100
+        )
+        
+        # Wrap entire run in transaction for atomic writes
+        with run_transaction(str(self.s.output_dir)):
+            self._run_internal()
+    
+    def _run_internal(self):
+        """Internal run method wrapped by transaction."""
         settings = Settings()  # validated at CLI
         import time
         self.start_time = time.time()  # Make it an instance variable for later access
@@ -1170,6 +1251,31 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Filter providers by topic relevance to prevent off-topic noise
         filtered_providers = self._filter_providers_by_topic(enabled, self.s.topic)
         selected_providers = [p for p in decision.providers if p in filtered_providers]
+        
+        # ===== v8.13.0 STATS PIPELINE INTEGRATION =====
+        # For stats intent, use specialized pipeline instead of general collection
+        if intent.value == "stats":
+            logger.info("v8.13.0 Using specialized stats pipeline")
+            try:
+                primary_cards, context_cards = run_stats_pipeline(
+                    query=self.s.topic,
+                    all_providers=selected_providers,
+                    collect_function=self._collect_from_providers
+                )
+                
+                # Prioritize stats sources
+                primary_cards = prioritize_stats_sources(primary_cards)
+                
+                # Stats-specific processing overrides normal collection
+                stats_cards = primary_cards + context_cards
+                logger.info(f"v8.13.0 Stats pipeline: {len(primary_cards)} primary, {len(context_cards)} context cards")
+                
+                # Skip normal collection for stats - we have specialized cards
+                all_results = {"stats_pipeline": []}  # Dummy for compatibility
+                
+            except Exception as e:
+                logger.warning(f"v8.13.0 Stats pipeline failed, falling back to normal collection: {e}")
+                # Continue with normal collection if stats pipeline fails
         
         if anchors and self.s.depth in ["standard", "deep"]:
             # Run discipline-aware anchor queries
@@ -1256,8 +1362,14 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # TRANSFORM to EvidenceCard (stamp search_provider)
         cards: List[EvidenceCard] = []
         
-        # Add free API cards first (they're already EvidenceCard objects)
-        cards.extend(free_api_cards)
+        # v8.13.0: Use stats cards if available from specialized pipeline
+        if 'stats_cards' in locals() and stats_cards:
+            logger.info(f"v8.13.0 Using {len(stats_cards)} cards from stats pipeline")
+            cards.extend(stats_cards)
+        else:
+            # Normal collection path
+            # Add free API cards first (they're already EvidenceCard objects)
+            cards.extend(free_api_cards)
         
         # Then add web search results
         for provider, hits in per_provider.items():
@@ -2119,6 +2231,66 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         tri_union = tri_union_final
         primary_share = current_metrics["primary_share"]
         
+        # ===== v8.13.0 INTEGRATION POINT =====
+        # Apply v8.13.0 improvements before final metrics calculation
+        
+        # 1. Canonicalize and deduplicate evidence
+        logger.info(f"Before v8.13.0 canonicalization: {len(cards)} cards")
+        cards = dedup_by_canonical(cards)
+        logger.info(f"After v8.13.0 canonicalization: {len(cards)} cards")
+        
+        # 2. Mark primary sources using v8.13.0 scholarly tiers
+        for card in cards:
+            mark_primary(card)
+        
+        # 3. Filter by intent requirements
+        intent = self.context.get("intent", "generic")
+        jurisdiction = detect_jurisdiction_from_query(self.s.topic)
+        cards = filter_for_intent(cards, intent, self.s.topic)
+        logger.info(f"After v8.13.0 intent filtering for {intent}: {len(cards)} cards")
+        
+        # 4. Compute v8.13.0 unified metrics once
+        final_metrics = compute_metrics(
+            cards=cards,
+            clusters=paraphrase_cluster_sets if 'paraphrase_cluster_sets' in locals() else [],
+            provider_errors=self.provider_errors,
+            provider_attempts=self.provider_attempts
+        )
+        
+        # 5. Write v8.13.0 metrics to file
+        write_metrics(str(self.s.output_dir), final_metrics)
+        
+        # 6. Check v8.13.0 quality gates (HARD GATE)
+        cfg = self.v813_config
+        gates_passed = gates_pass(final_metrics, intent)
+        
+        logger.info(
+            "v8.13.0 Final metrics: primary_share=%.3f (floor=%.2f), triangulation=%.3f (floor=%.2f), domain_concentration=%.3f (cap=%.2f)",
+            final_metrics.primary_share, cfg.primary_share_floor,
+            final_metrics.triangulation_rate, cfg.triangulation_floor,
+            final_metrics.domain_concentration, cfg.domain_concentration_cap
+        )
+        
+        if not gates_passed:
+            # HARD GATE: Stop here, only write insufficient evidence report
+            failure_msg = format_gate_failure_message(final_metrics, intent)
+            logger.warning(f"v8.13.0 Quality gates failed: {failure_msg}")
+            
+            write_insufficient_evidence_report(
+                output_dir=str(self.s.output_dir),
+                metrics=final_metrics,
+                intent=intent,
+                errors=[failure_msg]
+            )
+            
+            # CRITICAL: Return early - do NOT generate final report
+            logger.info("v8.13.0 Exiting early due to quality gate failure")
+            return
+        
+        # Gates passed - continue to final report generation
+        logger.info("v8.13.0 Quality gates passed, generating final report")
+        
+        # ===== LEGACY METRICS (for backward compatibility) =====
         # FINAL METRICS CALCULATION - Single source of truth after ALL processing
         N_final = len(cards)
         dom_ct_final = Counter(canonical_domain(c.source_domain) for c in cards)
