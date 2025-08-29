@@ -88,6 +88,12 @@ class OrchestratorSettings:
 class Orchestrator:
     def __init__(self, s: OrchestratorSettings):
         self.s = s
+        # Validate output_dir is not None
+        if self.s.output_dir is None:
+            raise ValueError("output_dir cannot be None")
+        # Ensure output_dir is a Path object
+        if not isinstance(self.s.output_dir, Path):
+            self.s.output_dir = Path(self.s.output_dir)
         self.s.output_dir.mkdir(parents=True, exist_ok=True)
         # Use global registry instead of creating a new one
         register_search_tools(registry)
@@ -196,10 +202,25 @@ class Orchestrator:
             "",
             "## Recommendations",
             "",
-            "1. **Broaden search** - Use more general terms",
-            "2. **Try alternatives** - Different terminology may yield results",
-            "3. **Break down complex queries** - Search subtopics separately",
-            "4. **Retry later** - If providers are down",
+        ])
+        
+        # Intent-specific recommendations (reusing intent variable from above)
+        if intent == "stats":
+            report_lines.extend([
+                "1. **Expand official sources** - Query OECD, IMF, World Bank, BEA/BLS/IRS, Eurostat directly",
+                "2. **Add recent primary data** - Need at least 3 primary sources from last 24 months",
+                "3. **Increase retries** - Use exponential backoff for 403/429 from official portals",
+                "4. **Verify triangulation** - Require multi-domain confirmation from official sources",
+            ])
+        else:
+            report_lines.extend([
+                "1. **Broaden search** - Use more general terms",
+                "2. **Try alternatives** - Different terminology may yield results",
+                "3. **Break down complex queries** - Search subtopics separately",
+                "4. **Retry later** - If providers are down",
+            ])
+        
+        report_lines.extend([
             "",
             "---",
             f"*Generated: {safe_format_dt(self.start_time, '%Y-%m-%d %H:%M')}*",
@@ -211,6 +232,12 @@ class Orchestrator:
     def _write(self, name: str, content: str):
         """Atomic write with temp file + rename."""
         import tempfile
+        # Ensure output_dir exists
+        if self.s.output_dir is None:
+            raise ValueError("Cannot write file: output_dir is None")
+        if not self.s.output_dir.exists():
+            self.s.output_dir.mkdir(parents=True, exist_ok=True)
+        
         target = self.s.output_dir / name
         # Write to temp file in same directory (for atomic rename)
         with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', 
@@ -2182,14 +2209,23 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         logger.info(f"Selected report tier: {tier.value} (confidence: {report_confidence:.2f}, {tier_explanation})")
         
         # CRITICAL FIX: Check quality gates BEFORE generating report
-        should_generate_final_report = True
+        # Import quality gates
+        from research_system.quality.gates import meets_minimum_bar, explain_bar, calculate_stats_metrics
+        
+        # Calculate stats-specific metrics if needed
+        intent = self.context.get("intent", "generic")
+        if intent == "stats":
+            stats_metrics = calculate_stats_metrics(cards, paraphrase_cluster_sets)
+            metrics.update(stats_metrics)
+        
+        # Check quality gates using intent-aware logic
+        should_generate_final_report = meets_minimum_bar(metrics, intent)
         confidence_level = None
         adjustments = {}
         
-        # First check: Basic metric thresholds
-        if metrics.get("primary_share_in_union", 0) < 0.40 or metrics.get("union_triangulation", 0) < 0.25:
-            should_generate_final_report = False
-            logger.warning(f"Quality gates failed: primary_share={metrics.get('primary_share_in_union', 0):.2f}, triangulation={metrics.get('union_triangulation', 0):.2f}")
+        if not should_generate_final_report:
+            gate_explanation = explain_bar(metrics, intent)
+            logger.warning(f"Quality gates not met for intent={intent}: {gate_explanation}")
         
         # Second check: Strict mode with adaptive guard
         if self.s.strict and should_generate_final_report:

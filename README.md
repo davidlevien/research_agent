@@ -1,8 +1,8 @@
-# Research System v8.11.0 - Universal Research Intelligence Platform
+# Research System v8.12.0 - Universal Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.11.0's comprehensive quality improvements preventing nonsense reports and ensuring only validated findings are published.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.12.0's **hardened stats intent pipeline** with strict source requirements, entailment-validated facts, and enhanced HTTP resilience for official data portals.
 
-**Status**: ✅ Production-ready with strict quality gates, source-aware clustering, and validated claim extraction
+**Status**: ✅ Production-ready with intent-aware quality gates, domain-constrained clustering, and extraction-only schemas
 
 ## 🚀 Quick Start
 
@@ -93,6 +93,16 @@ The system **adapts thresholds dynamically** based on evidence availability and 
 - **Flexible** (Product, Local, How-to): 15-20% triangulation
 - **Supply Adaptation**: Further reduced when domains < 6 or cards < 25
 - **Absolute Minimums**: 8-10 triangulated cards based on supply
+
+#### Stats Intent Special Requirements (v8.12.0)
+For statistics/economic data queries, **stricter requirements** apply:
+- **Primary Source Minimum**: ≥50% from official statistics domains
+- **Recent Primary**: ≥3 primary sources from last 24 months
+- **Triangulated Clusters**: ≥1 cluster with 2+ primary domains
+- **Allowed Primary Domains**: OECD, IMF, World Bank, BEA, BLS, IRS, CBO, GAO, Eurostat, UN, NBER, Nature, Science
+- **Banned Representatives**: Advocacy sites (taxfoundation.org, americanprogress.org, etc.) flagged as non-representative
+- **Cluster Quality**: Each cluster must have ≥2 distinct primary domains to count as triangulated
+- **Extraction-Only Facts**: All Key Findings/Numbers must be directly extracted and entailed by evidence
 
 #### Primary Source Requirements
 - **Standard**: 40% of evidence from primary sources
@@ -553,6 +563,24 @@ from research_system.strict.adaptive_guard import adaptive_strict_check
 - **Rate Limit Controls**: Per-provider RPS configuration
 - **Intent-Specific Reporting**: Adaptive report structure by query type
 - **Geographic Disambiguation**: Handles ambiguous city names
+
+### v8.12.0 - Hardened Stats Pipeline (Latest)
+- **Stats-specific quality gates**: ≥50% primary sources, ≥3 recent primary, ≥1 triangulated cluster
+- **Domain-constrained clustering**: Prevents mixing advocacy with official statistics sources
+- **Source admissibility filters**: Flags non-representative domains for stats intent
+- **Extraction-only schemas**: Pydantic-validated KeyFinding/KeyNumber with entailment requirement
+- **Enhanced HTTP resilience**: Exponential backoff with jitter for official data portals (OECD, IMF, etc.)
+- **Comprehensive gate logging**: Detailed failure explanations with pass/fail indicators
+- **NoneType.exists fix**: Robust null checks for output_dir operations
+- **Stats recommendations**: Tailored guidance for expanding official source coverage
+
+### v8.11.0 - Quality Gate Enforcement
+- **Mutually exclusive reports**: Never generates both insufficient AND final reports
+- **Safe datetime handling**: Comprehensive fmt_date function handling all input types
+- **Claim schema validation**: Strict structured extraction with citation requirements
+- **Source-aware clustering**: Prevents advocacy/stats source contamination
+- **Template guards**: Empty section prevention in Key Findings/Numbers
+- **Start_time fixes**: Proper instance variable initialization
 
 ### v8.6.0 - Adaptive Intelligence
 - Supply-aware quality gates with dynamic thresholds

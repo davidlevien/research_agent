@@ -1,10 +1,35 @@
 """Safe datetime formatting utilities to prevent strftime errors."""
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Union, Optional
 import logging
+import time
 
 logger = logging.getLogger(__name__)
+
+
+def fmt_date(dt_like, fmt: str = "%Y-%m-%d") -> str:
+    """
+    Accepts datetime, epoch float/int, or ISO string; returns safe formatted date.
+    
+    This is the primary function used throughout the system to format dates.
+    It handles all common input types robustly.
+    """
+    if isinstance(dt_like, (int, float)):
+        dt = datetime.fromtimestamp(float(dt_like), tz=timezone.utc)
+    elif isinstance(dt_like, str):
+        try:
+            dt = datetime.fromisoformat(dt_like.replace("Z", "+00:00"))
+        except Exception:
+            dt = datetime.fromtimestamp(time.time(), tz=timezone.utc)
+    elif isinstance(dt_like, datetime):
+        dt = dt_like
+    elif dt_like is None:
+        dt = datetime.fromtimestamp(time.time(), tz=timezone.utc)
+    else:
+        dt = datetime.fromtimestamp(time.time(), tz=timezone.utc)
+    
+    return dt.strftime(fmt)
 
 
 def safe_format_dt(

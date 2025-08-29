@@ -48,6 +48,44 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = Field("gpt-4-turbo-preview", description="OpenAI model to use")
     ANTHROPIC_MODEL: str = Field("claude-3-opus-20240229", description="Anthropic model to use")
     MIN_EVIDENCE_CARDS: int = Field(24, description="Minimum evidence cards required")
+    
+    # ==== Stats Intent Specific Constraints (Topic-Agnostic) ====
+    STATS_INTENT: str = "stats"
+    STATS_PRIMARY_SHARE_MIN: float = Field(0.50, description="≥50% cards must be primary/official for stats")
+    STATS_RECENT_PRIMARY_MIN: int = Field(3, description="≥3 primary items from last 24 months for stats")
+    STATS_TRIANGULATED_MIN: int = Field(1, description="≥1 multi-domain triangulated cluster for stats")
+    STATS_CLUSTER_PRIMARY_DOMAINS_MIN: int = Field(2, description="≥2 distinct primary domains per cluster")
+    
+    # Domains allowed to anchor/represent claims in stats reports
+    STATS_ALLOWED_PRIMARY_DOMAINS: set = Field(
+        default_factory=lambda: {
+            "oecd.org", "stats.oecd.org", "imf.org", "worldbank.org", "data.worldbank.org",
+            "ec.europa.eu", "eurostat.ec.europa.eu", "ecb.europa.eu",
+            "bea.gov", "bls.gov", "irs.gov", "cbo.gov", "gao.gov", "treasury.gov", 
+            "federalreserve.gov", "fred.stlouisfed.org", "census.gov",
+            "un.org", "data.un.org", "ourworldindata.org",
+            "nber.org", "jstor.org", "nature.com", "science.org", "pnas.org",
+            "stats.govt.nz", "abs.gov.au", "statistics.gov.uk", "statcan.gc.ca"
+        }
+    )
+    
+    # Domains that may NOT be claim representatives for stats
+    STATS_BANNED_REPRESENTATIVE_DOMAINS: set = Field(
+        default_factory=lambda: {
+            "americanprogress.org", "taxfoundation.org", "epi.org", "cfr.org",
+            "heritage.org", "aei.org", "cato.org", "brookings.edu",
+            "gobankingrates.com", "investopedia.com", "concordcoalition.org",
+            "wikipedia.org", "medium.com", "substack.com", "wordpress.com"
+        }
+    )
+    
+    # Topic filter regex for stats-relevant numeric claims
+    STATS_TOPIC_REGEX: str = Field(
+        default=r"(tax(\s|-|_)?(rate|burden|share|progressiv)|marginal|effective|average.*tax|"
+                r"gini|income\s+(share|quintile|decile)|percentile|bracket|growth|gdp|"
+                r"unemployment|inflation|deficit|debt|revenue|spending|budget)",
+        description="Regex pattern to identify stats-relevant claims"
+    )
     MAX_BACKFILL_ATTEMPTS: int = Field(3, description="Maximum backfill iterations")
 
     # ==== HTTP & retries ====
