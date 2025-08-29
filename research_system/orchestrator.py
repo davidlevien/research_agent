@@ -2182,9 +2182,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         adjustments = {}
         
         # First check: Basic metric thresholds
-        if metrics_dict.get("primary_share_in_union", 0) < 0.40 or metrics_dict.get("union_triangulation", 0) < 0.25:
+        if metrics.get("primary_share_in_union", 0) < 0.40 or metrics.get("union_triangulation", 0) < 0.25:
             should_generate_final_report = False
-            logger.warning(f"Quality gates failed: primary_share={metrics_dict.get('primary_share_in_union', 0):.2f}, triangulation={metrics_dict.get('union_triangulation', 0):.2f}")
+            logger.warning(f"Quality gates failed: primary_share={metrics.get('primary_share_in_union', 0):.2f}, triangulation={metrics.get('union_triangulation', 0):.2f}")
         
         # Second check: Strict mode with adaptive guard
         if self.s.strict and should_generate_final_report:
@@ -2219,9 +2219,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 # Generate report with tier-specific configuration
                 report = self._generate_adaptive_report(cards, appendix_cards, detector, tier, max_tokens)
                 
-                # Add adaptive metadata to report - FIX: Use metrics_dict which has correct values
-                # Merge current_metrics with metrics_dict for complete data
-                combined_metrics = {**metrics_dict, **current_metrics}
+                # Add adaptive metadata to report - FIX: Use metrics which has correct values
+                # Merge current_metrics with metrics for complete data
+                combined_metrics = {**metrics, **current_metrics}
                 combined_metrics['total_cards'] = len(cards)
                 combined_metrics['credible_cards'] = len([c for c in cards if (c.credibility_score or 0.5) >= 0.5])
                 combined_metrics['triangulated_cards'] = len(triangulated_indices)
@@ -2243,9 +2243,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Generate insufficient evidence report instead
             logger.warning(f"Quality gates not met - generating insufficient evidence report only")
             self._write_insufficient_evidence_report(
-                [f"Primary share: {metrics_dict.get('primary_share_in_union', 0):.1%} < 40%",
-                 f"Triangulation: {metrics_dict.get('union_triangulation', 0):.1%} < 25%"],
-                metrics_dict, 
+                [f"Primary share: {metrics.get('primary_share_in_union', 0):.1%} < 40%",
+                 f"Triangulation: {metrics.get('union_triangulation', 0):.1%} < 25%"],
+                metrics, 
                 confidence_level or ConfidenceLevel.LOW
             )
             # Don't raise exception yet - let other artifacts be generated
