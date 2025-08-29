@@ -1120,7 +1120,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         checklist = "# Citation Validation Checklist\n\n"
         
         # Date parsing helper
-        from datetime import datetime, timedelta, timezone
+        from datetime import timedelta
         cutoff = datetime.now(timezone.utc) - timedelta(days=365)
         def _parse_dt(s):
             if not s: return None
@@ -1958,7 +1958,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         for m in structured_matches:
             if len(m.get("domains", [])) >= 2:
                 tri_card_index.update(m.get("indices", []))
-        from datetime import timezone
         now = datetime.now(timezone.utc)
         for i, c in enumerate(cards):
             # Calculate recency days
