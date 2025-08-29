@@ -1,8 +1,8 @@
-# Research System v8.14.0 - Config-Driven Research Intelligence Platform
+# Research System v8.15.0 - Enhanced Reporting & Quality Gates
 
-A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.14.0's **config-driven guardrails**, **topic-agnostic filtering**, and **deterministic execution** for reliable, advocacy-free research.
+A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.15.0's **hard quality gating**, **citation-bound numbers**, **sentence-aware trimming**, and **actionable insufficient evidence guidance**.
 
-**Status**: ✅ Production-ready with v8.14.0 config-driven improvements: topic-agnostic filtering, deterministic seeding, safe datetime handling, and unified report composition
+**Status**: ✅ Production-ready with v8.15.0 enhanced reporting: single-source metrics, citation safety, concrete next steps, and source strategy transparency
 
 ## 🚀 Quick Start
 
@@ -144,6 +144,65 @@ confidence = 0.4*triangulation + 0.3*primary_share + 0.2*domain_diversity + 0.1*
 - **Adaptive Sections**: Token budgets adjust per tier
 - **Quality Signals**: Clear explanations of any threshold adjustments
 - **Insufficient Evidence Reports**: Enhanced with metrics table, actionable recommendations
+
+## 🔒 v8.15.0 Enhanced Reporting System
+
+### Hard Quality Gates
+**The system now enforces strict quality gates that prevent low-quality reports:**
+
+- **Final Report Generation**: Only when ALL gates pass:
+  - Triangulation ≥ 50% (configurable)
+  - Primary share ≥ 33% (configurable)
+  - Evidence cards ≥ 25 (configurable)
+- **Single Source of Truth**: Metrics loaded from disk (`metrics.json`) to prevent drift
+- **No Partial Reports**: If gates fail, only insufficient evidence report is generated
+
+### Citation-Bound Key Numbers
+**Every numeric claim must have verifiable citations:**
+
+- **Support Requirements**: Numbers included only if:
+  - Supported by ≥2 distinct domains, OR
+  - Supported by ≥1 source from PRIMARY_WHITELIST
+- **Citation Binding**: Each key number displays inline citations [1] [2] [3]
+- **Citation Safety Section**: Reports citation coverage with PASS ✅ or NEEDS ATTENTION ⚠️
+
+### Sentence-Aware Content Trimming
+**Professional outputs without dangling ellipses:**
+
+- **Smart Boundaries**: Ends at sentence boundaries when possible
+- **Abbreviation Handling**: Recognizes common abbreviations (Dr., Inc., etc.)
+- **Word Boundaries**: Falls back to word boundaries if no sentence end found
+- **Clean Ellipses**: Only adds "…" when truly truncated mid-thought
+
+### Actionable Insufficient Evidence Reports
+**When gates fail, provides concrete next steps:**
+
+- **Intent-Specific Guidance**:
+  - Stats: Query OECD/World Bank SDMX endpoints
+  - Medical: Search PubMed systematic reviews
+  - Regulatory: Check official .gov sources
+- **Troubleshooting Tips**: Diagnoses low triangulation, primary share issues
+- **Backfill Strategy**: Clear steps to improve evidence quality
+- **Acceptance Thresholds**: Explicit criteria for report generation
+
+### Source Strategy Transparency
+**Documents actual provider usage and backfill policy:**
+
+- **Providers Used**: Lists actual providers from the run
+- **Primary Source Criteria**: Shows whitelisted domains by category
+- **Backfill Policy**: Explains whether backfill was needed and why
+- **Search Approach**: Documents intent-based strategy and filters applied
+
+### Report Section Parity
+**All reports include consistent sections:**
+
+- Executive Summary (sentence-trimmed findings)
+- Key Findings (triangulated, multi-domain)
+- Key Numbers (with citations)
+- Evidence Supply (metrics from disk)
+- Citation Safety (validation status)
+- Source Distribution (domain breakdown with 🔷 markers)
+- Appendix (links to supporting documents)
 
 ### Evidence Validity Guarantees
 

@@ -80,6 +80,12 @@ from research_system.triangulation.contradiction_filter import filter_contradict
 from research_system.triangulation.intent_filters import filter_cards_by_intent, get_filtered_clusters_for_intent
 from research_system.quality.quote_rescue import rescue_quotes, extract_key_numbers
 
+# v8.15.0 imports for enhanced reporting
+from research_system.context import RunContext, Metrics
+from research_system.report.enhanced_final_report import ReportWriter as FinalReportWriter
+from research_system.report.enhanced_insufficient import ReportWriter as InsufficientReportWriter
+from research_system.report.source_strategy import ReportWriter as SourceStrategyWriter
+
 import json
 
 logger = logging.getLogger(__name__)
@@ -2403,13 +2409,55 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             stats_metrics = calculate_stats_metrics(cards, paraphrase_cluster_sets)
             metrics.update(stats_metrics)
         
-        # Check quality gates using intent-aware logic
-        should_generate_final_report = meets_minimum_bar(metrics, intent)
+        # v8.15.0: Load metrics from disk for single source of truth
+        metrics_path = self.s.output_dir / "metrics.json"
+        metrics_obj = Metrics.from_file(metrics_path)
+        
+        # Determine quality gate thresholds based on config
+        cfg = getattr(self, 'v813_config', None) or load_quality_config()
+        min_triangulation = cfg.triangulation_floor if hasattr(cfg, 'triangulation_floor') else 0.50
+        min_primary = cfg.primary_share_floor if hasattr(cfg, 'primary_share_floor') else 0.33
+        min_cards = 25  # Can be made configurable
+        
+        # Check quality gates
+        allow_final = metrics_obj.meets_gates(min_triangulation, min_primary, min_cards)
+        gate_failures = metrics_obj.get_gate_failures(min_triangulation, min_primary, min_cards)
+        
+        # Track providers used during collection
+        providers_used = list(set(
+            card.provider for card in cards 
+            if hasattr(card, 'provider') and card.provider
+        ))
+        
+        # Create run context
+        ctx = RunContext(
+            outdir=Path(self.s.output_dir),
+            query=self.s.topic,
+            metrics=metrics_obj,
+            allow_final_report=allow_final,
+            reason_final_report_blocked="; ".join(gate_failures) if gate_failures else None,
+            providers_used=providers_used,
+            intent=intent.value if intent else "generic",
+            depth=self.s.depth,
+            strict=self.s.strict
+        )
+        
+        # Log decision
+        if allow_final:
+            logger.info("Quality gates met -> generating final_report.md")
+        else:
+            logger.warning(
+                "Quality gates not met -> generating insufficient_evidence_report.md (%s)",
+                ctx.reason_final_report_blocked
+            )
+        
+        # Keep legacy variables for backward compatibility
+        should_generate_final_report = allow_final
         confidence_level = None
         adjustments = {}
         
         if not should_generate_final_report:
-            gate_explanation = explain_bar(metrics, intent)
+            gate_explanation = ctx.reason_final_report_blocked or "Quality gates not met"
             logger.warning(f"Quality gates not met for intent={intent}: {gate_explanation}")
         
         # Second check: Strict mode with adaptive guard
@@ -2434,48 +2482,52 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 should_generate_final_report = False
                 self._write("GAPS_AND_RISKS.md", "# Gaps & Risks\n\n" + "\n".join(f"- {e}" for e in errs))
         
-        # Generate appropriate report based on quality gates
-        if not should_generate_final_report:
-            # Quality gates failed - ONLY generate insufficient evidence report, NO final report
-            logger.warning(f"Quality gates not met - generating insufficient evidence report only")
-            self._write_insufficient_evidence_report(
-                [f"Primary share: {metrics.get('primary_share_in_union', 0):.1%} < 40%",
-                 f"Triangulation: {metrics.get('union_triangulation', 0):.1%} < 25%"],
-                metrics, 
-                confidence_level or ConfidenceLevel.LOW
-            )
-            # CRITICAL: Do NOT generate final_report.md when quality gates fail
-        else:
-            # Quality gates passed - generate final report ONLY
+        # v8.15.0: Generate appropriate report based on quality gates
+        if ctx.allow_final_report:
+            # Quality gates passed - generate final report
             try:
-                # Calculate appendix: raw cards minus balanced cards
-                balanced_ids = {c.id for c in cards}
-                appendix_cards = [c for c in raw_cards if c.id not in balanced_ids]
+                FinalReportWriter(ctx).write()
+                logger.info("Generated final report")
                 
-                # Generate report with tier-specific configuration
-                report = self._generate_adaptive_report(cards, appendix_cards, detector, tier, max_tokens)
-                
-                # Add adaptive metadata to report - FIX: Use metrics which has correct values
-                # Merge current_metrics with metrics for complete data
-                combined_metrics = {**metrics, **current_metrics}
-                combined_metrics['total_cards'] = len(cards)
-                combined_metrics['credible_cards'] = len([c for c in cards if (c.credibility_score or 0.5) >= 0.5])
-                combined_metrics['triangulated_cards'] = len(triangulated_indices)
-                combined_metrics['unique_domains'] = unique_domains
-                combined_metrics['provider_error_rate'] = self.provider_errors / max(1, self.provider_attempts)
-                
-                metadata = generate_adaptive_report_metadata(
-                    combined_metrics, confidence_level,
-                    adjustments,
-                    tier.value, report_confidence, tier_explanation
-                )
-                report = metadata + "\n\n---\n\n" + report
-                
-                self._write("final_report.md", report)
+                # Keep legacy adaptive report generation as fallback
+                # (can be removed once new system is proven stable)
+                if os.getenv('USE_LEGACY_REPORT', '').lower() == 'true':
+                    # Calculate appendix: raw cards minus balanced cards
+                    balanced_ids = {c.id for c in cards}
+                    appendix_cards = [c for c in raw_cards if c.id not in balanced_ids]
+                    
+                    # Generate report with tier-specific configuration
+                    report = self._generate_adaptive_report(cards, appendix_cards, detector, tier, max_tokens)
+                    
+                    # Add adaptive metadata to report
+                    combined_metrics = {**metrics, **current_metrics}
+                    combined_metrics['total_cards'] = len(cards)
+                    combined_metrics['credible_cards'] = len([c for c in cards if (c.credibility_score or 0.5) >= 0.5])
+                    combined_metrics['triangulated_cards'] = len(triangulated_indices)
+                    combined_metrics['unique_domains'] = unique_domains
+                    combined_metrics['provider_error_rate'] = self.provider_errors / max(1, self.provider_attempts)
+                    
+                    metadata = generate_adaptive_report_metadata(
+                        combined_metrics, confidence_level,
+                        adjustments,
+                        tier.value, report_confidence, tier_explanation
+                    )
+                    report = metadata + "\n\n---\n\n" + report
+                    
+                    self._write("final_report.md", report)
             except Exception as e:
-                self._write("final_report.md", f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}")
-                logger.error(f"Report generation failed: {e}")
-            # Don't raise exception yet - let other artifacts be generated
+                logger.error(f"Failed to generate final report: {e}")
+                # Write error report
+                error_msg = f"# Report Generation Failed\n\nError: {e!r}\n\nCards collected: {len(cards)}"
+                (ctx.outdir / "final_report.md").write_text(error_msg)
+        else:
+            # Quality gates failed - generate insufficient evidence report
+            InsufficientReportWriter(ctx).write()
+            logger.info("Generated insufficient evidence report")
+        
+        # v8.15.0: Always generate source strategy
+        SourceStrategyWriter(ctx).write()
+        logger.info("Generated source strategy")
         
         error_file_path = self.s.output_dir / "evidence_cards.errors.jsonl"
         self._write("citation_checklist.md", self._generate_citation_checklist(cards, error_file_path))
