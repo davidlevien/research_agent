@@ -269,11 +269,13 @@ pytest tests/test_evidence_repair.py
 
 ### Bug Fixes
 - **Fixed NameError**: Resolved `start_time` undefined error in orchestrator's backfill loop
+- **Fixed AttributeError**: Resolved `'float' object has no attribute 'strftime'` in report generation
 - **Instance Variables**: Properly initialized `self.start_time` and `self.time_budget` as instance variables
 - **Test Coverage**: Fixed triangulation rate test to include required `domains` field in clusters
 
 ### Technical Improvements
 - **Timing Management**: Both `start_time` and `time_budget` now initialized in constructor with proper defaults
+- **Datetime Conversion**: Properly converts float timestamps to datetime objects for formatting
 - **Backfill Loop**: Correctly references `self.start_time` for elapsed time calculations
 - **Adaptive Decisions**: Time remaining calculations now work reliably throughout orchestrator lifecycle
 
