@@ -226,3 +226,13 @@ def get_serpapi_state() -> Dict[str, Any]:
         "call_budget": _serpapi_state["call_budget"],
         "circuit_open_until": _serpapi_state["circuit_open_until"]
     }
+
+
+def reset_serpapi_state() -> None:
+    """v8.17.0: Reset SerpAPI state for testing purposes."""
+    _serpapi_state["is_open"] = False
+    _serpapi_state["seen_queries"].clear()
+    _serpapi_state["call_count"] = 0
+    _serpapi_state["consecutive_429s"] = 0
+    _serpapi_state["call_budget"] = int(os.getenv("SERPAPI_MAX_CALLS_PER_RUN", "10"))
+    _serpapi_state["circuit_open_until"] = 0.0

@@ -466,11 +466,10 @@ class TestSerpAPIWrapper:
             if 'SERPAPI_API_KEY' in os.environ:
                 del os.environ['SERPAPI_API_KEY']
             
-            from research_system.tools.search_serpapi import search_serpapi, _serpapi_state
+            from research_system.tools.search_serpapi import search_serpapi, _serpapi_state, reset_serpapi_state
             
-            # Reset state
-            _serpapi_state["consecutive_429s"] = 0
-            _serpapi_state["seen_queries"] = set()
+            # Reset state properly
+            reset_serpapi_state()
             
             with patch('research_system.tools.search_serpapi._make_serpapi_request') as mock_request:
                 # Mock should be called even without key
@@ -490,10 +489,10 @@ class TestSerpAPIWrapper:
             if 'SERPAPI_API_KEY' in os.environ:
                 del os.environ['SERPAPI_API_KEY']
             
-            from research_system.tools.search_serpapi import search_serpapi, _serpapi_state
+            from research_system.tools.search_serpapi import search_serpapi, _serpapi_state, reset_serpapi_state
             
-            # Reset state
-            _serpapi_state["consecutive_429s"] = 0
+            # Reset state properly
+            reset_serpapi_state()
             
             with patch('research_system.tools.search_serpapi._make_serpapi_request') as mock_request:
                 # Simulate 429 response by raising an HTTPStatusError
