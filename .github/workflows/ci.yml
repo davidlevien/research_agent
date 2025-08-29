@@ -43,9 +43,12 @@ jobs:
       run: |
         mkdir -p test_outputs
         pytest -q
-    - name: Run v8.4 sanity tests
+    - name: Run v8.16 critical fixes tests
       run: |
-        PYTHONPATH=. pytest tests/test_v84_fixes.py -q --tb=no
+        PYTHONPATH=. pytest tests/test_v816_critical_fixes.py -q --tb=no
+    - name: Run surgical fixes tests
+      run: |
+        PYTHONPATH=. pytest tests/test_surgical_fixes.py -q --tb=no
     - name: Run v8.5 pack-aware tests
       run: |
         PYTHONPATH=. pytest tests/test_primary_share.py -q --tb=no
