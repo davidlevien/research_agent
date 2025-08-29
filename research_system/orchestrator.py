@@ -201,7 +201,7 @@ class Orchestrator:
             "4. **Retry later** - If providers are down",
             "",
             "---",
-            f"*Generated: {self.start_time.strftime('%Y-%m-%d %H:%M')}*",
+            f"*Generated: {datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M')}*",
             f"*Provider attempts: {metrics.get('provider_attempts', 0)}*"
         ])
         
