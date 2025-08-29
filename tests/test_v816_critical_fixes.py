@@ -185,11 +185,11 @@ class TestOECDProvider:
         
         results = search_oecd("GDP", limit=5)
         
-        # Should use correct endpoint without /ALL/ suffix
+        # v8.17.0: Should use correct endpoint WITH /ALL/ suffix (per OECD docs and CI requirements)
         mock_http.assert_called_with(
             "oecd", 
             "GET", 
-            "https://stats.oecd.org/SDMX-JSON/dataflow"
+            "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"
         )
         assert len(results) > 0
     

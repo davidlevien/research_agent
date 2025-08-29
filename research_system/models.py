@@ -81,6 +81,11 @@ class EvidenceCard(BaseModel):
     # v8.16.0: Stable identifier for dedup/canonicalization
     canonical_id: Optional[str] = None
     
+    # v8.17.0: Labels for marking cards (is_primary, context_only, etc.)
+    # Some pipelines refer to .labels; keep it optional to avoid runtime errors
+    # when older cards don't include it. This matches the run-time failure fix.
+    labels: Optional[Any] = None  # Dynamic object for labeling cards
+    
     def ensure_canonical_id(self) -> None:
         """Compute canonical_id if missing, using DOI, URL, or content hash."""
         if self.canonical_id:

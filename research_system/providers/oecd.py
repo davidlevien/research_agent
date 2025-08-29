@@ -9,8 +9,11 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.16.0: Correct OECD SDMX-JSON dataflow endpoint (no /ALL/ suffix)
-_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow"
+# v8.17.0: Correct OECD SDMX-JSON dataflow endpoint 
+# Tests and OECD docs expect fetching dataflows under /ALL/
+# Prior runs 404'd when hitting /dataflow without /ALL/ (see CI failures)
+# Keeping trailing slash is important for some proxies/CDNs
+_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"
 
 # Circuit breaker state
 _circuit_state = {

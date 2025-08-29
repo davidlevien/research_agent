@@ -1,6 +1,7 @@
 import httpx
 import logging
 import os
+import time
 from typing import Dict, Any, Optional, Set
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from ..config import Settings
@@ -19,8 +20,12 @@ _serpapi_state = {
     "is_open": False,
     "seen_queries": set(),
     "call_count": 0,
-    "consecutive_429s": 0
+    "consecutive_429s": 0,
+    "call_budget": int(os.getenv("SERPAPI_MAX_CALLS_PER_RUN", "10")),
+    "circuit_open_until": 0.0
 }
+
+CIRCUIT_COOLDOWN_SEC = 60
 
 @retry(
     stop=stop_after_attempt(3),
@@ -94,7 +99,10 @@ def _parse_serpapi_results(data: Dict[str, Any]) -> list[SearchHit]:
 
 def _get_api_key() -> Optional[str]:
     """v8.16.0: Lazy-load API key for CI/test flexibility."""
-    return os.getenv("SERPAPI_API_KEY") or Settings().SERPAPI_API_KEY
+    try:
+        return os.getenv("SERPAPI_API_KEY") or Settings().SERPAPI_API_KEY
+    except Exception:
+        return os.getenv("SERPAPI_API_KEY")
 
 def run(req: SearchRequest) -> list[SearchHit]:
     """Execute search using SerpAPI with circuit breaker and deduplication.
@@ -110,9 +118,10 @@ def run(req: SearchRequest) -> list[SearchHit]:
     trip_on_429 = os.getenv("SERPAPI_TRIP_ON_429", "true").lower() == "true"
     
     if use_circuit_breaker:
-        # Check if circuit is open
-        if _serpapi_state["is_open"]:
-            logger.info(f"SERPAPI_SKIPPED_CIRCUIT_OPEN", extra={"q": req.query})
+        # Check if circuit is open (either by time or flag)
+        now = time.time()
+        if _serpapi_state["circuit_open_until"] > now or _serpapi_state["is_open"]:
+            logger.info("SERPAPI_CIRCUIT_OPEN", extra={"q": req.query})
             return []
         
         # Check for duplicate queries
@@ -122,10 +131,13 @@ def run(req: SearchRequest) -> list[SearchHit]:
             return []
         _serpapi_state["seen_queries"].add(query_norm)
         
-        # Check call budget
-        if _serpapi_state["call_count"] >= max_calls_per_run:
+        # Check call budget (use state budget)
+        if _serpapi_state["call_count"] >= _serpapi_state["call_budget"]:
             logger.info("SERPAPI_SKIPPED_BUDGET", extra={"q": req.query, "count": _serpapi_state["call_count"]})
             return []
+    
+    # Increment call count (must happen before we make the call)
+    if use_circuit_breaker:
         _serpapi_state["call_count"] += 1
     
     # Increment request counter
@@ -173,9 +185,10 @@ def run(req: SearchRequest) -> list[SearchHit]:
             # Parse results
             results = _parse_serpapi_results(response_data)
             
-            # Reset consecutive 429s on success
+            # Reset consecutive 429s and circuit state on success
             if use_circuit_breaker:
                 _serpapi_state["consecutive_429s"] = 0
+                _serpapi_state["is_open"] = False
             
             logger.info(f"SerpAPI search for '{req.query}' returned {len(results)} results")
             return results
@@ -185,8 +198,10 @@ def run(req: SearchRequest) -> list[SearchHit]:
                 logger.warning("SERPAPI_RATE_LIMIT", extra={"q": req.query, "status": 429})
                 if use_circuit_breaker:
                     _serpapi_state["consecutive_429s"] += 1
+                    # Trip the circuit immediately on first 429 (matches tests)
                     if trip_on_429 and _serpapi_state["consecutive_429s"] >= 1:
-                        _serpapi_state["is_open"] = True
+                        _serpapi_state["circuit_open_until"] = time.time() + CIRCUIT_COOLDOWN_SEC
+                        _serpapi_state["is_open"] = True  # Keep for backward compatibility
                         logger.warning("SERPAPI_CIRCUIT_TRIPPED", extra={"q": req.query, "consecutive_429s": _serpapi_state["consecutive_429s"]})
             logger.error(f"SerpAPI search failed for query '{req.query}': {e}")
             SEARCH_ERRORS.labels(provider="serpapi").inc()
@@ -200,3 +215,14 @@ def search_serpapi(query: str, num: int = 10, **kwargs) -> list[SearchHit]:
     """v8.16.0: Backward compatibility wrapper for run() function."""
     req = SearchRequest(query=query, count=num, **kwargs)
     return run(req)
+
+
+def get_serpapi_state() -> Dict[str, Any]:
+    """v8.17.0: Get current SerpAPI state for monitoring/testing."""
+    return {
+        "consecutive_429s": _serpapi_state["consecutive_429s"],
+        "seen_queries": set(_serpapi_state["seen_queries"]),
+        "call_count": _serpapi_state["call_count"],
+        "call_budget": _serpapi_state["call_budget"],
+        "circuit_open_until": _serpapi_state["circuit_open_until"]
+    }

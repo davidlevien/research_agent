@@ -1733,9 +1733,13 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         initial_H_norm = H_norm
         
         # PRIMARY BACKFILL if needed
+        # v8.17.0: Honor strict mode - disable backfill when strict mode is on
+        if self.s.strict:
+            logger.info("Strict mode enabled: skipping backfill passes to match source strategy.")
+            # No backfill, proceed to finalize with current evidence
         # v8.16.0: Use configured threshold (default 33%) consistently
-        min_primary_threshold = getattr(self.v813_config, 'primary_share_floor', 0.33)
-        if primary_share < min_primary_threshold:
+        elif primary_share < getattr(self.v813_config, 'primary_share_floor', 0.33):
+            min_primary_threshold = getattr(self.v813_config, 'primary_share_floor', 0.33)
             logger.info(f"Primary share {primary_share:.2%} < {min_primary_threshold:.0%}, running backfill")
             from research_system.enrich.primary_fill import primary_fill_for_families
             

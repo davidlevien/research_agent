@@ -125,6 +125,7 @@ class TestSerpAPICircuitBreaker:
         _serpapi_state["is_open"] = False
         _serpapi_state["seen_queries"].clear()
         _serpapi_state["call_count"] = 0
+        _serpapi_state["circuit_open_until"] = 0.0
         
         with patch.dict(os.environ, {"SERPAPI_CIRCUIT_BREAKER": "true"}):
             with patch('research_system.tools.search_serpapi._make_serpapi_request') as mock_request:
@@ -151,6 +152,8 @@ class TestSerpAPICircuitBreaker:
         _serpapi_state["is_open"] = False
         _serpapi_state["seen_queries"].clear()
         _serpapi_state["call_count"] = 0
+        _serpapi_state["circuit_open_until"] = 0.0
+        _serpapi_state["call_budget"] = 2  # Set budget for this test
         
         with patch.dict(os.environ, {"SERPAPI_CIRCUIT_BREAKER": "true", "SERPAPI_MAX_CALLS_PER_RUN": "2"}):
             with patch('research_system.tools.search_serpapi._make_serpapi_request') as mock_request:
@@ -395,7 +398,7 @@ class TestObservabilityAndMetrics:
                 # Should log with structured format
                 mock_logger.info.assert_called()
                 call_args = mock_logger.info.call_args
-                assert "SERPAPI_SKIPPED_CIRCUIT_OPEN" in str(call_args)
+                assert "SERPAPI_CIRCUIT_OPEN" in str(call_args)
     
     def test_confidence_level_always_set(self):
         """Test confidence level is never None in final output."""
