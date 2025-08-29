@@ -1088,7 +1088,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
     def run(self):
         settings = Settings()  # validated at CLI
         import time
-        start_time = time.time()
+        self.start_time = time.time()  # Make it an instance variable for later access
         
         # Set global time budget (default 1800 seconds / 30 minutes)
         total_seconds = getattr(self.s, 'timeout', 1800)
@@ -2153,7 +2153,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
 
         # Choose adaptive report tier based on evidence quality
         import time
-        elapsed = time.time() - start_time
+        elapsed = time.time() - self.start_time  # Use instance variable
         time_left = max(0, self.time_budget - elapsed)
         
         # Calculate metrics for tier selection
