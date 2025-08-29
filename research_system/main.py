@@ -2,10 +2,9 @@ import argparse
 from pathlib import Path
 from research_system.config import Settings
 from research_system.orchestrator import Orchestrator, OrchestratorSettings
+from research_system.utils.deterministic import set_global_seeds
 import logging, os, sys, time, asyncio
 import structlog
-import random
-import numpy as np
 
 def _init_logging():
     level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -17,10 +16,8 @@ def _init_logging():
     )
 
 def main():
-    # Set seeds for deterministic behavior
-    random.seed(0)
-    np.random.seed(0)
-    os.environ["PYTHONHASHSEED"] = "0"
+    # Set seeds for deterministic behavior using our centralized seeding module
+    set_global_seeds(seed=2025)
     
     _init_logging()
     p = argparse.ArgumentParser(prog="research-system", description="Research & Citations")

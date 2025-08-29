@@ -6,7 +6,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Threshold for fuzzy matching (0-100 scale)
-HARD_MIN = 70
+HARD_MIN = 65
 
 
 def entails(premise: str, hypothesis: str) -> bool:

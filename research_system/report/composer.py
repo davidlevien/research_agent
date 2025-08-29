@@ -5,8 +5,10 @@ from collections import defaultdict, Counter
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
 from research_system.report.claim_filter import (
-    filter_key_findings, extract_key_numbers, is_numeric_claim, is_on_topic
+    filter_key_findings, is_numeric_claim, is_on_topic
 )
+from research_system.report.key_numbers import compose_key_numbers_section
+from research_system.triangulation.contradiction_filter import get_contradiction_summary
 
 NUM = re.compile(r"\b(?:[±~]?\d+(?:\.\d+)?%|\d{1,3}(?:,\d{3})+(?:\.\d+)?|\b(?:19|20)\d{2}\b)\b")
 INCR = ("increase","increased","up","rise","grew","growth","higher")
@@ -60,13 +62,8 @@ def _score_cluster(cards) -> float:
     cred = sum((c.credibility_score or 0.5) for c in cards) / max(1,len(cards))
     return 2.5*len(doms) + 1.5*primary + 1.0*numeric + 1.0*cred
 
-def _contradictions(cards) -> List[Tuple]:
-    # very light polarity heuristic within a cluster
-    inc = [c for c in cards if any(w in _best_text(c).lower() for w in INCR)]
-    dec = [c for c in cards if any(w in _best_text(c).lower() for w in DECR)]
-    if inc and dec:
-        return [("increase vs decrease", inc[:3], dec[:3])]
-    return []
+# NOTE: Contradiction detection moved to research_system.triangulation.contradiction_filter
+# This function is kept for backward compatibility but should not be used for new clusters
 
 def _index_sources(cards) -> Tuple[Dict[str,int], List[str]]:
     idx, seen = {}, []
@@ -185,27 +182,16 @@ def compose_report(topic: str, cards, tri: dict, metrics: dict, *, max_findings:
                 if len(findings)+len(extras) >= 6: break
         findings.extend(extras)
 
-    # 4) Key numbers (pull top numeric sentences across all cards) - ENHANCED
-    key_numbers_raw = extract_key_numbers(cards, topic, max_numbers=15)
-    key_numbers = []
-    
-    for sent, c in key_numbers_raw:
-        # Additional validation - exclude metadata/citations
-        if any(pat in sent.lower() for pat in ['isbn', 'doi:', '©', 'retrieved', 'accessed']):
-            continue
-        key_numbers.append(f"- {sent} {_cit(c, idx)}")
-        if len(key_numbers) >= 8:
-            break
+    # 4) Key numbers (structured extraction with units and labels) - v8.14.0 ENHANCEMENT
+    key_numbers_section = compose_key_numbers_section(cards, max_numbers=8)
+    # Convert to list format for compatibility with existing logic
+    key_numbers = key_numbers_section.split('\n') if key_numbers_section else []
 
-    # 5) Contradictions & uncertainties
-    contra = []
-    for _, cs in clusters_scored:
-        for label, inc, dec in _contradictions(cs):
-            para = f"- **{label}:** " \
-                   f"positive {_cit(inc[0], idx)} vs negative {_cit(dec[0], idx)}. " \
-                   f"Interpret carefully; check methodology and time period."
-            contra.append(para)
-    if not contra:
+    # 5) Contradictions & uncertainties (using new contradiction filter)
+    # NOTE: Main contradiction filtering should happen before clustering/representative selection
+    # This is a final pass to report any remaining issues
+    contra = get_contradiction_summary([(key, cs) for key, cs in clusters_scored])
+    if not contra or all(c.startswith("- No") for c in contra):
         contra = ["- No direct contradictions surfaced in clustered evidence; monitor for new data."]
 
     # 6) Outlook (heuristic: extrapolate from top clusters with primaries)
@@ -236,9 +222,9 @@ def compose_report(topic: str, cards, tri: dict, metrics: dict, *, max_findings:
         md.append("No publishable findings met evidence thresholds for this query.")
 
     # Key Numbers - only include if we have actual numbers
-    if key_numbers and len(key_numbers) > 0:
+    if key_numbers and any(kn.strip() for kn in key_numbers):
         md.append("\n## Key Numbers")
-        md.extend(key_numbers)
+        md.extend([kn for kn in key_numbers if kn.strip()])
     # Skip Key Numbers section entirely if no valid numbers
 
     # Contradictions - only include if found

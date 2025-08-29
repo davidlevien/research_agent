@@ -13,6 +13,7 @@ from .models import Discipline
 
 from research_system.models import EvidenceCard, RelatedTopic
 from research_system.utils.datetime_safe import safe_format_dt, format_duration
+from research_system.utils.deterministic import set_global_seeds, ensure_deterministic_environment
 from research_system.tools.evidence_io import write_jsonl
 from research_system.tools.registry import tool_registry as registry
 from research_system.tools.search_registry import register_search_tools
@@ -75,6 +76,8 @@ from research_system.report.binding import (
     assert_no_placeholders, validate_references_section
 )
 from research_system.triangulation.representative import pick_cluster_representative_card
+from research_system.triangulation.contradiction_filter import filter_contradictory_clusters
+from research_system.triangulation.intent_filters import filter_cards_by_intent, get_filtered_clusters_for_intent
 from research_system.quality.quote_rescue import rescue_quotes, extract_key_numbers
 
 import json
@@ -104,6 +107,9 @@ class OrchestratorSettings:
 
 class Orchestrator:
     def __init__(self, s: OrchestratorSettings):
+        # Ensure deterministic behavior from the start
+        ensure_deterministic_environment()
+        
         self.s = s
         # Validate output_dir is not None
         if self.s.output_dir is None:
@@ -1649,6 +1655,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Sanitize paraphrase clusters to prevent over-merging
         para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
         
+        # Filter out contradictory clusters before representative selection
+        para_clusters = filter_contradictory_clusters(para_clusters)
+        logger.info(f"After contradiction filtering: {len(para_clusters)} paraphrase clusters")
+        
         # Structured triangulation - NEW PE-grade indicator matching
         structured_matches = structured_triangles(cards)
         
@@ -1785,6 +1795,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 # Re-compute triangulation with new cards
                 para_clusters = cluster_paraphrases(cards)
                 para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
+                para_clusters = filter_contradictory_clusters(para_clusters)
                 structured_matches = compute_structured_triangles(cards)
                 tri_union = union_rate(para_clusters, structured_matches, len(cards))
                 
@@ -2052,6 +2063,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Recompute triangulation on balanced cards for quality assessment
         para_clusters_final = cluster_paraphrases(cards)
         para_clusters_final = sanitize_paraphrase_clusters(para_clusters_final, cards)
+        para_clusters_final = filter_contradictory_clusters(para_clusters_final)
         structured_matches_final = structured_triangles(cards)
         tri_union_final = union_rate(para_clusters_final, structured_matches_final, len(cards))
         
@@ -2207,6 +2219,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Recompute metrics for next iteration
             para_clusters_final = cluster_paraphrases(cards)
             para_clusters_final = sanitize_paraphrase_clusters(para_clusters_final, cards)
+            para_clusters_final = filter_contradictory_clusters(para_clusters_final)
             structured_matches_final = structured_triangles(cards)
             tri_union_final = union_rate(para_clusters_final, structured_matches_final, len(cards))
             

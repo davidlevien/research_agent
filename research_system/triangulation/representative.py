@@ -3,6 +3,7 @@
 import numpy as np
 import logging
 from typing import List, Tuple, Any, Optional
+from urllib.parse import urlparse
 from sentence_transformers import SentenceTransformer
 
 from research_system.quality.domain_weights import credibility_weight
@@ -11,6 +12,31 @@ from research_system.config_v2 import load_quality_config
 logger = logging.getLogger(__name__)
 
 _model: Optional[SentenceTransformer] = None
+
+def _extract_domain(card: Any) -> str:
+    """Extract domain from card."""
+    domain = getattr(card, 'source_domain', '') or getattr(card, 'domain', '') or ''
+    if not domain:
+        return ''
+    
+    # If it's a URL, extract the domain
+    if '://' in domain:
+        try:
+            return urlparse(domain).netloc.lower()
+        except Exception:
+            return domain.lower()
+    
+    return domain.lower()
+
+def _validate_cluster_domains(cards: List[Any]) -> bool:
+    """Check if cluster has at least 2 independent domains."""
+    domains = set()
+    for card in cards:
+        domain = _extract_domain(card)
+        if domain:
+            domains.add(domain)
+    
+    return len(domains) >= 2
 
 def _get_embedding_model() -> SentenceTransformer:
     """Get or initialize the embedding model."""
@@ -25,15 +51,22 @@ def pick_representative(cluster: List[Tuple[Any, str]], query_text: str) -> str:
     Choose the best representative sentence from a cluster.
     
     Uses credibility-weighted medoid selection with topic similarity floor.
+    Requires at least 2 independent domains for cluster promotion.
     
     Args:
         cluster: List of (card, sentence_str) tuples
         query_text: Original query for topic similarity
         
     Returns:
-        Best representative sentence
+        Best representative sentence, or empty string if cluster invalid
     """
     if not cluster:
+        return ""
+    
+    # Extract cards and validate domain diversity
+    cards = [c for (c, _) in cluster]
+    if not _validate_cluster_domains(cards):
+        logger.debug(f"Cluster rejected: insufficient domain diversity ({len(cards)} cards)")
         return ""
     
     if len(cluster) == 1:
@@ -109,14 +142,21 @@ def pick_cluster_representative_card(cluster: List[Any], query_text: str) -> Any
     """
     Choose the best representative card from a cluster.
     
+    Requires at least 2 independent domains for cluster promotion.
+    
     Args:
         cluster: List of cards
         query_text: Original query
         
     Returns:
-        Best representative card
+        Best representative card, or None if cluster invalid
     """
     if not cluster:
+        return None
+    
+    # Validate domain diversity requirement
+    if not _validate_cluster_domains(cluster):
+        logger.debug(f"Cluster rejected: insufficient domain diversity ({len(cluster)} cards)")
         return None
     
     if len(cluster) == 1:

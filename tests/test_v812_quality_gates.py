@@ -190,7 +190,7 @@ class TestOrchestratorQualityGates:
             orch = Orchestrator(settings)
             assert output_dir.exists()
     
-    @patch('research_system.orchestrator.meets_minimum_bar')
+    @patch('research_system.quality.gates.meets_minimum_bar')
     def test_quality_gates_prevent_final_report(self, mock_meets_bar):
         """Test that failed quality gates prevent final report generation."""
         mock_meets_bar.return_value = False
@@ -225,30 +225,39 @@ class TestSourceFilters:
         """Test source admissibility for stats intent."""
         from research_system.selection.source_filters import is_admissible
         
-        # Official source - always admissible
+        # Create a mock that supports attribute assignment
         card = Mock(source_domain="oecd.org")
+        card.flags = {}  # Initialize flags as empty dict
+        
+        # Official source - always admissible
         assert is_admissible(card, "stats") == True
         assert hasattr(card, 'flags')
         assert card.flags.get('is_primary_official') == True
         
         # Banned representative domain - admissible but flagged
         card = Mock(source_domain="taxfoundation.org")
+        card.flags = {}
         assert is_admissible(card, "stats") == True
         assert card.flags.get('non_representative_only') == True
         
         # Low credibility - not admissible
         card = Mock(source_domain="random-blog.com", credibility_score=0.2)
+        card.flags = {}
         assert is_admissible(card, "stats") == False
     
     def test_filter_by_admissibility(self):
         """Test filtering cards by admissibility."""
         from research_system.selection.source_filters import filter_by_admissibility
         
-        cards = [
-            Mock(source_domain="oecd.org", credibility_score=0.9),
-            Mock(source_domain="random-blog.com", credibility_score=0.2),
-            Mock(source_domain="imf.org", credibility_score=0.95),
-        ]
+        # Create mocks with proper flags initialization
+        card1 = Mock(source_domain="oecd.org", credibility_score=0.9)
+        card1.flags = {}
+        card2 = Mock(source_domain="random-blog.com", credibility_score=0.2)
+        card2.flags = {}
+        card3 = Mock(source_domain="imf.org", credibility_score=0.95)
+        card3.flags = {}
+        
+        cards = [card1, card2, card3]
         
         filtered = filter_by_admissibility(cards, "stats")
         assert len(filtered) == 2
@@ -264,31 +273,41 @@ class TestEnhancedClustering:
             cluster_claims, Cluster, ClusterMember
         )
         
-        # Mock cards with different domains
+        # Mock cards with different domains and proper credibility scores
         cards = [
             Mock(
                 claim="Tax rate is 35%",
                 source_domain="oecd.org",
-                is_primary_source=True
+                is_primary_source=True,
+                credibility_score=0.9
             ),
             Mock(
                 claim="Tax rate is approximately 35%", 
                 source_domain="imf.org",
-                is_primary_source=True
+                is_primary_source=True,
+                credibility_score=0.95
             ),
             Mock(
                 claim="Tax rate is 35%",
                 source_domain="taxfoundation.org",  # Banned representative
-                is_primary_source=False
+                is_primary_source=False,
+                credibility_score=0.7
             ),
         ]
         
-        # With sentence transformers mocked
-        with patch('research_system.triangulation.enhanced_clustering.SentenceTransformer'):
+        # Mock SentenceTransformer and its encode method
+        with patch('research_system.triangulation.enhanced_clustering.SentenceTransformer') as mock_st:
+            # Create a mock instance
+            mock_instance = Mock()
+            mock_st.return_value = mock_instance
+            
+            # Mock the encode method to return dummy embeddings for 3 cards
+            import numpy as np
+            mock_instance.encode.return_value = np.array([[0.1, 0.2, 0.3], [0.15, 0.25, 0.35], [0.12, 0.22, 0.32]])
+            
             clusters = cluster_claims(cards, "stats", threshold=0.40)
             
-            # The function would need proper mocking of embeddings
-            # This tests the structure is in place
+            # Test that the clustering returns a list
             assert isinstance(clusters, list)
 
 
@@ -350,7 +369,7 @@ class TestExtractionSchemas:
             )
         ]
         
-        with patch('research_system.writers.schemas.extract_structured_fact') as mock_extract:
+        with patch('research_system.writers.extractors.extract_structured_fact') as mock_extract:
             mock_extract.return_value = {
                 "metric": "tax rate",
                 "value": 35,
@@ -415,12 +434,16 @@ class TestDatetimeHandling:
         assert result == "2024-01-01 12:00"
     
     def test_safe_format_dt_with_none(self):
-        """Test formatting None returns current time."""
+        """Test formatting None returns default value."""
         from research_system.utils.datetime_safe import safe_format_dt
         
+        # Test with default "—"
         result = safe_format_dt(None, "%Y")
-        current_year = datetime.now().year
-        assert str(current_year) in result
+        assert result == "—"
+        
+        # Test with custom default
+        result = safe_format_dt(None, "%Y", default="N/A")
+        assert result == "N/A"
 
 
 if __name__ == "__main__":

@@ -112,7 +112,12 @@ def dedup_by_canonical(cards: List[Any]) -> List[Any]:
             continue
         
         seen.add(cid)
-        c.canonical_id = cid
+        # Try to set canonical_id, but don't fail if card is immutable
+        try:
+            c.canonical_id = cid
+        except (AttributeError, TypeError):
+            # Card object doesn't support attribute setting - that's okay
+            pass
         out.append(c)
     
     if duplicates > 0:
