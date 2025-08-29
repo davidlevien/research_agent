@@ -469,7 +469,7 @@ class ContentProcessor:
         - score by frequency × novelty × recency
         - return k diverse candidates with inclusion reasons
         """
-        from datetime import datetime
+        from datetime import datetime, timezone
         from collections import defaultdict
         
         def _tokenize(text: str) -> List[str]:
@@ -484,7 +484,7 @@ class ContentProcessor:
             return sorted(ranked, key=lambda x: x[1], reverse=True)
         
         seed_tokens = set(_tokenize(seed_topic))
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         buckets: Dict[str, Dict[str, float]] = defaultdict(lambda: {"freq": 0, "novelty": 0, "recency_boost": 0})
         
         # Common words to exclude
@@ -517,7 +517,13 @@ class ContentProcessor:
                 # Boost for recency
                 if hasattr(card, 'date') and card.date:
                     try:
-                        card_date = datetime.fromisoformat(card.date.replace('Z', '+00:00')) if isinstance(card.date, str) else card.date
+                        if isinstance(card.date, str):
+                            card_date = datetime.fromisoformat(card.date.replace('Z', '+00:00'))
+                        else:
+                            card_date = card.date
+                        # Ensure both are timezone-aware
+                        if card_date.tzinfo is None:
+                            card_date = card_date.replace(tzinfo=timezone.utc)
                         age_days = max(1, (now - card_date).days)
                         bucket["recency_boost"] = max(bucket["recency_boost"], min(1.0, 30 / age_days))
                     except:

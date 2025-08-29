@@ -6,7 +6,7 @@ import uuid
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import defaultdict, Counter
 from urllib.parse import urlparse
 from .models import Discipline
@@ -559,7 +559,7 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         # Build guardrails report
         md = ["# Acceptance Guardrails Evaluation", "",
               f"**Topic**: {self.s.topic}",
-              f"**Timestamp**: {datetime.utcnow().isoformat()}Z",
+              f"**Timestamp**: {datetime.now(timezone.utc).isoformat()}",
               f"**Evidence Cards**: {len(cards)}",
               f"**Unique Domains**: {len(domains)}", "",
               "## Evidence Quality Checks", ""]
@@ -668,7 +668,7 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         """Generate acceptance criteria with actual validation checks"""
         guardrails = "# Acceptance Guardrails\n\n"
         guardrails += f"**Topic**: {self.s.topic}\n"
-        guardrails += f"**Execution Time**: {datetime.utcnow().isoformat()}Z\n\n"
+        guardrails += f"**Execution Time**: {datetime.now(timezone.utc).isoformat()}\n\n"
         
         if cards is None:
             # Pre-collection template
@@ -919,7 +919,7 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
         lines = []
         lines.append(f"# Final Report: {self.s.topic}")
         lines.append("")
-        lines.append(f"**Generated**: {datetime.utcnow().isoformat()}Z")
+        lines.append(f"**Generated**: {datetime.now(timezone.utc).isoformat()}")
         lines.append(f"**Evidence Cards**: {len(cards)}")
         lines.append(f"**Providers**: {', '.join(sorted({getattr(c,'provider','other') for c in cards}))}")
         
@@ -1120,8 +1120,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         checklist = "# Citation Validation Checklist\n\n"
         
         # Date parsing helper
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(days=365)
+        from datetime import datetime, timedelta, timezone
+        cutoff = datetime.now(timezone.utc) - timedelta(days=365)
         def _parse_dt(s):
             if not s: return None
             s = str(s).strip()
@@ -1137,14 +1137,20 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                 try:
                     # Handle ISO format with timezone
                     clean_s = s.split('+')[0].split('.')[0]
-                    return datetime.strptime(clean_s, fmt)
+                    dt = datetime.strptime(clean_s, fmt)
+                    # Make timezone-aware (assume UTC if not specified)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    return dt
                 except:
                     pass
             return None
         
         # Check various criteria with actual implementation
         has_primary = any(c.is_primary_source for c in cards)
-        recent_cards = [c for c in cards if (_parse_dt(getattr(c, 'publication_date', None) or getattr(c, 'date', None)) or datetime.min) >= cutoff]
+        # Use timezone-aware datetime.min replacement
+        min_date = datetime.min.replace(tzinfo=timezone.utc)
+        recent_cards = [c for c in cards if (_parse_dt(getattr(c, 'publication_date', None) or getattr(c, 'date', None)) or min_date) >= cutoff]
         has_recent = len(recent_cards) > 0
         all_attributed = all(bool(getattr(c, 'provider', None)) for c in cards)
         high_quality = len([c for c in cards if (getattr(c, 'credibility_score', 0) or 0) > 0.7])
@@ -1443,7 +1449,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     
                     # Metadata
                     subtopic_name="Research Findings",
-                    collected_at=datetime.utcnow().isoformat() + "Z",
+                    collected_at=datetime.now(timezone.utc).isoformat(),
                     author=author
                 ))
 
@@ -1545,7 +1551,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                             relevance_score=nc.get("relevance_score", 0.7),
                             confidence=nc.get("confidence", 0.5),
                             source_domain=canonical_domain(nc.get("source_domain", nc.get("url", ""))),
-                            collected_at=datetime.utcnow().isoformat() + "Z",
+                            collected_at=datetime.now(timezone.utc).isoformat(),
                             is_primary_source=True,
                             claim=nc.get("claim", nc.get("title", "")),
                             supporting_text=nc.get("supporting_text", nc.get("snippet", "")),
@@ -1634,7 +1640,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         confidence=0.64,
                                         is_primary_source=_is_primary_class(new_domain),
                                         source_domain=canonical_domain(new_domain),
-                                        collected_at=datetime.utcnow().isoformat() + "Z"
+                                        collected_at=datetime.now(timezone.utc).isoformat()
                                     ))
                                     # Update counts to prevent over-adding from same domain
                                     domain_counts[new_domain] = domain_counts.get(new_domain, 0) + 1
@@ -1780,7 +1786,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                             claim=content.title or "",
                             supporting_text=content.text[:1000],
                             subtopic_name=self.s.topic,
-                            collected_at=datetime.utcnow().isoformat() + "Z"
+                            collected_at=datetime.now(timezone.utc).isoformat()
                         )
                 except:
                     return None
@@ -1923,7 +1929,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         is_primary_source=is_primary_domain(domain),
                                         search_provider=provider,
                                         source_domain=canonical_domain(domain),
-                                        collected_at=datetime.utcnow().isoformat() + "Z",
+                                        collected_at=datetime.now(timezone.utc).isoformat(),
                                         related_reason=f"arex_targeted_{metric}"
                                     ))
         
@@ -2034,7 +2040,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                             relevance_score=0.75,
                             confidence=0.64,
                             is_primary_source=True,
-                            collected_at=datetime.utcnow().isoformat() + "Z",
+                            collected_at=datetime.now(timezone.utc).isoformat(),
                             claim=s.get("claim", s.get("title", "")),
                             supporting_text=s.get("supporting_text", s.get("snippet", "")),
                             subtopic_name="Research Findings"
@@ -2213,7 +2219,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                 is_primary_source=is_primary_domain(domain),
                                 search_provider=provider,
                                 source_domain=canonical_domain(domain),
-                                collected_at=datetime.utcnow().isoformat() + "Z",
+                                collected_at=datetime.now(timezone.utc).isoformat(),
                                 backfill_reason=purpose
                             ))
                 except Exception as e:
