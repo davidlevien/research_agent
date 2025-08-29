@@ -1,6 +1,6 @@
-# Research System v8.9.0 - Universal Research Intelligence Platform
+# Research System v8.10.1 - Universal Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.9.0's enhanced evidence validation, provider circuit breakers, and improved triangulation marking.
+A production-ready, principal engineer-grade research system that delivers **decision-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.10.1's fixed timing management and improved test coverage.
 
 **Status**: ✅ Production-ready with circuit breakers, evidence validation, and triangulation safety
 
@@ -264,6 +264,18 @@ pytest tests/test_evidence_repair.py
 - Evidence repair validation
 - Lazy Settings initialization for proper env var loading
 - CONTACT_EMAIL compliance for API requirements
+
+## 🆕 v8.10.1 Critical Timing Fix
+
+### Bug Fixes
+- **Fixed NameError**: Resolved `start_time` undefined error in orchestrator's backfill loop
+- **Instance Variables**: Properly initialized `self.start_time` and `self.time_budget` as instance variables
+- **Test Coverage**: Fixed triangulation rate test to include required `domains` field in clusters
+
+### Technical Improvements
+- **Timing Management**: Both `start_time` and `time_budget` now initialized in constructor with proper defaults
+- **Backfill Loop**: Correctly references `self.start_time` for elapsed time calculations
+- **Adaptive Decisions**: Time remaining calculations now work reliably throughout orchestrator lifecycle
 
 ## 🆕 v8.9.0 Evidence Validation & Circuit Breaker Enhancements
 

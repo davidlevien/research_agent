@@ -124,16 +124,16 @@ def test_triangulation_rate_calculation():
     
     # Multi-source clusters (triangulated)
     multi_clusters = [
-        {"indices": [0, 1], "size": 2},
-        {"indices": [2, 3, 4], "size": 3},
+        {"indices": [0, 1], "size": 2, "domains": ["domain1.com", "domain2.com"]},
+        {"indices": [2, 3, 4], "size": 3, "domains": ["domain3.com", "domain4.com", "domain5.com"]},
     ]
     # 5 cards total, all in multi-source clusters
     assert triangulation_rate_from_clusters(multi_clusters) == 1.0
     
     # Mixed clusters
     mixed_clusters = [
-        {"indices": [0], "size": 1},  # 1 single
-        {"indices": [1, 2], "size": 2},  # 2 triangulated
+        {"indices": [0], "size": 1, "domains": ["domain1.com"]},  # 1 single
+        {"indices": [1, 2], "size": 2, "domains": ["domain2.com", "domain3.com"]},  # 2 triangulated
     ]
     # 3 cards total, 2 triangulated = 66.7%
     rate = triangulation_rate_from_clusters(mixed_clusters)

@@ -106,6 +106,11 @@ class Orchestrator:
         # Track provider health for adaptive adjustments
         self.provider_errors = 0
         self.provider_attempts = 0
+        
+        # Initialize timing attributes (will be properly set in run())
+        import time
+        self.start_time = time.time()
+        self.time_budget = 1800  # Default 30 minutes
     
     def _is_primary_class(self, domain: str) -> bool:
         """Check if domain is a primary source based on intent"""
@@ -1937,7 +1942,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             
             # Calculate time remaining for adaptive decisions
             import time
-            elapsed = time.time() - start_time
+            elapsed = time.time() - self.start_time
             time_budget = getattr(self, 'time_budget', 120)
             time_left = max(0, time_budget - elapsed)
             time_remaining_pct = time_left / max(1, time_budget)
