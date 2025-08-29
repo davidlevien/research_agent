@@ -1952,7 +1952,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         for m in structured_matches:
             if len(m.get("domains", [])) >= 2:
                 tri_card_index.update(m.get("indices", []))
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         for i, c in enumerate(cards):
             # Calculate recency days
             recency_days = None
@@ -1962,6 +1963,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                         c_date = datetime.fromisoformat(c.date.replace('Z', '+00:00'))
                     else:
                         c_date = c.date
+                    # Ensure both are timezone-aware for comparison
+                    if c_date.tzinfo is None:
+                        c_date = c_date.replace(tzinfo=timezone.utc)
                     recency_days = (now - c_date).days
                 except:
                     pass
