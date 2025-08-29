@@ -20,6 +20,17 @@ CDC_POLICY_TERMS = (
     "regulation", "mandate", "requirement", "protocol"
 )
 
+# Safe verbs for SVO (subject-verb-object) patterns
+SAFE_VERBS = ("increases", "decreases", "is associated with",
+              "correlates with", "contributes to", "reduces", "raises")
+
+# Banned advocacy phrases - moved from key_numbers for reuse
+BAN_PHRASES = (
+    "project 2025", "corporate welfare", "hurt the middle class",
+    "tax the rich more", "fair share", "talking point", "manifesto",
+    "campaign", "party platform", "press release", "op-ed"
+)
+
 HTML_TAG = re.compile(r"<[^>]+>")
 
 def _clean(s: str) -> str:
@@ -27,6 +38,19 @@ def _clean(s: str) -> str:
     s = HTML_TAG.sub("", s or "")
     s = " ".join(s.split())
     return s
+
+def _is_advocacy(text: str) -> bool:
+    """Check if text contains advocacy language."""
+    t = text.lower()
+    return any(p in t for p in BAN_PHRASES)
+
+def _svotize(text: str) -> Optional[str]:
+    """Convert text to SVO format if it contains safe verbs and numbers."""
+    # crude but reliable: require at least one SAFE_VERB and a number or explicit noun phrase
+    t = " ".join(text.split())
+    if any(v in t.lower() for v in SAFE_VERBS) and re.search(r"\d|percent|percentage|rate|ratio|index", t, re.I):
+        return t
+    return None
 
 def has_numeric_and_period(s: str) -> bool:
     """Check if text contains both numbers and time periods"""
@@ -52,90 +76,69 @@ def render_finding(claim: str, domains: List[str], sources: List[Any], label: st
         out.append(f"    - {md_link(title, s.url)} — {s.source_domain}")
     return "\n".join(out)
 
-def compose_findings(
-    cards: List[Any], 
-    para_clusters: List[Dict], 
-    struct_tris: List[Dict],
-    topic: str = ""
-) -> str:
+def compose_findings(cards, para_clusters, struct_tris, topic: str = "") -> str:
     """
-    Compose findings section with triangulated claims first.
-    Returns markdown-formatted findings.
+    Compose findings section with factual, SVO-structured claims.
+    Prioritizes triangulated, multi-domain claims and rejects advocacy language.
     """
-    findings = []
-    used_indices = set()
+    ranked = []
+    used = set()
     
-    # Check if this is a CDC-related topic
-    is_cdc_topic = "cdc" in topic.lower()
-    
-    # 1. Triangulated structured claims (highest priority)
+    # prefer structured triangles first (multi-domain)
     for tri in struct_tris:
-        if len(set(tri.get("domains", []))) < 2:
-            continue
-        claim = _clean(tri.get("representative_claim", ""))
-        
-        # Filter for CDC relevance if needed
-        if is_cdc_topic and not any(term.lower() in claim.lower() for term in CDC_POLICY_TERMS):
-            continue
-            
-        if not has_numeric_and_period(claim):
-            continue
-        indices = tri.get("indices", [])
-        if any(i in used_indices for i in indices):
-            continue
-        srcs = [cards[i] for i in indices]
-        findings.append(render_finding(claim, tri.get("domains", []), srcs, "Triangulated"))
-        used_indices.update(indices)
-        if len(findings) >= 10:
-            break
+        for c in tri.get("cards", []):
+            if getattr(c, "domain_count", 1) < 2:
+                continue
+            if _is_advocacy(c.text):
+                continue
+            svot = _svotize(c.text or "")
+            if not svot:
+                continue
+            k = svot.lower()
+            if k in used:
+                continue
+            used.add(k)
+            ranked.append(("A", svot, c))
     
-    # 2. Triangulated paraphrase clusters  
-    if len(findings) < 10:
-        for cluster in para_clusters:
-            if len(set(cluster.get("domains", []))) < 2:
+    # then paraphrase clusters (still multi-domain)
+    for cl in para_clusters:
+        for c in cl.get("cards", []):
+            if _is_advocacy(c.text):
                 continue
-            claim = _clean(cluster.get("representative_claim", ""))
-            
-            # Filter for CDC relevance if needed
-            if is_cdc_topic and not any(term.lower() in claim.lower() for term in CDC_POLICY_TERMS):
+            svot = _svotize(c.text or "")
+            if not svot:
                 continue
-                
-            if not has_numeric_and_period(claim):
+            k = svot.lower()
+            if k in used:
                 continue
-            indices = cluster.get("indices", [])
-            if any(i in used_indices for i in indices):
+            used.add(k)
+            ranked.append(("B", svot, c))
+
+    # finally high-cred singletons only if we're starving
+    if len(ranked) < 3:
+        for c in cards:
+            if getattr(c, "cred_score", 0.0) < 0.75:
                 continue
-            srcs = [cards[i] for i in indices]
-            findings.append(render_finding(claim, cluster.get("domains", []), srcs, "Triangulated"))
-            used_indices.update(indices)
-            if len(findings) >= 10:
-                break
-    
-    # 3. Backfill with single-source primaries
-    if len(findings) < 6:
-        primaries = [
-            c for c in cards 
-            if c.source_domain in PRIMARY 
-            and c.quote_span 
-            and has_numeric_and_period(c.quote_span)
-        ]
-        # Sort by credibility
-        primaries.sort(key=lambda c: c.credibility_score, reverse=True)
-        
-        for c in primaries:
-            if cards.index(c) in used_indices:
+            if _is_advocacy(c.text):
                 continue
-            findings.append(render_finding(
-                c.quote_span, 
-                [c.source_domain], 
-                [c], 
-                "Single-source"
-            ))
-            used_indices.add(cards.index(c))
-            if len(findings) >= 6:
-                break
-    
-    return "\n".join(findings)
+            svot = _svotize(c.text or "")
+            if not svot:
+                continue
+            k = svot.lower()
+            if k in used:
+                continue
+            used.add(k)
+            ranked.append(("C", svot, c))
+
+    # build markdown with inline links
+    out = []
+    for tier, svot, c in ranked[:6]:
+        url = getattr(c, "url", "") or (getattr(c, "source", {}) or {}).get("url", "")
+        dom = getattr(c, "source_domain", "") or getattr(c, "domain", "")
+        src_md = f" [[source]({url}) — {dom}]" if url else ""
+        out.append(f"- {svot}{src_md}")
+
+    return "\n".join(out) if out else "- _No triangulated, factual findings passed guardrails._"
 
 def generate_final_report(
     cards: List[Any],

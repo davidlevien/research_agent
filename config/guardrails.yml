@@ -1,0 +1,36 @@
+text_types:
+  allow_content_types: ["dataset", "statistical_report", "peer_reviewed_article", "gov_brief", "technical_note"]
+  block_content_types: ["press_release", "campaign_material", "op_ed", "advocacy_report"]
+
+lexicons:
+  stance_verbs: ["urge","demand","condemn","celebrate","promise","pledge","endorse","denounce"]
+  subjective_adjectives: ["outrageous","shameful","unfair","tremendous","disastrous","amazing","terrible"]
+  rhetorical_markers: ["!", "??", "!!!", "needless to say", "it is obvious", "clearly"]
+
+numerics:
+  min_value_abs: 0.0
+  require_units: false  # set true if you want every number to have an explicit unit
+  max_items: 6
+
+contradiction:
+  antonym_pairs:
+    - ["increase", "decrease"]
+    - ["higher", "lower"]
+    - ["rise", "fall"]
+    - ["accelerate", "decelerate"]
+  # numeric contradiction sensitivity (threshold for opposite-sign conflicts on same metric)
+  sign_conflict_threshold: 0.0
+
+credibility:
+  primary_domains:
+    - ".gov"
+    - ".edu"
+    - ".int"
+    - "oecd.org"
+    - "imf.org"
+    - "worldbank.org"
+    - "ec.europa.eu"
+    - "who.int"
+    - "un.org"
+  min_cred_score: 0.60
+  prefer_primary_boost: 0.75

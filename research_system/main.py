@@ -2,7 +2,8 @@ import argparse
 from pathlib import Path
 from research_system.config import Settings
 from research_system.orchestrator import Orchestrator, OrchestratorSettings
-from research_system.utils.deterministic import set_global_seeds
+from research_system.utils.seeding import set_global_seeds
+from research_system.utils.dtime import safe_strftime
 import logging, os, sys, time, asyncio
 import structlog
 
@@ -17,7 +18,7 @@ def _init_logging():
 
 def main():
     # Set seeds for deterministic behavior using our centralized seeding module
-    set_global_seeds(seed=2025)
+    set_global_seeds(os.environ.get("RA_GLOBAL_SEED", "20230817"))
     
     _init_logging()
     p = argparse.ArgumentParser(prog="research-system", description="Research & Citations")
@@ -34,13 +35,12 @@ def main():
     settings = Settings()  # instantiation triggers validators
     
     # Create a proper subdirectory for this run
-    from datetime import datetime
     import re
     
     # Generate subdirectory name from topic and timestamp
     topic_slug = re.sub(r'[^\w\s-]', '', args.topic.lower())
     topic_slug = re.sub(r'[\s_-]+', '_', topic_slug)[:50]  # Limit length
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = safe_strftime(time.time(), "%Y%m%d_%H%M%S")
     
     # Create subdirectory path
     base_output_dir = Path(args.output_dir)

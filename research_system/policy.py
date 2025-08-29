@@ -24,7 +24,7 @@ DEFAULT_PRIORS = {
 
 POLICIES: Dict[Discipline, Policy] = {
     Discipline.GENERAL: Policy(["crossref","openalex","gdelt"], [
-        "{topic} site:doi.org", "{topic} 2024..2025 filetype:pdf", "{topic} site:*.gov"
+        "{topic} site:doi.org", "{topic} 2024..2025 filetype:pdf", "{topic} site:.gov"
     ], DEFAULT_PRIORS, 0.35, 0.40, 0.90),
     Discipline.SCIENCE: Policy(["crossref","openalex"], [
         "{topic} site:arxiv.org", "{topic} site:doi.org", "{topic} replication dataset"

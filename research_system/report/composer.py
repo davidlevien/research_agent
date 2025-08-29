@@ -9,6 +9,9 @@ from research_system.report.claim_filter import (
 )
 from research_system.report.key_numbers import compose_key_numbers_section
 from research_system.triangulation.contradiction_filter import get_contradiction_summary
+from research_system.text.texttype import passes_content_policy
+from research_system.text.numbers import as_markdown_bullets
+from research_system.text.contradictions import prune_conflicts
 
 NUM = re.compile(r"\b(?:[±~]?\d+(?:\.\d+)?%|\d{1,3}(?:,\d{3})+(?:\.\d+)?|\b(?:19|20)\d{2}\b)\b")
 INCR = ("increase","increased","up","rise","grew","growth","higher")
@@ -105,6 +108,34 @@ def _pick_quotes(cards, k=2) -> List[str]:
             seen.add(s)
         if len(out) >= k: break
     return out
+
+SAFE_VERBS = ("increases","decreases","is associated with","correlates with",
+              "contributes to","reduces","raises","predicts","explains")
+
+def _svotize(text: str) -> str | None:
+    t = " ".join((text or "").split())
+    if any(v in t.lower() for v in SAFE_VERBS) and re.search(r"\d|percent|rate|ratio|index|coefficient", t, re.I):
+        return t
+    return None
+
+def compose_key_numbers(claims):
+    claims = [c for c in claims if passes_content_policy(c)]
+    return as_markdown_bullets(claims)
+
+def compose_findings(cards):
+    cards = [c for c in cards if passes_content_policy(c)]
+    cards = prune_conflicts(cards, keep=6)
+    out = []
+    for c in cards:
+        svot = _svotize(getattr(c,"text","") or "")
+        if not svot:
+            continue
+        url = (getattr(c,"source",{}) or {}).get("url") or getattr(c,"url","") or ""
+        src = f" [[source]({url})]" if url else ""
+        out.append(f"- {svot}{src}")
+        if len(out) >= 6:
+            break
+    return "\n".join(out) if out else "- _No triangulated, factual findings passed guardrails._"
 
 def compose_report(topic: str, cards, tri: dict, metrics: dict, *, max_findings: int = 10) -> str:
     # 0) Build source index for consistent citations

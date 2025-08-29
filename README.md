@@ -1,8 +1,8 @@
-# Research System v8.13.0 - Scholarly-Grade Research Intelligence Platform
+# Research System v8.14.0 - Config-Driven Research Intelligence Platform
 
-A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.13.0's **unified quality configuration**, **atomic transaction support**, **evidence-number binding enforcement**, and **17 comprehensive improvements** for reliable, entailment-validated research.
+A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.14.0's **config-driven guardrails**, **topic-agnostic filtering**, and **deterministic execution** for reliable, advocacy-free research.
 
-**Status**: ✅ Production-ready with v8.13.0 scholarly-grade improvements: unified quality config, atomic transactions, evidence-number binding, and 17 comprehensive fixes
+**Status**: ✅ Production-ready with v8.14.0 config-driven improvements: topic-agnostic filtering, deterministic seeding, safe datetime handling, and unified report composition
 
 ## 🚀 Quick Start
 
@@ -789,7 +789,19 @@ from research_system.strict.adaptive_guard import adaptive_strict_check
 - **Intent-Specific Reporting**: Adaptive report structure by query type
 - **Geographic Disambiguation**: Handles ambiguous city names
 
-### v8.13.0 - Scholarly-Grade Improvements (Latest)
+### v8.14.0 - Config-Driven Topic-Agnostic System (Latest)
+- **Config-Driven Guardrails**: All filtering rules in `config/guardrails.yml` for easy tuning
+- **Topic-Agnostic Text Classification**: Detects content types (dataset, peer_reviewed, gov_brief, etc.) without topic bias
+- **Rhetoric & Advocacy Filtering**: Lexicon-based detection of stance verbs, subjective adjectives, rhetorical markers
+- **Generic Numeric Extraction**: Handles all units (%, $, €, £, pp, bps, millions, billions) with ranges
+- **Antonym-Based Contradiction Detection**: Configurable pairs (increase/decrease, rise/fall) with sign conflict detection
+- **Engine-Safe Query Building**: Fixed `site:*.gov` → `site:.gov` for better search engine compatibility
+- **Deterministic Seeding**: Global seed control via `RA_GLOBAL_SEED` environment variable
+- **Safe DateTime Formatting**: Handles datetime, float timestamps, ISO strings robustly
+- **Config-Driven Representative Selection**: Credibility weighting with primary domain boost from config
+- **Unified Report Composers**: Single pipeline using passes_content_policy and prune_conflicts
+
+### v8.13.0 - Scholarly-Grade Improvements
 - **Unified Quality Configuration**: Single source of truth (`quality.yml`) for all thresholds and settings
 - **Atomic Writes & Transactions**: Prevents partial outputs with run transaction wrapper and atomic file operations
 - **Hard-Gate Early Return**: Never generates both insufficient evidence AND final reports (mutually exclusive)

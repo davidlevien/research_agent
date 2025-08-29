@@ -10,16 +10,40 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Comprehensive numeric pattern matching
-_NUM_PAT = re.compile(
-    r"""(?P<raw>
-        (?:[$€£¥]\s*)?\d{1,3}(?:,\d{3})*(?:\.\d+)?      # 1,234 or 1,234.56 or $1,234
-        | \d+(?:\.\d+)?\s*%                             # 12.3%
-        | \d+(?:\.\d+)?\s*(?:pp|ppt|bps)               # 2.5pp, 25bps
-        | \b\d+(?:\.\d+)?\b                             # plain numbers
-    )""",
-    re.VERBOSE
+# Stricter numeric pattern with explicit units
+NUM_PAT = re.compile(
+    r"""(?P<val>[+-]?\d{1,3}(?:,\d{3})*(?:\.\d+)?|[+-]?\d+(?:\.\d+)?)\s*
+        (?P<unit>%|pp\b|ppt\b|bps\b|bn\b|billion\b|m\b|million\b|k\b|thousand\b|
+                   \$|usd\b|€|eur\b|£|gbp\b|trillion\b|t\b)""",
+    re.IGNORECASE | re.VERBOSE
 )
+
+# Banned advocacy phrases
+BAN_PHRASES = (
+    "project 2025", "corporate welfare", "hurt the middle class",
+    "tax the rich more", "fair share", "talking point", "manifesto",
+    "campaign", "party platform", "press release", "op-ed"
+)
+
+def _is_advocacy(text: str) -> bool:
+    """Check if text contains advocacy language."""
+    if not isinstance(text, str):
+        return False
+    txt = text.lower()
+    return any(p in txt for p in BAN_PHRASES)
+
+def _norm_unit(unit: str) -> str:
+    """Normalize unit strings."""
+    u = unit.lower()
+    return {
+        "usd": "$", "€": "€", "£": "£", 
+        "bn": "billion", "m": "million", "k": "thousand",
+        "t": "trillion", "eur": "€", "gbp": "£"
+    }.get(u, u)
+
+def _norm_val(s: str) -> float:
+    """Normalize numeric values."""
+    return float(s.replace(",", ""))
 
 # Unit hint patterns for context labeling
 _UNIT_HINTS = [
@@ -324,27 +348,60 @@ def _extract_key_numbers(cards: List[Any], max_items: int = 6) -> List[KeyNumber
     
     return results
 
-def compose_key_numbers_section(cards: List[Any], max_numbers: int = 6) -> str:
-    """Compose a structured Key Numbers section with proper units and citations."""
-    try:
-        key_numbers = _extract_key_numbers(cards, max_items=max_numbers)
+def compose_key_numbers_section(claims, max_items: int = 6, max_numbers: int = None) -> str:
+    """Return a markdown bullet list of numerically-grounded, cited key numbers."""
+    # Use max_numbers if provided, otherwise use max_items
+    if max_numbers is not None:
+        max_items = max_numbers
         
-        if not key_numbers:
-            return "No quantitative figures with sufficient reliability were identified."
+    items = []
+    seen = set()
+    
+    for c in claims:
+        text = getattr(c, "text", "")
+        if not text or not isinstance(text, str) or _is_advocacy(text):
+            continue
+            
+        m = NUM_PAT.search(text)
+        if not m:
+            continue
+            
+        val = _norm_val(m.group("val"))
+        unit = _norm_unit(m.group("unit"))
         
-        # Format as structured bullets
-        lines = []
-        for kn in key_numbers:
-            # Create bullet with number, label, and source
-            source_text = f"*({kn.source})*" if kn.source and kn.source != "unknown" else ""
-            line = f"- **{kn.display}** — {kn.label} {source_text}"
-            lines.append(line)
+        # canonical key => (rounded) value + unit + normalized claim head
+        head = re.sub(r"\s+", " ", text.strip())
+        head = head[:220]  # keep it tidy
+        key = (round(val, 6), unit, head.split(" (")[0].lower())
         
-        return "\n".join(lines)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        # build bullet with citation (prefer source_title > title > url)
+        src = getattr(c, "source", None) or {}
+        src_title = src.get("source_title") or src.get("title") or src.get("url") or ""
+        src_url = src.get("url") or ""
         
-    except Exception as e:
-        logger.error(f"Error in compose_key_numbers_section: {e}")
-        return "Error extracting key numbers."
+        if not src_url:
+            # skip uncitable numbers
+            continue
+
+        bullet = f"- **{val:g} {unit}** — {head}"
+        bullet += f" [[source]({src_url})" + (f" — {src_title}]" if src_title else "]")
+        items.append((abs(val), bullet))  # salience by magnitude
+
+    # strong sort: magnitude desc then text
+    items.sort(key=lambda x: (-x[0], x[1]))
+    
+    # cap, but ensure at least 3 if we have them
+    out = [b for _, b in items[:max(max_items, 3)]]
+    
+    # fallback if nothing made it through
+    if not out:
+        return "- _No reliable, numeric key numbers could be triangulated._"
+        
+    return "\n".join(out)
 
 def validate_key_numbers_quality(cards: List[Any]) -> Dict[str, Any]:
     """Validate the quality of extracted key numbers for testing."""
