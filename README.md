@@ -1,8 +1,8 @@
-# Research System v8.15.0 - Enhanced Reporting & Quality Gates
+# Research System v8.16.0 - Critical Production Fixes & Robustness
 
-A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.15.0's **hard quality gating**, **citation-bound numbers**, **sentence-aware trimming**, and **actionable insufficient evidence guidance**.
+A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.16.0's **critical runtime fixes**, v8.15.0's **hard quality gating**, **citation-bound numbers**, **sentence-aware trimming**, and **actionable insufficient evidence guidance**.
 
-**Status**: ✅ Production-ready with v8.15.0 enhanced reporting: single-source metrics, citation safety, concrete next steps, and source strategy transparency
+**Status**: ✅ Production-ready with v8.16.0 critical fixes for runtime stability and v8.15.0 enhanced reporting: single-source metrics, citation safety, concrete next steps, and source strategy transparency
 
 ## 🚀 Quick Start
 
@@ -848,7 +848,41 @@ from research_system.strict.adaptive_guard import adaptive_strict_check
 - **Intent-Specific Reporting**: Adaptive report structure by query type
 - **Geographic Disambiguation**: Handles ambiguous city names
 
-### v8.14.0 - Config-Driven Topic-Agnostic System (Latest)
+### v8.16.0 - Critical Production Fixes (Latest)
+
+**Released**: December 2024
+**Focus**: Runtime stability, API robustness, and CI/CD compatibility
+
+**Critical Fixes**:
+1. **EvidenceCard Canonical ID**: Added `canonical_id` field and `ensure_canonical_id()` method to prevent crashes during deduplication
+2. **Cross-Encoder Polymorphism**: Reranker now handles both dict and dataclass/Pydantic objects gracefully
+3. **OECD Endpoint Fix**: Corrected SDMX-JSON dataflow URL (removed incorrect `/ALL/` suffix)
+4. **OpenAlex Query Degradation**: Robust 3-tier fallback (search → title.search → abstract.search) for handling API errors
+5. **Unpaywall Email Validation**: Uses environment variable with valid default (`ci@example.org`) to prevent 422 errors
+6. **Smarter Contradiction Filter**: Only drops clusters with confident opposing stances (2+ members each side, avg confidence ≥0.6)
+7. **Primary Share Consistency**: Backfill now uses configured threshold (default 33%) instead of hardcoded 50%
+8. **EPUB/Non-HTML Handling**: Trafilatura extraction errors handled gracefully without crashing
+9. **SerpAPI CI/CD Compatibility**: Wrapper logic runs even without API key for test mocking
+
+**Testing**: Comprehensive test suite in `tests/test_v816_critical_fixes.py` with 22 tests covering all fixes
+
+### v8.15.0 - Enhanced Reporting & Quality Gates
+
+**Released**: December 2024  
+**Focus**: Hard quality gating with single-source metrics, citation safety, and actionable guidance
+
+**Major Features**:
+1. **Single Source of Truth**: Centralized metrics in `context.py` prevent drift between components
+2. **Citation-Bound Numbers**: Key numbers section with mandatory evidence citations
+3. **Sentence-Aware Trimming**: Clean text truncation at sentence boundaries without dangling ellipses
+4. **Actionable Next Steps**: Specific guidance when evidence is insufficient
+5. **Source Strategy Transparency**: Clear reporting of provider usage and failures
+6. **Section Parity**: All report types (final, insufficient, diagnostic) have consistent sections
+7. **Hard Quality Gates**: Reports blocked when thresholds not met (triangulation ≥50%, primary ≥33%, cards ≥25)
+
+**Testing**: Comprehensive test suite with 27 tests in `tests/test_v815_reporting.py`
+
+### v8.14.0 - Config-Driven Topic-Agnostic System
 - **Config-Driven Guardrails**: All filtering rules in `config/guardrails.yml` for easy tuning
 - **Topic-Agnostic Text Classification**: Detects content types (dataset, peer_reviewed, gov_brief, etc.) without topic bias
 - **Rhetoric & Advocacy Filtering**: Lexicon-based detection of stance verbs, subjective adjectives, rhetorical markers

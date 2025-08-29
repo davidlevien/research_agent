@@ -9,6 +9,11 @@ from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
 
+# v8.16.0: Custom exception for missing API key (allows test mocking)
+class SerpAPIConfigError(Exception):
+    """Raised when SerpAPI is not configured properly."""
+    pass
+
 # Circuit breaker state (module-level for persistence across calls)
 _serpapi_state = {
     "is_open": False,
@@ -24,6 +29,10 @@ _serpapi_state = {
 )
 def _make_serpapi_request(query: str, count: int, api_key: str, location: str = "United States", timeout: int = 30) -> Dict[str, Any]:
     """Make HTTP request to SerpAPI with retry logic"""
+    # v8.16.0: Don't make real network calls without a key (tests can monkeypatch this)
+    if not api_key:
+        raise SerpAPIConfigError("SERPAPI_API_KEY not configured")
+    
     url = "https://serpapi.com/search.json"
     params = {
         "q": query,
@@ -83,8 +92,16 @@ def _parse_serpapi_results(data: Dict[str, Any]) -> list[SearchHit]:
     
     return results
 
+def _get_api_key() -> Optional[str]:
+    """v8.16.0: Lazy-load API key for CI/test flexibility."""
+    return os.getenv("SERPAPI_API_KEY") or Settings().SERPAPI_API_KEY
+
 def run(req: SearchRequest) -> list[SearchHit]:
-    """Execute search using SerpAPI with circuit breaker and deduplication"""
+    """Execute search using SerpAPI with circuit breaker and deduplication.
+    
+    v8.16.0: Wrapper logic (circuit breaker, dedup, budget) runs even without API key
+    to allow tests to exercise the full pipeline with mocked _make_serpapi_request.
+    """
     settings = Settings()
     
     # Check if circuit breaker is enabled (default: True)
@@ -117,12 +134,11 @@ def run(req: SearchRequest) -> list[SearchHit]:
     # Start latency timer
     with SEARCH_LATENCY.labels(provider="serpapi").time():
         try:
-            # Get API key
-            api_key = settings.SERPAPI_API_KEY
+            # Get API key (v8.16.0: lazy-loaded for test flexibility)
+            api_key = _get_api_key()
             if not api_key:
-                logger.error("SERPAPI_API_KEY not configured")
-                SEARCH_ERRORS.labels(provider="serpapi").inc()
-                return []
+                logger.debug("SERPAPI_API_KEY not configured; continuing so circuit-breaker/dedup logic can run (tests/mocks).")
+                # Note: _make_serpapi_request will raise SerpAPIConfigError if not mocked
             
             # Determine location from region if specified
             location = "United States"
@@ -139,15 +155,20 @@ def run(req: SearchRequest) -> list[SearchHit]:
                 }
                 location = region_map.get(req.region, location)
             
-            # Make the API request
+            # Make the API request (v8.16.0: may raise SerpAPIConfigError if no key)
             timeout = settings.HTTP_TIMEOUT_SECONDS
-            response_data = _make_serpapi_request(
-                query=req.query,
-                count=req.count,
-                api_key=api_key,
-                location=location,
-                timeout=timeout
-            )
+            try:
+                response_data = _make_serpapi_request(
+                    query=req.query,
+                    count=req.count,
+                    api_key=api_key or "",  # Pass empty string if None
+                    location=location,
+                    timeout=timeout
+                )
+            except SerpAPIConfigError:
+                logger.debug("SERPAPI disabled (no key) — skipping real request and returning empty result.")
+                SEARCH_ERRORS.labels(provider="serpapi").inc()
+                return []
             
             # Parse results
             results = _parse_serpapi_results(response_data)
@@ -174,3 +195,8 @@ def run(req: SearchRequest) -> list[SearchHit]:
             logger.error(f"SerpAPI search failed for query '{req.query}': {e}")
             SEARCH_ERRORS.labels(provider="serpapi").inc()
             return []
+
+def search_serpapi(query: str, num: int = 10, **kwargs) -> list[SearchHit]:
+    """v8.16.0: Backward compatibility wrapper for run() function."""
+    req = SearchRequest(query=query, count=num, **kwargs)
+    return run(req)

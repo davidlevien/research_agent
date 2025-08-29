@@ -1733,8 +1733,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         initial_H_norm = H_norm
         
         # PRIMARY BACKFILL if needed
-        if primary_share < 0.50:
-            logger.info(f"Primary share {primary_share:.2%} < 50%, running backfill")
+        # v8.16.0: Use configured threshold (default 33%) consistently
+        min_primary_threshold = getattr(self.v813_config, 'primary_share_floor', 0.33)
+        if primary_share < min_primary_threshold:
+            logger.info(f"Primary share {primary_share:.2%} < {min_primary_threshold:.0%}, running backfill")
             from research_system.enrich.primary_fill import primary_fill_for_families
             
             # Get families that need primaries

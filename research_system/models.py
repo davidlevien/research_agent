@@ -3,6 +3,8 @@ from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
 from enum import Enum
 import uuid
+import hashlib
+from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 
 
 class Discipline(str, Enum):
@@ -75,6 +77,43 @@ class EvidenceCard(BaseModel):
     law_citation: Optional[str] = None  # Legal citation (e.g., 15 U.S.C. §1)
     cve_id: Optional[str] = None  # CVE identifier for security vulnerabilities
     metadata: Optional[Dict[str, Any]] = None  # Additional metadata storage
+    
+    # v8.16.0: Stable identifier for dedup/canonicalization
+    canonical_id: Optional[str] = None
+    
+    def ensure_canonical_id(self) -> None:
+        """Compute canonical_id if missing, using DOI, URL, or content hash."""
+        if self.canonical_id:
+            return
+        
+        # Try DOI first
+        if self.doi:
+            did = self.doi.lower().replace("https://doi.org/", "").strip()
+            self.canonical_id = f"doi:{did}"
+            return
+        
+        # Try URL
+        if self.url:
+            self.canonical_id = f"url:{self._sha1(self._canonical_url(self.url))}"
+            return
+        
+        # Fallback to content hash
+        key = (self.title or self.claim or self.quote_span or self.snippet or "").strip().lower()
+        self.canonical_id = f"text:{self._sha1(key)}"
+    
+    def _canonical_url(self, u: str) -> str:
+        """Canonicalize URL by removing tracking parameters."""
+        try:
+            p = urlparse(u)
+            # Strip utm/tracking parameters
+            q = [(k, v) for k, v in parse_qsl(p.query) if not k.lower().startswith("utm_")]
+            return urlunparse((p.scheme.lower(), p.netloc.lower(), p.path, "", urlencode(q), ""))
+        except Exception:
+            return u or ""
+    
+    def _sha1(self, s: str) -> str:
+        """Generate SHA1 hash of string."""
+        return hashlib.sha1(s.encode("utf-8", errors="ignore")).hexdigest()
     
     @model_validator(mode="after")
     def backfill_required_fields(self):

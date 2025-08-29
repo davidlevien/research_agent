@@ -310,7 +310,13 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     
     # Extract text with trafilatura if available, otherwise basic fallback
     if HAS_TRAFILATURA and trafilatura:
-        text = trafilatura.extract(html, include_comments=False, include_tables=False) or ""
+        # v8.16.0: Handle EPUB/non-HTML extraction errors gracefully
+        try:
+            text = trafilatura.extract(html, include_comments=False, include_tables=False) or ""
+        except Exception as e:
+            logger.debug(f"Trafilatura failed to extract; non-HTML or EPUB detected: {e}")
+            text = ""
+        
         try:
             tmeta = trafilatura.extract_metadata(html)
             title_fallback = tmeta.title if tmeta else None

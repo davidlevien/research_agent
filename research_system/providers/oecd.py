@@ -9,8 +9,8 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# OECD SDMX-JSON: list dataflows (datasets) and filter by query
-_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"  # Trailing slash required
+# v8.16.0: Correct OECD SDMX-JSON dataflow endpoint (no /ALL/ suffix)
+_DATAFLOW = "https://stats.oecd.org/SDMX-JSON/dataflow"
 
 # Circuit breaker state
 _circuit_state = {

@@ -105,19 +105,31 @@ def dedup_by_canonical(cards: List[Any]) -> List[Any]:
     duplicates = 0
     
     for c in cards:
-        cid = canonical_id(c)
+        # v8.16.0: Safely compute canonical_id when missing
+        try:
+            # Try to call ensure_canonical_id if available
+            if hasattr(c, 'ensure_canonical_id'):
+                c.ensure_canonical_id()
+        except Exception:
+            pass
+        
+        # Get or compute canonical ID
+        cid = getattr(c, 'canonical_id', None)
+        if not cid:
+            cid = canonical_id(c)
+            # Try to set it on the card
+            try:
+                c.canonical_id = cid
+            except (AttributeError, TypeError):
+                # Card object doesn't support attribute setting - that's okay
+                pass
+        
         if cid in seen:
             duplicates += 1
             logger.debug(f"Dropping duplicate with canonical ID: {cid}")
             continue
         
         seen.add(cid)
-        # Try to set canonical_id, but don't fail if card is immutable
-        try:
-            c.canonical_id = cid
-        except (AttributeError, TypeError):
-            # Card object doesn't support attribute setting - that's okay
-            pass
         out.append(c)
     
     if duplicates > 0:

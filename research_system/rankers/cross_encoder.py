@@ -69,6 +69,23 @@ def rerank(
         except Exception as e:
             logger.debug(f"LLM reranking not available: {e}")
     
+    # v8.16.0: Helper to safely extract text from dict or object
+    def _get_text(candidate, *keys):
+        """Extract text from dict or dataclass/pydantic object."""
+        if isinstance(candidate, dict):
+            for key in keys:
+                value = candidate.get(key)
+                if value:
+                    return str(value)
+            return ""
+        else:
+            # Try attribute access for objects (dataclass, Pydantic, etc.)
+            for key in keys:
+                value = getattr(candidate, key, None)
+                if value:
+                    return str(value)
+            return ""
+    
     # Try cross-encoder reranking
     try:
         from sentence_transformers import CrossEncoder
@@ -79,7 +96,11 @@ def rerank(
         # Prepare pairs for scoring
         pairs = []
         for c in candidates:
-            text = f"{c.get('title', '')} {c.get('snippet', '')}"
+            title = _get_text(c, 'title')
+            snippet = _get_text(c, 'snippet', 'text')
+            text = f"{title} {snippet}".strip()
+            if not text:
+                text = _get_text(c, 'supporting_text', 'claim', 'url')
             pairs.append([query, text])
         
         # Get scores
@@ -99,15 +120,25 @@ def rerank(
         logger.debug("sentence-transformers not available, using score-based ranking")
         
         # Fallback: rank by existing scores if available
-        if candidates and "confidence" in candidates[0]:
-            candidates.sort(key=lambda c: c.get("confidence", 0), reverse=True)
-        elif candidates and "relevance_score" in candidates[0]:
-            candidates.sort(key=lambda c: c.get("relevance_score", 0), reverse=True)
+        def _get_score(c, *keys):
+            if isinstance(c, dict):
+                for key in keys:
+                    if key in c:
+                        return c.get(key, 0)
+            else:
+                for key in keys:
+                    if hasattr(c, key):
+                        return getattr(c, key, 0)
+            return 0
+        
+        if candidates:
+            candidates.sort(key=lambda c: _get_score(c, "confidence", "relevance_score", "credibility_score"), reverse=True)
         
         return candidates[:topk]
     
     except Exception as e:
-        logger.warning(f"Cross-encoder reranking failed: {e}")
+        # v8.16.0: Downgrade to debug level to avoid noise
+        logger.debug(f"Cross-encoder reranking failed: {e}")
         return candidates[:topk]
 
 def batch_rerank(
@@ -160,11 +191,30 @@ def hybrid_rerank(
         
         model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
         
+        # v8.16.0: Helper for safe extraction
+        def _get_value(c, *keys):
+            if isinstance(c, dict):
+                for key in keys:
+                    if key in c:
+                        return c.get(key)
+            else:
+                for key in keys:
+                    if hasattr(c, key):
+                        return getattr(c, key, None)
+            return None
+        
+        def _get_text_safe(c, *keys):
+            for key in keys:
+                val = _get_value(c, key)
+                if val:
+                    return str(val)
+            return ""
+        
         # Get original scores (normalize to 0-1)
         original_scores = []
         for c in candidates:
-            score = c.get("confidence", c.get("relevance_score", 0.5))
-            original_scores.append(score)
+            score = _get_value(c, "confidence", "relevance_score", "credibility_score") or 0.5
+            original_scores.append(float(score))
         
         # Normalize original scores
         max_orig = max(original_scores) if original_scores else 1.0
@@ -174,7 +224,11 @@ def hybrid_rerank(
         # Get reranker scores
         pairs = []
         for c in candidates:
-            text = f"{c.get('title', '')} {c.get('snippet', '')}"
+            title = _get_text_safe(c, 'title')
+            snippet = _get_text_safe(c, 'snippet', 'text', 'supporting_text')
+            text = f"{title} {snippet}".strip()
+            if not text:
+                text = _get_text_safe(c, 'claim', 'url')
             pairs.append([query, text])
         
         reranker_scores = model.predict(pairs)

@@ -92,44 +92,121 @@ def has_contradictions(cards: List[Any]) -> bool:
     """
     return len(detect_contradictions(cards)) > 0
 
-def filter_contradictory_clusters(clusters: List[Any]) -> List[Any]:
+def filter_contradictory_clusters(clusters: List[Any], confidence_threshold: float = 0.6) -> List[Any]:
     """
-    Remove clusters that contain contradictory evidence.
+    Remove clusters that contain strongly contradictory evidence.
+    v8.16.0: Only drop clusters with confident opposing stances (2+ members each side, avg confidence >= 0.6).
     
     Args:
         clusters: List of cluster objects/dicts
+        confidence_threshold: Minimum average confidence to consider contradictions strong
         
     Returns:
-        Filtered list with contradictory clusters removed
+        Filtered list with strongly contradictory clusters removed
     """
     if not clusters:
         return []
     
     filtered_clusters = []
     removed_count = 0
+    flagged_count = 0
     
     for cluster in clusters:
         # Extract cards from cluster (handle different formats)
         if isinstance(cluster, dict):
             cluster_cards = cluster.get('cards', [])
+            cluster_meta = cluster.get('meta', {})
         else:
             cluster_cards = getattr(cluster, 'cards', [])
+            cluster_meta = getattr(cluster, 'meta', {})
         
         if not cluster_cards:
             continue
         
-        # Check for contradictions
-        if has_contradictions(cluster_cards):
-            logger.debug(f"Filtered out cluster with {len(cluster_cards)} cards due to contradictions")
-            removed_count += 1
-            continue
+        # Detect contradictions
+        contradictions = detect_contradictions(cluster_cards)
+        
+        if contradictions:
+            # Analyze contradiction strength
+            should_drop = False
+            
+            for contradiction_type, pos_cards, neg_cards in contradictions:
+                # Check if we have strong opposition (2+ on each side)
+                if len(pos_cards) >= 2 and len(neg_cards) >= 2:
+                    # Calculate average confidence (using credibility_score as proxy)
+                    pos_confidence = _calculate_avg_confidence(pos_cards)
+                    neg_confidence = _calculate_avg_confidence(neg_cards)
+                    
+                    if pos_confidence >= confidence_threshold and neg_confidence >= confidence_threshold:
+                        # Strong, confident contradiction - drop this cluster
+                        should_drop = True
+                        if isinstance(cluster, dict):
+                            cluster['meta'] = cluster.get('meta', {})
+                            cluster['meta']['dropped_reason'] = 'confident_contradiction'
+                            cluster['meta']['pos_confidence'] = pos_confidence
+                            cluster['meta']['neg_confidence'] = neg_confidence
+                        logger.debug(f"Dropping cluster with confident contradiction: {len(pos_cards)} vs {len(neg_cards)} cards, confidence {pos_confidence:.2f} vs {neg_confidence:.2f}")
+                        break
+            
+            if should_drop:
+                removed_count += 1
+                continue
+            else:
+                # Weak contradiction - keep but flag for review
+                if isinstance(cluster, dict):
+                    cluster['meta'] = cluster.get('meta', {})
+                    cluster['meta']['needs_review'] = True
+                    cluster['meta']['weak_contradiction'] = True
+                else:
+                    if not hasattr(cluster, 'meta'):
+                        cluster.meta = {}
+                    cluster.meta['needs_review'] = True
+                    cluster.meta['weak_contradiction'] = True
+                flagged_count += 1
+                logger.debug(f"Keeping cluster with weak contradiction for review: {len(cluster_cards)} cards")
         
         filtered_clusters.append(cluster)
     
     if removed_count > 0:
-        logger.info(f"Filtered {removed_count} contradictory clusters from {len(clusters)} total")
+        logger.info(f"Filtered {removed_count} strongly contradictory clusters from {len(clusters)} total")
+    if flagged_count > 0:
+        logger.info(f"Flagged {flagged_count} clusters with weak contradictions for review")
     
     return filtered_clusters
+
+def _calculate_avg_confidence(cards: List[Any]) -> float:
+    """
+    Calculate average confidence/credibility score for a set of cards.
+    
+    Args:
+        cards: List of evidence cards
+        
+    Returns:
+        Average confidence score (0.0 to 1.0)
+    """
+    if not cards:
+        return 0.0
+    
+    scores = []
+    for card in cards:
+        # Try to get confidence/credibility score
+        score = None
+        for attr in ['confidence', 'credibility_score', 'relevance_score']:
+            val = getattr(card, attr, None)
+            if val is not None:
+                try:
+                    # Try to convert to float, skip if it's a Mock or other non-numeric
+                    score = float(val)
+                    break
+                except (TypeError, ValueError):
+                    continue
+        
+        if score is None:
+            score = 0.5  # Default medium confidence if no score available
+        
+        scores.append(score)
+    
+    return sum(scores) / len(scores) if scores else 0.5
 
 def validate_cluster_consistency(cluster_cards: List[Any], topic: str = "") -> bool:
     """

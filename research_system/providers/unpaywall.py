@@ -3,11 +3,13 @@
 from typing import Optional, Dict, Any
 from .http import http_json_with_policy as http_json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 BASE = "https://api.unpaywall.org/v2/"
-MAILTO = "research@example.com"  # Polite crawling
+# v8.16.0: Use environment variable with valid default
+MAILTO = os.getenv("UNPAYWALL_EMAIL", "ci@example.org")
 
 def lookup_fulltext(doi: str) -> Optional[Dict[str, Any]]:
     """Look up free full-text for a DOI."""
@@ -20,7 +22,8 @@ def lookup_fulltext(doi: str) -> Optional[Dict[str, Any]]:
             doi = doi.split("doi.org/")[-1]
         
         url = BASE + doi
-        data = http_json("unpaywall", "GET", url, params={"email": MAILTO})
+        # v8.16.0: Increased timeout for large PDFs
+        data = http_json("unpaywall", "GET", url, params={"email": MAILTO}, timeout=25)
         
         # Extract best OA location
         best_oa = data.get("best_oa_location")
