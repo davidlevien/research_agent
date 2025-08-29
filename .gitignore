@@ -51,11 +51,13 @@ junit.xml
 coverage.xml
 *.cover
 benchmark.json
+test_*/
 
 # Logs
 *.log
 logs/
 *.pid
+nohup.out
 
 # Outputs
 outputs/
