@@ -81,14 +81,11 @@ class TestSerpAPICircuitBreaker:
     
     def test_circuit_breaker_trips_on_429(self):
         """Test that circuit breaker trips on 429 responses."""
-        from research_system.tools.search_serpapi import run, _serpapi_state
+        from research_system.tools.search_serpapi import run, _serpapi_state, reset_serpapi_state
         from research_system.tools.search_models import SearchRequest
         
-        # Reset state
-        _serpapi_state["is_open"] = False
-        _serpapi_state["consecutive_429s"] = 0
-        _serpapi_state["seen_queries"].clear()
-        _serpapi_state["call_count"] = 0
+        # Reset state using proper function
+        reset_serpapi_state()
         
         with patch.dict(os.environ, {"SERPAPI_CIRCUIT_BREAKER": "true", "SERPAPI_TRIP_ON_429": "true"}):
             with patch('research_system.tools.search_serpapi._make_serpapi_request') as mock_request:
@@ -118,14 +115,11 @@ class TestSerpAPICircuitBreaker:
     
     def test_query_deduplication(self):
         """Test that duplicate queries are not sent."""
-        from research_system.tools.search_serpapi import run, _serpapi_state
+        from research_system.tools.search_serpapi import run, _serpapi_state, reset_serpapi_state
         from research_system.tools.search_models import SearchRequest
         
-        # Reset state
-        _serpapi_state["is_open"] = False
-        _serpapi_state["seen_queries"].clear()
-        _serpapi_state["call_count"] = 0
-        _serpapi_state["circuit_open_until"] = 0.0
+        # Reset state using proper function
+        reset_serpapi_state()
         
         with patch.dict(os.environ, {"SERPAPI_CIRCUIT_BREAKER": "true"}):
             with patch('research_system.tools.search_serpapi._make_serpapi_request') as mock_request:
@@ -145,14 +139,11 @@ class TestSerpAPICircuitBreaker:
     
     def test_call_budget_enforcement(self):
         """Test that call budget is enforced."""
-        from research_system.tools.search_serpapi import run, _serpapi_state
+        from research_system.tools.search_serpapi import run, _serpapi_state, reset_serpapi_state
         from research_system.tools.search_models import SearchRequest
         
-        # Reset state
-        _serpapi_state["is_open"] = False
-        _serpapi_state["seen_queries"].clear()
-        _serpapi_state["call_count"] = 0
-        _serpapi_state["circuit_open_until"] = 0.0
+        # Reset state using proper function
+        reset_serpapi_state()
         _serpapi_state["call_budget"] = 2  # Set budget for this test
         
         with patch.dict(os.environ, {"SERPAPI_CIRCUIT_BREAKER": "true", "SERPAPI_MAX_CALLS_PER_RUN": "2"}):
