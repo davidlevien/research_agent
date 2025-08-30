@@ -20,20 +20,52 @@ from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
 
-# v8.18.0: Redact api_key from noisy httpx INFO logs
+# v8.19.0: Redact api_key from httpx logs while fixing type issues
 class _RedactApiKeyFilter(logging.Filter):
     _pat = re.compile(r"(api_key=)[^&\s]+")
     
     def filter(self, record: logging.LogRecord) -> bool:
         try:
-            if isinstance(record.args, tuple):
-                record.args = tuple(
-                    self._pat.sub(r"\1REDACTED", str(a)) for a in record.args
-                )
+            # Fix httpx's HTTP Request log format issue and redact api_key
+            if isinstance(record.args, tuple) and len(record.args) == 5:
+                # Check if this is httpx's HTTP Request log (method, url, version, status, reason)
+                if record.msg == 'HTTP Request: %s %s "%s %d %s"':
+                    method, url, version, status, reason = record.args
+                    # Redact API key in URL
+                    if isinstance(url, str) and "api_key=" in url:
+                        url = self._pat.sub(r"\1REDACTED", url)
+                    # Fix status code type - convert string to int if needed
+                    if isinstance(status, str) and status.isdigit():
+                        status = int(status)
+                    record.args = (method, url, version, status, reason)
+                else:
+                    # General case: only redact strings that contain api_key
+                    new_args = []
+                    for arg in record.args:
+                        if isinstance(arg, str) and "api_key=" in arg:
+                            new_args.append(self._pat.sub(r"\1REDACTED", arg))
+                        else:
+                            new_args.append(arg)
+                    record.args = tuple(new_args)
+            elif isinstance(record.args, tuple):
+                # Other tuple cases
+                new_args = []
+                for arg in record.args:
+                    if isinstance(arg, str) and "api_key=" in arg:
+                        new_args.append(self._pat.sub(r"\1REDACTED", arg))
+                    else:
+                        new_args.append(arg)
+                record.args = tuple(new_args)
             elif isinstance(record.args, dict):
-                record.args = {k: self._pat.sub(r"\1REDACTED", str(v)) for k, v in record.args.items()}
-            record.msg = self._pat.sub(r"\1REDACTED", str(record.msg))
+                record.args = {
+                    k: self._pat.sub(r"\1REDACTED", str(v)) if isinstance(v, str) and "api_key=" in str(v) else v
+                    for k, v in record.args.items()
+                }
+            # Only modify msg if it's a string and contains api_key
+            if isinstance(record.msg, str) and "api_key=" in record.msg:
+                record.msg = self._pat.sub(r"\1REDACTED", record.msg)
         except Exception:
+            # If anything goes wrong, don't break logging
             pass
         return True
 
