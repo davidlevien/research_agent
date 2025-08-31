@@ -19,6 +19,11 @@ def test_oecd_dataflows_lowercase_first():
 
 def test_oecd_dataflows_fallback():
     """Test OECD fallback through multiple endpoints."""
+    from research_system.providers.oecd import reset_circuit_state
+    
+    # Reset circuit state to ensure clean test
+    reset_circuit_state()
+    
     with patch('research_system.providers.oecd.http_json') as mock_http:
         # First 3 fail, 4th succeeds
         mock_http.side_effect = [
@@ -41,12 +46,10 @@ def test_oecd_dataflows_fallback():
 
 def test_oecd_circuit_breaker():
     """Test OECD circuit breaker on repeated failures."""
-    from research_system.providers.oecd import _circuit_state, CIRCUIT_THRESHOLD
+    from research_system.providers.oecd import _circuit_state, CIRCUIT_THRESHOLD, reset_circuit_state
     
     # Reset circuit
-    _circuit_state["is_open"] = False
-    _circuit_state["consecutive_failures"] = 0
-    _circuit_state["catalog_cache"] = None
+    reset_circuit_state()
     
     with patch('research_system.providers.oecd.http_json') as mock_http:
         # All endpoints fail
@@ -64,6 +67,11 @@ def test_oecd_circuit_breaker():
 
 def test_oecd_search():
     """Test OECD search functionality."""
+    from research_system.providers.oecd import reset_circuit_state
+    
+    # Reset circuit state to ensure clean test
+    reset_circuit_state()
+    
     with patch('research_system.providers.oecd._dataflows') as mock_dataflows:
         mock_dataflows.return_value = {
             "TOURISM": {"name": "Tourism Statistics"},

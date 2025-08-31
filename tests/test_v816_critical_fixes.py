@@ -173,12 +173,10 @@ class TestOECDProvider:
     @patch('research_system.providers.oecd.http_json')
     def test_oecd_uses_correct_dataflow_url(self, mock_http):
         """Test that OECD uses correct SDMX-JSON dataflow endpoint."""
-        from research_system.providers.oecd import search_oecd, _circuit_state
+        from research_system.providers.oecd import search_oecd, reset_circuit_state
         
         # Reset circuit state to ensure clean test
-        _circuit_state["is_open"] = False
-        _circuit_state["consecutive_failures"] = 0
-        _circuit_state["catalog_cache"] = None
+        reset_circuit_state()
         
         mock_http.return_value = {
             "Dataflows": {
@@ -203,12 +201,10 @@ class TestOECDProvider:
     @patch('research_system.providers.oecd.http_json')
     def test_oecd_fallback_to_all_endpoint(self, mock_http):
         """Test that OECD falls back to /ALL/ endpoint when first fails."""
-        from research_system.providers.oecd import search_oecd, _circuit_state
+        from research_system.providers.oecd import search_oecd, reset_circuit_state
         
         # Reset circuit state to ensure clean test
-        _circuit_state["is_open"] = False
-        _circuit_state["consecutive_failures"] = 0
-        _circuit_state["catalog_cache"] = None
+        reset_circuit_state()
         
         # First call fails, second succeeds
         mock_http.side_effect = [
@@ -239,11 +235,10 @@ class TestOECDProvider:
     
     def test_oecd_circuit_breaker(self):
         """Test OECD circuit breaker functionality."""
-        from research_system.providers.oecd import _circuit_state, search_oecd
+        from research_system.providers.oecd import _circuit_state, search_oecd, reset_circuit_state
         
-        # Reset circuit state
-        _circuit_state["is_open"] = False
-        _circuit_state["consecutive_failures"] = 0
+        # Reset circuit state and set up test cache
+        reset_circuit_state()
         _circuit_state["catalog_cache"] = {"TEST": {"name": "Cached Dataset"}}
         
         with patch('research_system.providers.oecd.http_json') as mock_http:

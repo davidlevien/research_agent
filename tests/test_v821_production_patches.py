@@ -326,7 +326,10 @@ class TestOECDEndpointResilience:
     @patch('research_system.providers.oecd.http_json')
     def test_fallback_through_endpoints(self, mock_http):
         """Test OECD tries multiple endpoints on failure."""
-        from research_system.providers.oecd import _dataflows
+        from research_system.providers.oecd import _dataflows, reset_circuit_state
+        
+        # Reset circuit state to ensure clean test
+        reset_circuit_state()
         
         # First 3 fail, 4th succeeds
         mock_http.side_effect = [

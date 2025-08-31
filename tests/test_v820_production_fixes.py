@@ -34,7 +34,10 @@ def test_oecd_lowercase_endpoints_first():
 
 def test_oecd_fallback_mechanism():
     """Test OECD tries multiple endpoints until one works."""
-    from research_system.providers.oecd import _dataflows
+    from research_system.providers.oecd import _dataflows, reset_circuit_state
+    
+    # Reset circuit state to ensure clean test
+    reset_circuit_state()
     
     # Mock http_json to fail first 3 times, succeed on 4th
     with patch('research_system.providers.oecd.http_json') as mock_http:

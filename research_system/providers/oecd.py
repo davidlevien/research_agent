@@ -38,6 +38,15 @@ _circuit_state = {
     "cache_time": 0
 }
 
+def reset_circuit_state():
+    """Reset circuit breaker state for testing."""
+    global _circuit_state
+    _circuit_state["is_open"] = False
+    _circuit_state["last_failure"] = 0
+    _circuit_state["consecutive_failures"] = 0
+    _circuit_state["catalog_cache"] = None
+    _circuit_state["cache_time"] = 0
+
 # Configuration
 CIRCUIT_COOLDOWN = int(os.getenv("OECD_CIRCUIT_COOLDOWN", "300"))  # 5 minutes
 CIRCUIT_THRESHOLD = int(os.getenv("OECD_CIRCUIT_THRESHOLD", "2"))  # Trip after 2 failures
