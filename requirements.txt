@@ -68,3 +68,5 @@ python-json-logger>=2.0.0
 jsonlines>=4.0.0
 tqdm>=4.65.0
 tenacity>=8.2.0
+tldextract>=3.4.0
+PyMuPDF>=1.23.0  # Optional: For PDF text extraction

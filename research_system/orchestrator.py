@@ -117,6 +117,9 @@ class Orchestrator:
         ensure_deterministic_environment()
         
         self.s = s
+        # v8.21.0: Initialize settings for salvage pass compatibility
+        self.settings = s.__dict__ if hasattr(s, '__dict__') else {}
+        
         # Validate output_dir is not None
         if self.s.output_dir is None:
             raise ValueError("output_dir cannot be None")

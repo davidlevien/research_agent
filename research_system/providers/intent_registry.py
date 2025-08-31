@@ -1,4 +1,4 @@
-"""Intent-based provider registry with tiered fallbacks."""
+"""Intent-based provider registry with tiered fallbacks and capability matrix."""
 
 import os
 import logging
@@ -7,6 +7,60 @@ from research_system.intent.classifier import Intent
 
 logger = logging.getLogger(__name__)
 
+# v8.21.0: Capability matrix for travel/tourism research
+CAPABILITY_MATRIX = {
+    # Demand-side indicators
+    "demand": {
+        "providers": ["unwto", "wttc", "eurostat", "ustravel", "fred", "bls"],
+        "min_sources": 2
+    },
+    # Capacity / traffic
+    "capacity": {
+        "providers": ["iata", "icao", "tsa", "oag"],
+        "min_sources": 2
+    },
+    # Prices / inflation
+    "prices": {
+        "providers": ["fred", "bls", "oecd", "eurostat"],
+        "min_sources": 2
+    },
+    # Employment / GDP contribution
+    "contribution": {
+        "providers": ["wttc", "oecd", "worldbank"],
+        "min_sources": 2
+    },
+    # Policy / macro briefs (secondary)
+    "policy": {
+        "providers": ["oecd", "congress_crs", "worldbank"],
+        "min_sources": 1
+    }
+}
+
+def plan_capabilities(query: str) -> List[str]:
+    """
+    Plan capability topics based on query.
+    For macro trend queries, plan all topics.
+    """
+    q_lower = query.lower()
+    
+    # Broad travel/tourism queries get all capabilities
+    if any(term in q_lower for term in ["travel", "tourism", "trends", "recovery", "industry"]):
+        return ["demand", "capacity", "prices", "contribution", "policy"]
+    
+    # Specific topic matching
+    topics = []
+    if any(term in q_lower for term in ["arrivals", "visitors", "demand"]):
+        topics.append("demand")
+    if any(term in q_lower for term in ["airline", "flight", "capacity", "traffic"]):
+        topics.append("capacity")
+    if any(term in q_lower for term in ["price", "inflation", "cpi", "cost"]):
+        topics.append("prices")
+    if any(term in q_lower for term in ["gdp", "employment", "jobs", "economic"]):
+        topics.append("contribution")
+    if any(term in q_lower for term in ["policy", "regulation", "government"]):
+        topics.append("policy")
+    
+    return topics if topics else ["demand", "contribution"]  # Default to core metrics
 
 # Provider registry with tiered fallbacks by intent
 INTENT_REGISTRY: Dict[Intent, Dict[str, List[str]]] = {

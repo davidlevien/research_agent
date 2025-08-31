@@ -190,12 +190,13 @@ class TestOECDProvider:
         
         results = search_oecd("GDP", limit=5)
         
-        # v8.18.0: Robust fallback tries multiple endpoints, starting without /ALL/
+        # v8.21.0: Enhanced OECD endpoints start with lowercase (which works)
         # The first successful call will be to the first candidate
         mock_http.assert_called_with(
             "oecd", 
             "GET", 
-            "https://stats.oecd.org/SDMX-JSON/dataflow"
+            "https://stats.oecd.org/sdmx-json/dataflow",
+            headers={"Accept": "application/json"}
         )
         assert len(results) > 0
     
@@ -225,13 +226,14 @@ class TestOECDProvider:
         
         results = search_oecd("GDP", limit=5)
         
-        # v8.18.0: Should have tried all 4 endpoints
+        # v8.21.0: Should have tried 4 endpoints (now we have 12 total, but succeed on 4th)
         assert mock_http.call_count == 4
-        # Last call should be to /ALL/ endpoint with trailing slash
+        # Fourth call should be to lowercase /all/ endpoint  
         mock_http.assert_called_with(
             "oecd", 
             "GET", 
-            "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/"
+            "https://stats.oecd.org/sdmx-json/dataflow/all/",
+            headers={"Accept": "application/json"}
         )
         assert len(results) > 0
     
