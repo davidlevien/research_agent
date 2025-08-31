@@ -1,8 +1,8 @@
-# Research System v8.18.0 - Enterprise-Grade Reliability & Robustness
+# Research System v8.21.0 - Always Produces Useful Output
 
-A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.18.0's **robust fallback mechanisms**, v8.17.0's **strict mode enforcement**, v8.16.0's **critical runtime fixes**, and v8.15.0's **hard quality gating**.
+A production-ready, principal engineer-grade research system that delivers **scholarly-grade** intelligence for **any search query** - from encyclopedic knowledge to local searches, product reviews to academic research. Built with v8.21.0's **resilient output generation**, v8.18.0's **robust fallback mechanisms**, v8.17.0's **strict mode enforcement**, and v8.15.0's **hard quality gating**.
 
-**Status**: ✅ Enterprise-ready with v8.18.0 robust error handling, strict mode controls, and comprehensive fallback mechanisms for maximum reliability
+**Status**: ✅ Enterprise-ready with v8.21.0 patches ensuring useful output is ALWAYS produced, even when quality gates fail
 
 ## 🚀 Quick Start
 
@@ -34,6 +34,113 @@ cp .env.example .env
 # Basic research (without API keys)
 SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
   --topic "your topic" --strict --output-dir outputs
+```
+
+## 🛡️ v8.21.0: Resilient Output Generation - Always Produces Useful Results
+
+### Overview
+Version 8.21.0 implements critical production patches ensuring the research system **ALWAYS** produces useful output, even when quality gates fail. This addresses the key issue where broad queries (like "travel & tourism trends") could result in no output.
+
+### Key Features
+
+#### 1. Always Emit Readable Reports (`WRITE_REPORT_ON_FAIL=true`)
+- Generates `final_report.md` with preliminary banner when gates fail
+- Report includes all sections but warns about lower confidence
+- Users always get structured insights, never empty-handed
+
+#### 2. Evidence Bundle Persistence (Always On)
+- **Before** quality gates run, saves to `evidence/` directory:
+  - `final_cards.jsonl` - All evidence cards
+  - `sources.csv` - Flat source list for easy review
+  - `metrics_snapshot.json` - Quality metrics
+- Ensures work is never lost, even on catastrophic failure
+
+#### 3. Degraded Draft Output (`WRITE_DRAFT_ON_FAIL=true`)
+- Creates `draft_degraded.md` with minimal but useful content
+- Shows metrics snapshot and top 30 evidence bullets
+- Clear warning about quality gates not being met
+
+#### 4. Dynamic Gate Profiles (`GATES_PROFILE=discovery`)
+Two profiles available:
+- **default**: Standard strict thresholds (50% primary, 45% triangulation)
+- **discovery**: Relaxed for broad topics (30% primary, 30% triangulation)
+
+#### 5. Last-Mile Backfill (`BACKFILL_ON_FAIL=true`)
+- When gates fail, attempts one more collection pass
+- Uses free APIs (Wikipedia, DuckDuckGo) with relaxed constraints
+- Re-checks gates after backfill - can rescue borderline runs
+
+#### 6. Trusted Domain Protection (`TRUSTED_DOMAINS`)
+Never filters these domains regardless of credibility:
+- Default: OECD, UNWTO, WTTC, World Bank, IMF, WHO, UN, etc.
+- Extend via: `TRUSTED_DOMAINS=custom1.org,custom2.com`
+
+#### 7. Enhanced Triangulation (`TRI_PARA_THRESHOLD=0.35`)
+- Lower default threshold (was 0.40) for broader clustering
+- Numeric token boost: Claims sharing 2+ numbers/years cluster together
+- Better handles paraphrases in broad topic research
+
+#### 8. Reranker Fallback (Automatic)
+- Lexical fallback when HuggingFace rate limits (429 errors)
+- Query-document token overlap scoring
+- Year/percent bonus scoring for relevance
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WRITE_REPORT_ON_FAIL` | `true` | Write preliminary report when gates fail |
+| `WRITE_DRAFT_ON_FAIL` | `true` | Write degraded draft when gates fail |
+| `BACKFILL_ON_FAIL` | `true` | Attempt backfill when gates fail |
+| `GATES_PROFILE` | `default` | Gate threshold profile (default/discovery) |
+| `TRI_PARA_THRESHOLD` | `0.35` | Paraphrase clustering threshold |
+| `TRUSTED_DOMAINS` | (see above) | Additional domains to never filter |
+| `PRIMARY_FLOOR` | varies | Override primary source minimum |
+| `TRIANGULATION_FLOOR` | varies | Override triangulation minimum |
+| `DOMAIN_CONC_CAP` | varies | Override domain concentration cap |
+
+### Usage Examples
+
+#### Maximum Resilience (Recommended for Broad Topics)
+```bash
+GATES_PROFILE=discovery \
+WRITE_REPORT_ON_FAIL=true \
+WRITE_DRAFT_ON_FAIL=true \
+BACKFILL_ON_FAIL=true \
+./run_full_features.sh "latest travel & tourism trends"
+```
+
+#### Standard Mode with Safety Net
+```bash
+# Uses default profile but ensures output on failure
+WRITE_REPORT_ON_FAIL=true \
+./run_full_features.sh "AI economic impact 2024"
+```
+
+#### Custom Trusted Domains
+```bash
+TRUSTED_DOMAINS=myorg.com,trusted.edu \
+./run_full_features.sh "industry specific research"
+```
+
+### Output Structure (v8.21.0)
+
+```
+outputs/<query-slug>/
+├── final_report.md          # Always generated (may have preliminary banner)
+├── evidence/                 # Always saved before gates
+│   ├── final_cards.jsonl   
+│   ├── sources.csv          
+│   └── metrics_snapshot.json
+├── draft_degraded.md        # If gates fail & WRITE_DRAFT_ON_FAIL=true
+├── insufficient_evidence_report.md  # If gates fail
+└── source_strategy.md       # Always generated
+```
+
+### Smoke Test
+Run the travel & tourism smoke test to verify all patches:
+```bash
+python3.11 smoke_test_travel_tourism.py
 ```
 
 ## 🎯 Intent-Aware Universal Research (v8.8.0)
