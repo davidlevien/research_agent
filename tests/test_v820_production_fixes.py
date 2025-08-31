@@ -16,11 +16,17 @@ def test_oecd_lowercase_endpoints_first():
     assert "sdmx-json" in _DATAFLOW_CANDIDATES[2]
     assert "sdmx-json" in _DATAFLOW_CANDIDATES[3]
     
-    # Next 4 should be uppercase fallbacks
-    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[4]
-    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[5]
-    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[6]
-    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[7]
+    # Next 4 should be mixed case (Sdmx-Json)
+    assert "Sdmx-Json" in _DATAFLOW_CANDIDATES[4]
+    assert "Sdmx-Json" in _DATAFLOW_CANDIDATES[5]
+    assert "Sdmx-Json" in _DATAFLOW_CANDIDATES[6]
+    assert "Sdmx-Json" in _DATAFLOW_CANDIDATES[7]
+    
+    # Last 4 should be uppercase fallbacks
+    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[8]
+    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[9]
+    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[10]
+    assert "SDMX-JSON" in _DATAFLOW_CANDIDATES[11]
     
     # Should have /all variants
     assert any("/all" in url for url in _DATAFLOW_CANDIDATES[:4])
@@ -217,7 +223,7 @@ def test_all_fixes_integrated():
     
     # 1. OECD endpoints
     from research_system.providers.oecd import _DATAFLOW_CANDIDATES
-    assert len(_DATAFLOW_CANDIDATES) == 8
+    assert len(_DATAFLOW_CANDIDATES) == 12  # Now has 12 endpoints (4 lowercase, 4 mixed, 4 uppercase)
     
     # 2. Logging format
     from research_system.quality.metrics_v2 import FinalMetrics

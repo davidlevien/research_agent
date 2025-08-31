@@ -2517,7 +2517,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             from research_system.triangulation.paraphrase_cluster import cluster_paraphrases
             
             paraphrase_clusters = cluster_paraphrases(cards)
-            paraphrase_cluster_sets = sanitize_paraphrase_clusters(paraphrase_clusters, cards, target_cap=12)
+            # Use max_frac parameter instead of target_cap - 12 cards out of typical 50-100 = ~0.2
+            paraphrase_cluster_sets = sanitize_paraphrase_clusters(paraphrase_clusters, cards, max_frac=0.2)
             
             # Recompute metrics with new clustering
             final_metrics = compute_metrics(

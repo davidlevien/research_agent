@@ -353,7 +353,7 @@ class TestLastMileBackfill:
         
         assert hasattr(Orchestrator, '_last_mile_backfill')
     
-    @patch('research_system.collection_enhanced.collect_from_free_apis')
+    @patch('research_system.orchestrator.collect_from_free_apis')
     def test_backfill_attempts_more_collection(self, mock_collect):
         """Test backfill tries to get more cards."""
         from research_system.orchestrator import Orchestrator
@@ -366,16 +366,35 @@ class TestLastMileBackfill:
         from research_system.orchestrator import Orchestrator as RealOrch
         orch._last_mile_backfill = RealOrch._last_mile_backfill.__get__(orch)
         
-        # Mock additional cards
-        new1 = Mock()
-        new1.url = "http://new1.com"
-        new2 = Mock()
-        new2.url = "http://new2.com"
+        # Mock additional cards with proper EvidenceCard structure
+        from research_system.models import EvidenceCard
+        new1 = EvidenceCard(
+            url="http://new1.com",
+            title="New 1",
+            snippet="New snippet 1",
+            provider="wikipedia",
+            credibility_score=0.5,
+            relevance_score=0.5
+        )
+        new2 = EvidenceCard(
+            url="http://new2.com",
+            title="New 2",
+            snippet="New snippet 2",
+            provider="duckduckgo",
+            credibility_score=0.5,
+            relevance_score=0.5
+        )
         mock_collect.return_value = [new1, new2]
         
         # Existing cards
-        old_card = Mock()
-        old_card.url = "http://old.com"
+        old_card = EvidenceCard(
+            url="http://old.com",
+            title="Old",
+            snippet="Old snippet",
+            provider="test",
+            credibility_score=0.5,
+            relevance_score=0.5
+        )
         cards = [old_card]
         
         # Run backfill

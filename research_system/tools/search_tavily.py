@@ -31,6 +31,12 @@ def _make_tavily_request(query: str, count: int, api_key: str, timeout: int = 30
     
     with httpx.Client(timeout=timeout) as client:
         response = client.post(url, json=payload, headers=headers)
+        
+        # v8.20.0: Handle Tavily's non-standard 432 status during protection windows
+        if response.status_code == 432:
+            logger.warning("Tavily returned 432 (rate limited), returning empty results")
+            return {"results": []}
+        
         response.raise_for_status()
         return response.json()
 
