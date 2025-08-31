@@ -2315,15 +2315,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             logger.warning(f"v8.13.0 Quality gates failed: primary_share={final_metrics.primary_share:.2%}, triangulation={final_metrics.triangulation_rate:.2%}")
             logger.info("v8.20.0: Launching lenient recovery pass to salvage the research")
             
-            # 1) Relax floors for this topic
-            from research_system.config_v2 import QualityConfig
-            relaxed_config = QualityConfig(
-                primary_share_floor=0.30,  # Was 0.40-0.50
-                triangulation_floor=0.20,   # Was 0.25-0.35
-                domain_concentration_cap=0.60,  # Was 0.50
-                min_unique_domains=3,  # Was 5
-                min_credible_cards=10  # Was 20
-            )
+            # 1) Define relaxed thresholds for this topic
+            relaxed_primary_floor = 0.30    # Was 0.40-0.50
+            relaxed_triangulation_floor = 0.20  # Was 0.25-0.35
+            relaxed_concentration_cap = 0.60    # Was 0.50
             
             # 2) Widen cluster threshold so near-synonyms cluster better
             from research_system.triangulation.paraphrase_cluster import set_threshold
@@ -2368,11 +2363,11 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Reset threshold
             set_threshold(original_threshold)
             
-            # Check gates with relaxed config
+            # Check gates with relaxed thresholds
             gates_passed_lenient = (
-                final_metrics.primary_share >= relaxed_config.primary_share_floor and
-                final_metrics.triangulation_rate >= relaxed_config.triangulation_floor and
-                final_metrics.domain_concentration <= relaxed_config.domain_concentration_cap
+                final_metrics.primary_share >= relaxed_primary_floor and
+                final_metrics.triangulation_rate >= relaxed_triangulation_floor and
+                final_metrics.domain_concentration <= relaxed_concentration_cap
             )
             
             if not gates_passed_lenient:
