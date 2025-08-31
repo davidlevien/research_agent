@@ -1,14 +1,23 @@
 import re
+import os
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Set
 
 # Global threshold that can be adjusted
-THRESHOLD = 0.40
+# v8.21.0: Lower default threshold for better broad topic triangulation
+THRESHOLD = float(os.getenv("TRI_PARA_THRESHOLD", "0.35"))
 
 def set_threshold(v: float):
     """Set the global paraphrase clustering threshold."""
     global THRESHOLD
     THRESHOLD = v
+
+def _numeric_tokens(text: str) -> Set[str]:
+    """v8.21.0: Extract numeric/year tokens for enhanced clustering."""
+    if not text:
+        return set()
+    # Find years, percentages, and significant numbers
+    return set(re.findall(r"\b(?:\d+(?:\.\d+)?%?|\d{4})\b", text))
 
 def _norm_for_para(s: str) -> str:
     """Normalize text for paraphrase detection"""
@@ -96,11 +105,25 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
         high_sim_pairs = []
         for i in range(n):
             for j in range(i+1, n):
-                if sim[i, j] >= TH:
+                similarity = sim[i, j]
+                
+                # v8.21.0: Numeric/keyword boost for near-misses
+                if similarity < TH and similarity >= 0.25:
+                    # Check if texts share significant numeric tokens
+                    ni = _numeric_tokens(texts_raw[i])
+                    nj = _numeric_tokens(texts_raw[j])
+                    shared_nums = len(ni.intersection(nj))
+                    
+                    if shared_nums >= 2:
+                        # Boost similarity to threshold if they share key numbers/years
+                        logger.info(f"Boosting similarity {similarity:.3f} -> {TH} for cards {i},{j} (shared {shared_nums} numeric tokens)")
+                        similarity = TH
+                
+                if similarity >= TH:
                     union(i, j)
-                    high_sim_pairs.append((i, j, sim[i,j]))
-                elif sim[i, j] >= 0.30:  # Log near-misses
-                    logger.info(f"Near-miss similarity {sim[i,j]:.3f} between cards {i} and {j}")
+                    high_sim_pairs.append((i, j, similarity))
+                elif similarity >= 0.30:  # Log near-misses
+                    logger.info(f"Near-miss similarity {similarity:.3f} between cards {i} and {j}")
         
         logger.info(f"Found {len(high_sim_pairs)} pairs above threshold {TH}")
         for i, j, score in high_sim_pairs[:5]:

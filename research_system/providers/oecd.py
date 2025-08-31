@@ -9,14 +9,19 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.20.0: Fixed OECD endpoints - lowercase paths work, uppercase 404s
-# Try lowercase first (correct/working), then legacy uppercase as fallback
+# v8.21.0: Enhanced OECD endpoints with more variants to handle case/path issues
+# Try multiple combinations to maximize success rate
 _DATAFLOW_CANDIDATES = [
     # Correct/working lowercase paths first
     "https://stats.oecd.org/sdmx-json/dataflow",
     "https://stats.oecd.org/sdmx-json/dataflow/",
     "https://stats.oecd.org/sdmx-json/dataflow/all",
     "https://stats.oecd.org/sdmx-json/dataflow/all/",
+    # Mixed case variations (some proxies/CDNs are case-sensitive)
+    "https://stats.oecd.org/Sdmx-Json/dataflow",
+    "https://stats.oecd.org/Sdmx-Json/dataflow/",
+    "https://stats.oecd.org/Sdmx-Json/dataflow/ALL",
+    "https://stats.oecd.org/Sdmx-Json/dataflow/all",
     # Older/legacy uppercase fallbacks (some environments still serve these)
     "https://stats.oecd.org/SDMX-JSON/dataflow",
     "https://stats.oecd.org/SDMX-JSON/dataflow/",

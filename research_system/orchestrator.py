@@ -323,6 +323,165 @@ class Orchestrator:
         # Atomic rename
         os.replace(tmp.name, target)
     
+    def _bool_env(self, name: str, default: bool) -> bool:
+        """Parse boolean environment variable."""
+        val = os.getenv(name)
+        if val is None:
+            return default
+        return val.lower() in ("1", "true", "yes", "on")
+    
+    def _persist_evidence_bundle(self,
+                                 output_dir: Path,
+                                 final_cards: List[EvidenceCard],
+                                 all_cards: Optional[List[EvidenceCard]] = None,
+                                 metrics: Optional[Dict] = None) -> None:
+        """
+        Persist raw, usable evidence *before* quality gates so we never lose work.
+        Writes:
+          - evidence/final_cards.jsonl
+          - evidence/all_cards.jsonl (optional if provided)
+          - evidence/sources.csv
+          - evidence/metrics_snapshot.json (optional if provided)
+        """
+        import csv
+        import json
+        
+        evdir = output_dir / "evidence"
+        evdir.mkdir(parents=True, exist_ok=True)
+        
+        def _write_jsonl(path: Path, rows: List):
+            with open(path, "w", encoding="utf-8") as f:
+                for r in rows:
+                    if hasattr(r, '__dict__'):
+                        # Convert EvidenceCard to dict
+                        r = r.__dict__
+                    f.write(json.dumps(r, ensure_ascii=False, default=str) + "\n")
+        
+        # final cards are the most useful; always write
+        _write_jsonl(evdir / "final_cards.jsonl", final_cards or [])
+        
+        # if available, also write the full working set
+        if all_cards is not None:
+            _write_jsonl(evdir / "all_cards.jsonl", all_cards)
+        
+        # flat source appendix (domain, title, url, quote)
+        with open(evdir / "sources.csv", "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["domain", "title", "url", "quote"])
+            for c in (final_cards or []):
+                card_dict = c.__dict__ if hasattr(c, '__dict__') else c
+                w.writerow([
+                    card_dict.get("source_domain", ""),
+                    card_dict.get("title", ""),
+                    card_dict.get("url", ""),
+                    (card_dict.get("quote") or card_dict.get("snippet") or "")[:2000],
+                ])
+        
+        if metrics is not None:
+            with open(evdir / "metrics_snapshot.json", "w", encoding="utf-8") as f:
+                json.dump(metrics, f, indent=2, default=str)
+        
+        logger.info("Persisted evidence bundle to %s", evdir)
+    
+    def _resolve_gate_profile(self) -> dict:
+        """
+        Gate profile selection, controllable via env without code changes.
+        Profiles:
+          - default: current strict thresholds
+          - discovery: relaxed thresholds for horizon scans
+        Env:
+          GATES_PROFILE=[default|discovery]
+          PRIMARY_FLOOR, TRIANGULATION_FLOOR, DOMAIN_CONC_CAP (override numbers)
+        """
+        profile = os.getenv("GATES_PROFILE", "default").lower()
+        if profile == "discovery":
+            floors = {
+                "primary_min": float(os.getenv("PRIMARY_FLOOR", "0.30")),
+                "triangulation_min": float(os.getenv("TRIANGULATION_FLOOR", "0.30")),
+                "domain_concentration_cap": float(os.getenv("DOMAIN_CONC_CAP", "0.30")),
+                "name": "discovery",
+            }
+        else:
+            floors = {
+                "primary_min": float(os.getenv("PRIMARY_FLOOR", "0.50")),
+                "triangulation_min": float(os.getenv("TRIANGULATION_FLOOR", "0.45")),
+                "domain_concentration_cap": float(os.getenv("DOMAIN_CONC_CAP", "0.25")),
+                "name": "default",
+            }
+        return floors
+    
+    def _last_mile_backfill(self, topic: str, cards: List[EvidenceCard]) -> None:
+        """
+        v8.21.0: One last attempt to get more evidence when gates fail.
+        Targeted backfill with relaxed constraints.
+        """
+        logger.info("v8.21.0: Starting last-mile backfill due to gate failure")
+        
+        try:
+            # Try to get more cards from free APIs with very relaxed constraints
+            from research_system.collection_enhanced import collect_from_free_apis
+            
+            # Focus on trusted sources
+            target_providers = ['wikipedia', 'duckduckgo']  # Free providers
+            
+            additional_cards = collect_from_free_apis(
+                topic,
+                providers=target_providers,
+                settings=self.settings
+            )
+            
+            if additional_cards:
+                logger.info(f"Last-mile backfill added {len(additional_cards)} cards")
+                
+                # Deduplicate using canonical IDs
+                from research_system.evidence.canonicalize import canonical_id
+                existing_ids = {canonical_id(c) for c in cards}
+                
+                for new_card in additional_cards:
+                    if canonical_id(new_card) not in existing_ids:
+                        cards.append(new_card)
+                        existing_ids.add(canonical_id(new_card))
+                
+                logger.info(f"After dedup: {len(cards)} total cards")
+            else:
+                logger.info("Last-mile backfill found no additional cards")
+                
+        except Exception as e:
+            logger.warning(f"Last-mile backfill failed: {e}")
+    
+    def _write_degraded_draft(self, output_dir: Path, final_cards: List[EvidenceCard], metrics: Dict) -> str:
+        """
+        Emit a minimal, clearly labeled draft so users still get value when gates fail.
+        """
+        path = output_dir / "draft_degraded.md"
+        lines = []
+        lines.append(f"# Draft (Degraded) — generated {datetime.utcnow().isoformat()}Z\n")
+        lines.append("> **Quality gates were not met. Treat findings as low confidence.**\n")
+        lines.append("## Metrics snapshot\n")
+        lines.append(f"- Primary share: {metrics.get('primary_share', 0)*100:.1f}%")
+        lines.append(f"- Triangulation: {metrics.get('triangulation_rate', 0)*100:.1f}%")
+        lines.append(f"- Domain concentration: {metrics.get('domain_concentration', 0)*100:.1f}%\n")
+        lines.append("## Evidence bullets\n")
+        
+        for c in (final_cards or [])[:30]:
+            card_dict = c.__dict__ if hasattr(c, '__dict__') else c
+            title = card_dict.get("title") or (card_dict.get("url") or "")[:80]
+            url = card_dict.get("url", "")
+            quote = (card_dict.get("quote") or card_dict.get("snippet") or "").strip()
+            if quote:
+                quote = quote.replace("\n", " ").strip()
+                if len(quote) > 300:
+                    quote = quote[:297] + "…"
+                lines.append(f"- **{title}** — {quote} ({url})")
+            else:
+                lines.append(f"- **{title}** ({url})")
+        
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        
+        logger.warning("Wrote degraded draft to %s", path)
+        return str(path)
+    
     def _ensure_snippet(self, snippet: str, title: str = "", url: str = "") -> str:
         """Ensure snippet is never empty (evidence validity invariant).
         
@@ -2299,6 +2458,17 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # 5. Write v8.13.0 metrics to file
         write_metrics(str(self.s.output_dir), final_metrics)
         
+        # v8.21.0: Always persist evidence bundle BEFORE quality gates
+        try:
+            self._persist_evidence_bundle(
+                output_dir=self.s.output_dir,
+                final_cards=cards,
+                all_cards=getattr(self, "all_cards", None),
+                metrics=final_metrics.__dict__ if hasattr(final_metrics, '__dict__') else final_metrics
+            )
+        except Exception as e:
+            logger.exception(f"Failed to persist evidence bundle: {e}")
+        
         # 6. Check v8.13.0 quality gates (HARD GATE)
         cfg = self.v813_config
         gates_passed = gates_pass(final_metrics, intent)
@@ -2605,6 +2775,66 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Quality gates failed - generate insufficient evidence report
             InsufficientReportWriter(ctx).write()
             logger.info("Generated insufficient evidence report")
+            
+            # v8.21.0: Also write preliminary final report and degraded draft when gates fail
+            write_report_on_fail = self._bool_env("WRITE_REPORT_ON_FAIL", True)
+            write_draft_on_fail = self._bool_env("WRITE_DRAFT_ON_FAIL", True)
+            backfill_on_fail = self._bool_env("BACKFILL_ON_FAIL", True)
+            
+            # Optional last-mile backfill before writing reports
+            if backfill_on_fail:
+                try:
+                    logger.info("Attempting last-mile backfill because gates failed...")
+                    self._last_mile_backfill(self.s.topic, cards)
+                    
+                    # Recompute metrics after backfill
+                    from research_system.quality.metrics_v2 import compute_metrics
+                    final_metrics = compute_metrics(
+                        cards=cards,
+                        clusters=paraphrase_cluster_sets if 'paraphrase_cluster_sets' in locals() else [],
+                        provider_errors=self.provider_errors,
+                        provider_attempts=self.provider_attempts
+                    )
+                    
+                    # Re-check gates with new metrics
+                    floors = self._resolve_gate_profile()
+                    gates_passed_after_backfill = (
+                        final_metrics.primary_share >= floors["primary_min"] and
+                        final_metrics.triangulation_rate >= floors["triangulation_min"] and
+                        final_metrics.domain_concentration <= floors["domain_concentration_cap"]
+                    )
+                    
+                    if gates_passed_after_backfill:
+                        logger.info("v8.21.0: Backfill successful! Gates now pass, generating full report")
+                        # Update context and generate full report
+                        ctx.allow_final_report = True
+                        ctx.metrics = final_metrics
+                        FinalReportWriter(ctx).write()
+                        logger.info("Generated final report after successful backfill")
+                        return  # Exit early since we succeeded
+                    else:
+                        logger.info("v8.21.0: Backfill completed but gates still fail")
+                        
+                except Exception as e:
+                    logger.exception(f"Backfill on fail encountered an error: {e}")
+            
+            if write_report_on_fail:
+                try:
+                    logger.info("Writing preliminary final report despite gate failure (WRITE_REPORT_ON_FAIL=True)")
+                    FinalReportWriter(ctx).write(preliminary=True)
+                    logger.info("Generated preliminary final report")
+                except Exception as e:
+                    logger.exception(f"Failed to write preliminary report: {e}")
+            
+            if write_draft_on_fail:
+                try:
+                    # Pass the metrics from context
+                    final_metrics_dict = {}
+                    if hasattr(ctx, 'metrics'):
+                        final_metrics_dict = ctx.metrics.__dict__ if hasattr(ctx.metrics, '__dict__') else ctx.metrics
+                    self._write_degraded_draft(self.s.output_dir, cards, final_metrics_dict)
+                except Exception as e:
+                    logger.exception(f"Failed to write degraded draft: {e}")
         
         # v8.15.0: Always generate source strategy
         SourceStrategyWriter(ctx).write()

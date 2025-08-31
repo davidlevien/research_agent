@@ -225,11 +225,11 @@ class ReportWriter:
             "summary": f"{with_cites}/{total} key numbers have at least one citation."
         }
     
-    def write(self) -> None:
-        """Write final report if quality gates are met."""
+    def write(self, preliminary: bool = False) -> None:
+        """Write final report, optionally with preliminary banner if quality gates failed."""
         
-        # Guard: never write if orchestrator said no
-        if not self.ctx.allow_final_report:
+        # If not preliminary and gates failed, skip
+        if not preliminary and not self.ctx.allow_final_report:
             logger.info("Final report suppressed due to quality gates")
             return
         
@@ -252,6 +252,12 @@ class ReportWriter:
         # Header
         lines.append(f"# Final Report")
         lines.append("")
+        
+        # Add preliminary warning if quality gates not met
+        if preliminary:
+            lines.append("> **Preliminary:** Quality gates not met; treat insights as lower confidence.")
+            lines.append("")
+        
         lines.append(f"**Query:** {self.ctx.query}")
         lines.append(f"**Generated:** {datetime.utcnow().isoformat()}Z")
         lines.append(f"**Evidence Cards:** {m.cards}")

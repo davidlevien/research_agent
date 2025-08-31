@@ -169,8 +169,8 @@ def rerank(
             logger.debug(f"Cross-encoder scoring failed: {e}")
             # Fall through to fallback below
     
-    # Fallback: rank by existing scores if available
-    logger.debug("Using score-based ranking (cross-encoder unavailable)")
+    # v8.21.0: Enhanced lexical fallback when cross-encoder unavailable
+    logger.debug("Using enhanced lexical fallback (cross-encoder unavailable)")
     
     def _get_score(c, *keys):
         if isinstance(c, dict):
@@ -183,10 +183,36 @@ def rerank(
                     return getattr(c, key, 0)
         return 0
     
-    if candidates:
-        candidates.sort(key=lambda c: _get_score(c, "confidence", "relevance_score", "credibility_score"), reverse=True)
+    # Compute lexical similarity scores
+    query_tokens = set(query.lower().split())
+    scored_candidates = []
     
-    return candidates[:topk]
+    for c in candidates:
+        # Get text content
+        title = _get_text(c, 'title')
+        snippet = _get_text(c, 'snippet', 'text', 'supporting_text', 'claim')
+        text = f"{title} {snippet}".lower()
+        
+        # Calculate lexical overlap
+        text_tokens = set(text.split())
+        overlap = len(query_tokens.intersection(text_tokens))
+        lexical_score = overlap / max(1, len(query_tokens))
+        
+        # Bonus for year/percent co-occurrence
+        if any(term in text for term in ["2023", "2024", "2025", "%", "percent", "growth", "increase", "decrease"]):
+            lexical_score += 0.05
+        
+        # Combine with existing scores if available
+        existing_score = _get_score(c, "confidence", "relevance_score", "credibility_score")
+        combined_score = 0.7 * lexical_score + 0.3 * existing_score
+        
+        scored_candidates.append((combined_score, c))
+    
+    # Sort by combined score
+    scored_candidates.sort(key=lambda x: x[0], reverse=True)
+    
+    # Return top-k
+    return [c for _, c in scored_candidates[:topk]]
 
 def batch_rerank(
     queries: List[str],

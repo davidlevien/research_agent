@@ -86,6 +86,7 @@ def apply_adaptive_credibility_floor(
 ) -> Tuple[List[EvidenceCard], int, Set[str]]:
     """
     Apply credibility floor with whitelisted singleton protection.
+    v8.21.0: Enhanced to prevent over-filtering of trusted sources.
     
     Args:
         cards: Evidence cards to filter
@@ -94,7 +95,28 @@ def apply_adaptive_credibility_floor(
     Returns:
         Tuple of (filtered_cards, num_filtered, retained_singletons)
     """
+    import os
     from research_system.selection.domain_balance import canonical_domain
+    
+    # v8.21.0: Default trusted domains that should never be filtered
+    TRUSTED_DEFAULT = {
+        "oecd.org", "stats.oecd.org", "unwto.org", "e-unwto.org", "wttc.org",
+        "etc-corporate.org", "eurostat.ec.europa.eu", "iata.org", "icao.int",
+        "ustravel.org", "amadeus.com", "skift.com", "abta.com", "americanexpress.com",
+        "mastercard.com", "bbc.com", "cnbc.com", "worldbank.org", "data.worldbank.org",
+        "imf.org", "treasury.gov", "europa.eu", "ec.europa.eu", "who.int", "un.org",
+        "unesco.org", "ilo.org", "cdc.gov", "nih.gov", "census.gov", "bls.gov",
+        "federalreserve.gov", "ecb.europa.eu", "weforum.org"
+    }
+    
+    # Parse additional trusted domains from environment
+    def _parse_set(env_name: str, base: Set[str]) -> Set[str]:
+        raw = os.getenv(env_name)
+        if not raw:
+            return base
+        return base | {d.strip().lower() for d in raw.split(",") if d.strip()}
+    
+    trusted = _parse_set("TRUSTED_DOMAINS", TRUSTED_DEFAULT)
     
     # Count domain frequencies
     domain_counts = Counter(
@@ -106,8 +128,15 @@ def apply_adaptive_credibility_floor(
     num_filtered = 0
     
     for card in cards:
-        domain = canonical_domain(card.source_domain)
-        is_singleton = domain_counts[domain] == 1
+        domain = canonical_domain(card.source_domain).lower()
+        is_singleton = domain_counts[canonical_domain(card.source_domain)] == 1
+        
+        # v8.21.0: Always keep trusted domains regardless of frequency or credibility
+        if domain in trusted:
+            filtered_cards.append(card)
+            if is_singleton:
+                retained_singletons.add(domain)
+            continue
         
         if is_singleton:
             # Check whitelist
