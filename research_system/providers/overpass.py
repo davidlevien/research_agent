@@ -10,7 +10,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-_OVERPASS = "https://overpass-api.de/api/interpreter"
+# v8.20.0: Multiple Overpass API mirrors for fallback
+_OVERPASS_URLS = [
+    "https://overpass.kumi.systems/api/interpreter",  # Fast mirror
+    "https://z.overpass-api.de/api/interpreter",      # German mirror
+    "https://overpass-api.de/api/interpreter",        # Main instance (often slow)
+]
 _last_call = 0
 
 def overpass_search(query: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -43,17 +48,31 @@ def overpass_search(query: str, limit: int = 10) -> List[Dict[str, Any]]:
     out {limit};
     """
     
-    try:
-        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
-            r = client.post(_OVERPASS, data={"data": overpass_q})
-            if r.status_code in RETRY_STATUSES:
-                time.sleep(1)  # Respect rate limit on retry
-                r = client.post(_OVERPASS, data={"data": overpass_q})
-                _last_call = time.time()
-            r.raise_for_status()
-            js = r.json()
-    except Exception as e:
-        logger.warning(f"Overpass search failed: {e}")
+    # v8.20.0: Try each mirror in order until one works
+    last_error = None
+    js = None
+    
+    for overpass_url in _OVERPASS_URLS:
+        try:
+            logger.debug(f"Trying Overpass mirror: {overpass_url}")
+            with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
+                r = client.post(overpass_url, data={"data": overpass_q})
+                if r.status_code in RETRY_STATUSES:
+                    time.sleep(1)  # Respect rate limit on retry
+                    r = client.post(overpass_url, data={"data": overpass_q})
+                    _last_call = time.time()
+                r.raise_for_status()
+                js = r.json()
+                logger.info(f"Overpass search successful via {overpass_url}")
+                break  # Success, exit loop
+        except Exception as e:
+            last_error = e
+            logger.debug(f"Overpass mirror {overpass_url} failed: {e}")
+            continue
+    
+    if js is None:
+        # All mirrors failed
+        logger.warning(f"All Overpass mirrors failed: {last_error}")
         return []
     
     els = js.get("elements", [])[:limit]

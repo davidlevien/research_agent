@@ -2,6 +2,14 @@ import re
 from collections import defaultdict
 from typing import List, Dict, Any
 
+# Global threshold that can be adjusted
+THRESHOLD = 0.40
+
+def set_threshold(v: float):
+    """Set the global paraphrase clustering threshold."""
+    global THRESHOLD
+    THRESHOLD = v
+
 def _norm_for_para(s: str) -> str:
     """Normalize text for paraphrase detection"""
     if not s: return ""
@@ -74,8 +82,8 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
             ra, rb = find(a), find(b)
             if ra != rb: parent[rb] = ra
 
-        # Threshold for similarity (tuned for tourism domain)
-        TH = 0.40
+        # Use global threshold for similarity
+        TH = THRESHOLD
         n = len(texts)
         
         logger.info(f"\nUsing SBERT with threshold {TH}")

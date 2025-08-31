@@ -105,7 +105,7 @@ def compute_metrics(cards: List[Any], clusters: Optional[List] = None,
     )
     
     logger.info(
-        "Computed final metrics: primary=%.1%%, triangulation=%.1%%, domains=%d, concentration=%.1%%",
+        "Computed final metrics: primary=%.1f%%, triangulation=%.1f%%, domains=%d, concentration=%.1f%%",
         metrics.primary_share * 100,
         metrics.triangulation_rate * 100,
         metrics.unique_domains,

@@ -9,10 +9,15 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.18.0: Robust OECD SDMX-JSON dataflow endpoint fallback
-# Some CDN edges serve dataflows at /dataflow, others at /dataflow/ALL/
-# Try multiple endpoints with trailing slash variants for CDN compatibility
+# v8.20.0: Fixed OECD endpoints - lowercase paths work, uppercase 404s
+# Try lowercase first (correct/working), then legacy uppercase as fallback
 _DATAFLOW_CANDIDATES = [
+    # Correct/working lowercase paths first
+    "https://stats.oecd.org/sdmx-json/dataflow",
+    "https://stats.oecd.org/sdmx-json/dataflow/",
+    "https://stats.oecd.org/sdmx-json/dataflow/all",
+    "https://stats.oecd.org/sdmx-json/dataflow/all/",
+    # Older/legacy uppercase fallbacks (some environments still serve these)
     "https://stats.oecd.org/SDMX-JSON/dataflow",
     "https://stats.oecd.org/SDMX-JSON/dataflow/",
     "https://stats.oecd.org/SDMX-JSON/dataflow/ALL",
@@ -59,7 +64,12 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
     for url in _DATAFLOW_CANDIDATES:
         try:
             logger.info(f"Trying OECD dataflows endpoint: {url}")
-            data = http_json("oecd", "GET", url)
+            data = http_json(
+                "oecd", 
+                "GET", 
+                url,
+                headers={"Accept": "application/json"}
+            )
             
             # Shape varies; normalize
             result = {}

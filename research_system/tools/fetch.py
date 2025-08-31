@@ -35,8 +35,13 @@ from .pdf_tables import find_numeric_cells
 from ..config import get_settings
 
 # Lazy load UA to avoid import-time Settings instantiation
-def _get_ua():
-    return {"User-Agent": "Mozilla/5.0 (ResearchAgent/1.0)"}
+def _get_ua(url: str = ""):
+    """Get appropriate User-Agent for the URL."""
+    # SEC requires specific format with email
+    if "sec.gov" in url or "edgar" in url.lower():
+        return {"User-Agent": "ResearchSystem/1.0 (research@example.com)"}
+    # Default for other sites
+    return {"User-Agent": "ResearchSystem/1.0 (+https://github.com/research-system)"}
 
 def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
     """Fetch HTML with caching, politeness, and paywall detection."""
@@ -50,7 +55,7 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
         
         # Use cache if enabled
         if settings.ENABLE_HTTP_CACHE:
-            status, headers, content = cached_get(url, headers=_get_ua(), timeout=25)
+            status, headers, content = cached_get(url, headers=_get_ua(url), timeout=25)
             
             # Handle blocked/paywalled domains
             if status == 403:
@@ -75,7 +80,7 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
                 return content, (headers.get("content-type") or "").lower()
         else:
             # Direct fetch without cache
-            r = httpx.get(url, timeout=25, headers=_get_ua(), follow_redirects=True)
+            r = httpx.get(url, timeout=25, headers=_get_ua(url), follow_redirects=True)
             if 200 <= r.status_code < 400:
                 url_str = str(r.url or "")
                 if "statista.com/sso" in url_str or "statista.com/login" in url_str:
