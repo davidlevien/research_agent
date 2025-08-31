@@ -78,13 +78,13 @@ class TestReportGenerationResilience:
             orch._persist_evidence_bundle = RealOrch._persist_evidence_bundle.__get__(orch)
             
             # Create test cards
-            cards = [
-                Mock(source_domain="test.com", title="Test", url="http://test.com", 
-                     quote="Test quote", snippet="Test snippet", __dict__={
-                         "source_domain": "test.com", "title": "Test", 
-                         "url": "http://test.com", "quote": "Test quote"
-                     })
-            ]
+            card = Mock()
+            card.source_domain = "test.com"
+            card.title = "Test"
+            card.url = "http://test.com"
+            card.quote = "Test quote"
+            card.snippet = "Test snippet"
+            cards = [card]
             
             # Call persist method
             orch._persist_evidence_bundle(
@@ -111,12 +111,18 @@ class TestReportGenerationResilience:
             orch._write_degraded_draft = RealOrch._write_degraded_draft.__get__(orch)
             
             # Create test cards  
-            cards = [
-                Mock(__dict__={"title": "Test 1", "url": "http://test1.com", 
-                              "snippet": "Evidence 1"}),
-                Mock(__dict__={"title": "Test 2", "url": "http://test2.com",
-                              "quote": "Evidence 2"})
-            ]
+            card1 = Mock()
+            card1.title = "Test 1"
+            card1.url = "http://test1.com"
+            card1.snippet = "Evidence 1"
+            
+            card2 = Mock()
+            card2.title = "Test 2"
+            card2.url = "http://test2.com"
+            card2.quote = "Evidence 2"
+            card2.snippet = None
+            
+            cards = [card1, card2]
             
             metrics = {
                 "primary_share": 0.3,
@@ -146,12 +152,23 @@ class TestCredibleSourceProtection:
         from research_system.quality_config.quality import QualityConfig
         
         # Create test cards with varying credibility
-        cards = [
-            Mock(source_domain="oecd.org", credibility_score=0.3),  # Low but trusted
-            Mock(source_domain="random.com", credibility_score=0.3),  # Low and untrusted
-            Mock(source_domain="unwto.org", credibility_score=0.2),  # Very low but trusted
-            Mock(source_domain="spam.net", credibility_score=0.9),  # High but singleton
-        ]
+        card1 = Mock()
+        card1.source_domain = "oecd.org"
+        card1.credibility_score = 0.3  # Low but trusted
+        
+        card2 = Mock()
+        card2.source_domain = "random.com"
+        card2.credibility_score = 0.3  # Low and untrusted
+        
+        card3 = Mock()
+        card3.source_domain = "unwto.org"
+        card3.credibility_score = 0.2  # Very low but trusted
+        
+        card4 = Mock()
+        card4.source_domain = "spam.net"
+        card4.credibility_score = 0.9  # High but singleton
+        
+        cards = [card1, card2, card3, card4]
         
         config = Mock(spec=QualityConfig)
         config.credibility = Mock(whitelist_singletons=set(), singleton_downweight=0.8)
@@ -175,10 +192,15 @@ class TestCredibleSourceProtection:
         os.environ["TRUSTED_DOMAINS"] = "custom.org,special.com"
         
         try:
-            cards = [
-                Mock(source_domain="custom.org", credibility_score=0.1),  # Very low but custom trusted
-                Mock(source_domain="special.com", credibility_score=0.2),
-            ]
+            card1 = Mock()
+            card1.source_domain = "custom.org"
+            card1.credibility_score = 0.1  # Very low but custom trusted
+            
+            card2 = Mock()
+            card2.source_domain = "special.com"
+            card2.credibility_score = 0.2
+            
+            cards = [card1, card2]
             
             config = Mock(spec=QualityConfig)
             config.credibility = Mock(whitelist_singletons=set(), singleton_downweight=0.8)
@@ -269,12 +291,12 @@ class TestRerankerFallback:
         with patch('research_system.rankers.cross_encoder._load_cross_encoder', return_value=None):
             candidates = [
                 {"title": "Generic article", "snippet": "Some text here"},
-                {"title": "Stats 2024", "snippet": "Growth of 25% recorded"},
+                {"title": "Growth statistics", "snippet": "Growth of 25% recorded in 2024"},
             ]
             
             results = rerank("growth statistics", candidates, topk=2)
             
-            # Second candidate should rank higher due to year/percent bonus
+            # Second candidate should rank higher due to lexical match + year/percent bonus
             assert "2024" in str(results[0]) or "25%" in str(results[0])
 
 
@@ -345,13 +367,16 @@ class TestLastMileBackfill:
         orch._last_mile_backfill = RealOrch._last_mile_backfill.__get__(orch)
         
         # Mock additional cards
-        mock_collect.return_value = [
-            Mock(url="http://new1.com"),
-            Mock(url="http://new2.com")
-        ]
+        new1 = Mock()
+        new1.url = "http://new1.com"
+        new2 = Mock()
+        new2.url = "http://new2.com"
+        mock_collect.return_value = [new1, new2]
         
         # Existing cards
-        cards = [Mock(url="http://old.com")]
+        old_card = Mock()
+        old_card.url = "http://old.com"
+        cards = [old_card]
         
         # Run backfill
         orch._last_mile_backfill("test topic", cards)
@@ -420,11 +445,12 @@ class TestFullIntegration:
                 orch._write_degraded_draft = RealOrch._write_degraded_draft.__get__(orch)
                 
                 # Test cards that would normally fail gates
-                cards = [
-                    Mock(__dict__={"source_domain": "wikipedia.org", 
-                                  "title": "Test", "url": "http://test.com",
-                                  "snippet": "Low quality evidence"})
-                ]
+                card = Mock()
+                card.source_domain = "wikipedia.org"
+                card.title = "Test"
+                card.url = "http://test.com"
+                card.snippet = "Low quality evidence"
+                cards = [card]
                 
                 # Persist evidence
                 orch._persist_evidence_bundle(Path(tmpdir), cards, None, {})

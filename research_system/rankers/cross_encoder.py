@@ -80,8 +80,9 @@ def rerank(
     if not candidates:
         return []
     
-    if len(candidates) <= topk:
-        return candidates
+    # v8.21.0: Always rank, even when candidates <= topk (still want ordering)
+    # if len(candidates) <= topk:
+    #     return candidates
     
     # Try LLM reranking first if requested
     if use_llm:

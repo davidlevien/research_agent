@@ -419,8 +419,6 @@ class Orchestrator:
         
         try:
             # Try to get more cards from free APIs with very relaxed constraints
-            from research_system.collection_enhanced import collect_from_free_apis
-            
             # Focus on trusted sources
             target_providers = ['wikipedia', 'duckduckgo']  # Free providers
             
@@ -2501,7 +2499,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # Add more cards if we can
             if len(cards) < 50:  # Only if we don't have many cards
                 # Try to get more cards with relaxed filtering
-                from research_system.collection_enhanced import collect_from_free_apis
                 try:
                     additional_cards = collect_from_free_apis(
                         self.s.topic,
@@ -2788,7 +2785,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     self._last_mile_backfill(self.s.topic, cards)
                     
                     # Recompute metrics after backfill
-                    from research_system.quality.metrics_v2 import compute_metrics
                     final_metrics = compute_metrics(
                         cards=cards,
                         clusters=paraphrase_cluster_sets if 'paraphrase_cluster_sets' in locals() else [],
