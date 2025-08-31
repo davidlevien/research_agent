@@ -7,7 +7,7 @@ import psutil
 import time
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 
@@ -472,8 +472,8 @@ class HealthMonitor:
     
     def get_uptime(self) -> timedelta:
         """Get system uptime"""
-        boot_time = datetime.fromtimestamp(psutil.boot_time())
-        return datetime.now() - boot_time
+        boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc)
+        return datetime.now(timezone.utc) - boot_time
     
     def get_health_summary(self) -> str:
         """Get human-readable health summary"""

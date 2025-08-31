@@ -22,6 +22,9 @@ def ensure_dt(x: Union[datetime, float, int, str, None]) -> Optional[datetime]:
         return None
     
     if isinstance(x, datetime):
+        # Ensure timezone-aware
+        if x.tzinfo is None:
+            return x.replace(tzinfo=timezone.utc)
         return x
     
     if isinstance(x, (int, float)):
@@ -231,16 +234,19 @@ def ensure_datetime(x: Optional[Union[int, float, datetime, str]]) -> Optional[d
     
     try:
         if isinstance(x, datetime):
+            # Ensure timezone-aware
+            if x.tzinfo is None:
+                return x.replace(tzinfo=timezone.utc)
             return x
         
         if isinstance(x, (int, float)):
-            return datetime.fromtimestamp(x)
+            return datetime.fromtimestamp(x, tz=timezone.utc)
         
         if isinstance(x, str):
             # Try common ISO formats
             for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"]:
                 try:
-                    return datetime.strptime(x, fmt)
+                    return datetime.strptime(x, fmt).replace(tzinfo=timezone.utc)
                 except ValueError:
                     continue
         

@@ -6,7 +6,7 @@ import re
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..models import EvidenceCard, BiasIndicators, QualityIndicators
 
@@ -151,7 +151,7 @@ class QualityAssurance:
         if evidence.publication_date:
             # Penalize old content
             if hasattr(evidence.publication_date, 'year'):
-                age_years = datetime.now().year - evidence.publication_date.year
+                age_years = datetime.now(timezone.utc).year - evidence.publication_date.year
                 if age_years > 5:
                     score -= 0.1
                     issues.append(f"Content is {age_years} years old")

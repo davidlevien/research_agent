@@ -23372,3 +23372,599 @@ INFO:research_system.orchestrator:After v8.13.0 canonicalization: 22 cards
 INFO:research_system.orchestrator:After v8.13.0 intent filtering for travel: 22 cards
 
 Unexpected error: can't compare offset-naive and offset-aware datetimes
+==================================
+Research System v8.8.0 - SURGICAL PRODUCTION FIXES
+==================================
+Topic: latest travel & tourism trends
+Output: outputs
+
+Enabled Features:
+  ✓ All search providers (Tavily, Brave, Serper)
+  ✓ Free APIs (Wikipedia, Wikidata, arXiv, etc.)
+  ✓ LLM-based claims extraction & synthesis
+  ✓ Cross-encoder reranking
+  ✓ Iterative backfill (min 24 cards)
+  ✓ MinHash deduplication
+  ✓ SBERT clustering
+  ✓ DuckDB aggregations
+  ✓ AREX expansion for uncorroborated metrics
+  ✓ Controversy detection
+  ✓ Primary source connectors
+  ✓ Article extraction
+  ✓ Adaptive domain balancing (25-40% cap)
+  ✓ Adaptive triangulation (25-35% threshold)
+  ✓ Adaptive strict quality gates
+
+v8.7.0 Intent-Aware Features:
+  ✓ Three-stage hybrid intent classification
+  ✓ Intent-based provider routing
+  ✓ Intent-specific quality thresholds
+  ✓ Geographic disambiguation
+  ✓ New providers: Nominatim, Wikivoyage, OSMTags
+
+v8.6.0 Adaptive Features:
+  ✓ Supply-aware quality gates
+  ✓ Adaptive report length (Brief/Standard/Deep)
+  ✓ Evidence snippet repair chains
+  ✓ Confidence scoring and reporting
+  ✓ Last-mile backfill optimization
+  ✓ Singleton whitelisting for authorities
+
+Previous Improvements:
+  ✓ Unified architecture & deduplication
+  ✓ HTML cleaning & citation validation
+  ✓ Triangulation consistency
+  ✓ Pack-aware primary detection
+
+Starting in 3 seconds...
+Output directory: outputs/latest_travel_tourism_trends_20250830_010943
+INFO:research_system.orchestrator:v8.13.0 Quality thresholds: primary_share=50%, triangulation=45%, domain_cap=25%
+INFO:research_system.orchestrator:Set global time budget: 1800s
+INFO:research_system.intent.classifier:Query 'latest travel & tourism trends...' classified as travel (rules)
+INFO:research_system.orchestrator:Query classified as intent: travel
+INFO:research_system.orchestrator:Intent thresholds: triangulation=0.25, sources=3
+INFO:research_system.providers.intent_registry:Intent travel -> providers: ['wikivoyage', 'wikipedia', 'wikidata', 'osmtags', 'nominatim', 'overpass']
+INFO:research_system.orchestrator:Intent travel selected providers: ['wikivoyage', 'wikipedia', 'wikidata', 'osmtags', 'nominatim', 'overpass']
+INFO:research_system.orchestrator:Routing: categories=['macro', 'general'], providers=['worldbank', 'oecd', 'eurostat', 'imf', 'fred', 'wikidata', 'wikipedia', 'wayback', 'openalex', 'crossref']
+INFO:research_system.orchestrator:Filtered out NPS provider for non-parks topic: latest travel & tourism trends
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=latest+travel+%26+tourism+trends+site%3Afred.stlouisfed.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=latest+travel+%26+tourism+trends+site%3Afred.stlouisfed.org&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: latest travel & tourism trends site:fred.stlouisfed.org
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: latest travel & tourism trends site:fred.stlouisfed.org
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: latest travel & tourism trends site:fred.stlouisfed.org
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=latest+travel+%26+tourism+trends+site%3Afred.stlouisfed.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+INFO:httpx:HTTP Request: GET https://serpapi.com/search.json?q=latest+travel+%26+tourism+trends+site%3Afred.stlouisfed.org&num=3&api_key=0234fa2880d7f2980f68d7bc36ea2b3d21f856cf9cf8181093b9d2517d54940f&engine=google&location=United+States&safe=active&filter=1 "HTTP/1.1 429 Too Many Requests"
+ERROR:research_system.tools.search_serpapi:SerpAPI rate-limited via RetryError (429). consecutive=1
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: latest travel & tourism trends site:oecd.org 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=latest+travel+%26+tourism+trends+site%3Aoecd.org+2024..2025+filetype%3Apdf&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: latest travel & tourism trends site:oecd.org 2024..2025 filetype:pdf
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: latest travel & tourism trends site:oecd.org 2024..2025 filetype:pdf
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=latest+travel+%26+tourism+trends+site%3Asec.gov+%2810-k+OR+10-q+OR+8-k%29&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: latest travel & tourism trends site:sec.gov (10-k OR 10-q OR 8-k)
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: latest travel & tourism trends site:sec.gov (10-k OR 10-q OR 8-k)
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: latest travel & tourism trends site:sec.gov (10-k OR 10-q OR 8-k)
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: latest travel & tourism trends 2024..2025
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: latest travel & tourism trends 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=latest+travel+%26+tourism+trends+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: latest travel & tourism trends 2024..2025
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 3 results for query: latest travel & tourism trends filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=latest+travel+%26+tourism+trends+filetype%3Apdf+2024..2025&count=3&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 3 results for query: latest travel & tourism trends filetype:pdf 2024..2025
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 3 results for query: latest travel & tourism trends filetype:pdf 2024..2025
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=latest+travel+%26+tourism+trends&count=20&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_brave:Brave search returned 20 results for query: latest travel & tourism trends
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 19 results for query: latest travel & tourism trends
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 9 results for query: latest travel & tourism trends
+INFO:research_system.orchestrator:Expanded query 'latest travel & tourism trends' returned 48 results
+INFO:research_system.orchestrator:Collecting from free APIs for topic: latest travel & tourism trends
+INFO:research_system.providers.intent_registry:Intent travel -> providers: ['wikivoyage', 'wikipedia', 'wikidata', 'osmtags', 'nominatim', 'overpass']
+INFO:research_system.orchestrator:Router selected providers: ['worldbank', 'oecd', 'eurostat', 'imf', 'fred', 'wikidata', 'wikipedia', 'wayback', 'openalex', 'crossref'] for categories: ['macro', 'general']
+INFO:research_system.collection_enhanced:Executing 10 providers in parallel: ['wikivoyage', 'wikipedia', 'wikidata', 'osmtags', 'nominatim', 'overpass', 'worldbank', 'oecd', 'eurostat', 'imf']
+INFO:research_system.providers.oecd:Trying OECD dataflows endpoint: https://stats.oecd.org/SDMX-JSON/dataflow
+INFO:httpx:HTTP Request: GET https://en.wikipedia.org/w/rest.php/v1/search/title?q=latest+travel+%26+tourism+trends&limit=10 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://api.worldbank.org/v2/indicator?format=json&per_page=1000&page=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://data.europa.eu/api/hub/search/search?query=latest+travel+%26+tourism+trends&limit=50&lang=en "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow
+INFO:research_system.providers.oecd:OECD dataflows endpoint failed (https://stats.oecd.org/SDMX-JSON/dataflow): Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO:research_system.providers.oecd:Trying OECD dataflows endpoint: https://stats.oecd.org/SDMX-JSON/dataflow/
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow/
+INFO:research_system.providers.oecd:OECD dataflows endpoint failed (https://stats.oecd.org/SDMX-JSON/dataflow/): Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO:research_system.providers.oecd:Trying OECD dataflows endpoint: https://stats.oecd.org/SDMX-JSON/dataflow/ALL
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.overpass:Overpass search failed: The read operation timed out
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow/ALL
+INFO:research_system.providers.oecd:OECD dataflows endpoint failed (https://stats.oecd.org/SDMX-JSON/dataflow/ALL): Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/ALL'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO:research_system.providers.oecd:Trying OECD dataflows endpoint: https://stats.oecd.org/SDMX-JSON/dataflow/ALL/
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://stats.oecd.org/SDMX-JSON/dataflow/ALL/ "HTTP/1.1 404 Not Found"
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://stats.oecd.org/SDMX-JSON/dataflow/ALL/
+INFO:research_system.providers.oecd:OECD dataflows endpoint failed (https://stats.oecd.org/SDMX-JSON/dataflow/ALL/): Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/ALL/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+WARNING:research_system.providers.oecd:OECD dataflows fetch failed after all fallbacks: Client error '404 Not Found' for url 'https://stats.oecd.org/SDMX-JSON/dataflow/ALL/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+WARNING:research_system.providers.http:HTTP request failed after 3 attempts: https://dataservices.imf.org/REST/SDMX_JSON.svc/Dataflow
+WARNING:research_system.providers.imf:IMF dataflows fetch failed: timed out
+INFO:research_system.orchestrator:Collected 0 cards from free APIs
+INFO:research_system.orchestrator:Enriching 93 cards with ENABLE_EXTRACT=True
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?t=travel "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?pageID=6&t=travel "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?t=foreign%3Btravel "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/OECD-TOURISM-TRENDS-AND-POLICIES-2024-LAUNCH-presentation.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/OECD-TOURISM-TRENDS-AND-POLICIES-2024-LAUNCH-presentation.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/OECD-TOURISM-TRENDS-AND-POLICIES-2024-LAUNCH-presentation.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/Archives/edgar/data/1758488/000095017025024552/osw-20241231.htm "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/Archives/edgar/data/1758488/000095017024022654/osw-20231231.htm "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.sec.gov/Archives/edgar/data/1820872/000110465923035161/gbtg-20221231x10k.htm "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mylighthouse.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.mylighthouse.com/resources/blog/travel-trends-2025-traveler-segments "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.bbc.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.bbc.com/travel/article/20250106-the-seven-travel-trends-that-will-shape-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://rusticpathways.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://rusticpathways.com/inside-rustic/online-magazine/what-travel-trends-to-expect-in-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ilag.nordnorge.com/content/uploads/sites/5/2025/01/20250106_Megatrends-Reshaping-International-Tourism-in-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://ilag.nordnorge.com/content/uploads/sites/5/2025/01/20250106_Megatrends-Reshaping-International-Tourism-in-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://ilag.nordnorge.com/content/uploads/sites/5/2025/01/20250106_Megatrends-Reshaping-International-Tourism-in-2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.congress.gov/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.congress.gov/crs_external_products/IN/PDF/IN12589/IN12589.1.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.congress.gov/crs_external_products/IN/PDF/IN12589/IN12589.1.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.congress.gov/crs_external_products/IN/PDF/IN12589/IN12589.1.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahla.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahla.com/sites/default/files/25_SOTI_Report_update.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.ahla.com/sites/default/files/25_SOTI_Report_update.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ahla.com/sites/default/files/25_SOTI_Report_update.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanexpress.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanexpress.com/en-us/travel/discover/get-inspired/global-travel-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://explodingtopics.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://explodingtopics.com/blog/travel-industry-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.deloitte.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.deloitte.com/us/en/Industries/consumer/articles/travel-hospitality-industry-outlook.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.mylighthouse.com/resources/blog/travel-trends-2025-traveler-segments "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.travelweekly.com/robots.txt "HTTP/1.1 405 Not Allowed"
+INFO:httpx:HTTP Request: GET https://www.travelweekly.com/ "HTTP/1.1 405 Not Allowed"
+INFO:httpx:HTTP Request: GET https://wttc.org/research/economic-impact "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://fred.stlouisfed.org/tags/series?t=air+travel%3Bprice+index "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf (hash: 83648169...)
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2018/11/analysing-megatrends-to-better-shape-the-future-of-tourism_b4b74377/d465eb68-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/reports/2018/11/analysing-megatrends-to-better-shape-the-future-of-tourism_b4b74377/d465eb68-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/reports/2018/11/analysing-megatrends-to-better-shape-the-future-of-tourism_b4b74377/d465eb68-en.pdf "HTTP/1.1 200 OK"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf (hash: b0266576...)
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+INFO:httpx:HTTP Request: GET https://www.dataestur.es/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.dataestur.es/en/blog/tourism-i2025-year-growth-travel-expected/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://rezdy.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://rezdy.com/blog/global-travel-tourism-statistics-2025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nytimes.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.nytimes.com/interactive/2025/travel/places-to-travel-destinations-2025.html "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www3.weforum.org/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www3.weforum.org/docs/WEF_Travel_and_Tourism_Development_Index_2024.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www3.weforum.org/docs/WEF_Travel_and_Tourism_Development_Index_2024.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www3.weforum.org/docs/WEF_Travel_and_Tourism_Development_Index_2024.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www3.weforum.org/docs/WEF_Travel_and_Tourism_Development_Index_2024.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www3.weforum.org/docs/WEF_Travel_and_Tourism_Development_Index_2024.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/robots.txt "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://tourismanalytics.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://tourismanalytics.com/uploads/1/2/0/4/120443739/wtm-global-travel-report-2024.pdf.coredownload.307954965.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.bbc.com/travel/article/20250106-the-seven-travel-trends-that-will-shape-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://iges.us/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://iges.us/us-tourism-travel-trends-2025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://pro.regiondo.com/blog/tourism-trends-2018-2/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.revfine.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.revfine.com/tourism-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://amadeus.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://amadeus.com/en/resources/research/travel-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.statista.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.statista.com/topics/13141/travel-and-tourism-trends-2025/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/iplogin?__sso_redirect=/topics/13141/travel-and-tourism-trends-2025/ "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize?response_type=code&client_id=xjVF0FFWFPOcG7XJO8C0XleeRPllUFfI&redirect_uri=https%3A%2F%2Fwww.statista.com%2Fsso%2Fcallback&state=s3EvO76y_5Hr3AqMBoUsQvi9P4ARGZc5gv2no_Pb1Jc&scope=openid+profile+offline_access&code_challenge=Qpkr5l3C4UcAFsNUvmsmdereYX5GFiMAaJihI3DxFdA&code_challenge_method=S256&audience=statista-api&ui_locales=en&connection=ip-login&0%5Bplatform%5D=en&0%5BstatistaTrackingUUID%5D=f86db006-d2e7-4cda-b5c3-0966d040d4db&0%5BrequestIp%5D=71.202.127.58 "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://services.sso.statista.com/ip/authorize?login_hint=&response_type=code&redirect_uri=https%3A%2F%2Flogin.statista.com%2Flogin%2Fcallback&state=dRuSvg48CC4wMIEpveWJZwjCS3zF2MTA&client_id=9a7cf70e-1be6-40a1-ba02-6e6e6654b93d "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/login/callback?state=dRuSvg48CC4wMIEpveWJZwjCS3zF2MTA&error=INVALID_IP&error_description=ip-not-authorized-for-login "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://login.statista.com/authorize/resume?state=Pn5l1hfSRGmI_8R7u7DrLLk64cXCTVGV "HTTP/1.1 302 Found"
+INFO:httpx:HTTP Request: GET https://www.statista.com/sso/callback?error=access_denied&error_description=ip-not-authorized-for-login&state=s3EvO76y_5Hr3AqMBoUsQvi9P4ARGZc5gv2no_Pb1Jc "HTTP/1.1 302 Moved Temporarily"
+INFO:httpx:HTTP Request: GET https://www.statista.com/topics/13141/travel-and-tourism-trends-2025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanexpress.com/en-us/travel/discover/get-inspired/global-travel-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.travelagewest.com/robots.txt "HTTP/1.1 405 Not Allowed"
+INFO:httpx:HTTP Request: GET https://www.travelagewest.com/Industry-Insight/Business-Features/summer-travel-trends-2025 "HTTP/1.1 405 Not Allowed"
+INFO:httpx:HTTP Request: GET https://wttc.org/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cbi.eu/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cbi.eu/market-information/tourism/trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ustravel.org/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.ustravel.org/research/monthly-travel-data-report "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://goodtourisminstitute.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://goodtourisminstitute.com/library/good-tourism-trends-2025/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://wttc.org/consumer-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.unwto.org/un-tourism-world-tourism-barometer-data "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://en.unwto-ap.org/un-tourism-world-tourism-barometer-data "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://en.unwto-ap.org/un-tourism-world-tourism-barometer-data "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://www.the-future-of-commerce.com/robots.txt "HTTP/1.1 200 OK"
+INFO:research_system.tools.fetch:Robots.txt disallows https://www.the-future-of-commerce.com/2025/01/28/travel-trends-2025/, trying DOI/mirror fallback
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/Tourism-Policy-Highlights-2024.pdf (hash: 83648169...)
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/07/oecd-tourism-trends-and-policies-2024_17ff33a3/80885d8b-en.pdf (hash: b0266576...)
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/TTP2022-Policy-Highlights-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/TTP2022-Policy-Highlights-en.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.oecd.org/content/dam/oecd/en/publications/support-materials/2022/11/oecd-tourism-trends-and-policies-2022_71dc1773/TTP2022-Policy-Highlights-en.pdf "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+WARNING:research_system.tools.fetch:Circuit open for www.sec.gov, skipping
+INFO:httpx:HTTP Request: GET https://www.bbc.com/travel/article/20250106-the-seven-travel-trends-that-will-shape-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.americanexpress.com/en-us/travel/discover/get-inspired/global-travel-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/robots.txt "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://reports.weforum.org/docs/WEF_Four_Scenarios_for_the_Future_of_Travel_and_Tourism_2025.pdf "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:httpx:HTTP Request: GET https://www.mastercard.com/content/dam/mccom/shared/news-and-trends/press/2024/soaring-passenger-traffic-longer-stays/Travel_Trends_2025.pdf "HTTP/1.1 403 Forbidden"
+INFO:research_system.net.pdf_fetch:Returning cached PDF for https://ilag.nordnorge.com/content/uploads/sites/5/2025/01/20250106_Megatrends-Reshaping-International-Tourism-in-2025.pdf (hash: 50c68913...)
+INFO:httpx:HTTP Request: GET https://www.americanexpress.com/en-us/travel/discover/get-inspired/global-travel-trends "HTTP/1.1 200 OK"
+WARNING:research_system.tools.fetch:Circuit open for www.mckinsey.com, skipping
+INFO:httpx:HTTP Request: GET https://www.mylighthouse.com/resources/blog/travel-trends-2025-traveler-segments "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.travelweekly.com/ "HTTP/1.1 405 Not Allowed"
+INFO:httpx:HTTP Request: GET https://www.revfine.com/tourism-trends/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://amadeus.com/en/resources/research/travel-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://research.skift.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://research.skift.com/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.contiki.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.contiki.com/six-two/article/travel-trends/ "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cntraveler.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://www.cntraveler.com/story/the-biggest-travel-trends-to-expect-in-2025 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://mysmartjourney.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://mysmartjourney.com/en-ca/post/what-are-the-travel-trends-in-tourism "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://marketing.sfgate.com/robots.txt "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://marketing.sfgate.com/blog/tourism-marketing-trends "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://goodtourisminstitute.com/library/good-tourism-trends-2025/ "HTTP/1.1 200 OK"
+INFO:research_system.enrich.ensure_quotes:Quote rescue: 93 primary cards need quotes
+INFO:research_system.enrich.ensure_quotes:Quote rescue complete: added 86 quotes
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 48 cards, 29 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=unwto.org, text='International tourist arrivals increased by 5% in January-March 2025, with around 300 million touris...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'international tourist arrivals increased by % in january-march with around million tourists strong t...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=wttc.org, text='In 2024, the sector supported a total of 357 million jobs globally, which is approximately 1 in 10 j...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in the sector supported a total of million jobs globally which is approximately in jobs...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 3: domain=oecd.org, text='The OECD Tourism Trends and Policies 2024 edition comes as tourism has rebounded strongly following ...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'the oecd tourism trends and policies edition comes as tourism has rebounded strongly following signi...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=oecd.org, text='The 2024 edition of OECD Tourism Trends and Policies comes as tourism has rebounded strongly followi...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'the edition of oecd tourism trends and policies comes as tourism has rebounded strongly following si...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 5: domain=wttc.org, text='Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong> space from 2022 and...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'learn more about consumer strong trends strong in the strong travel strong space from and beyond...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.237 0.420 0.424 0.505
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.237 1.000 0.230 0.234 0.233
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.420 0.230 1.000 0.993 0.441
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.424 0.234 0.993 1.000 0.436
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.505 0.233 0.441 0.436 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.332 between cards 1 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.342 between cards 1 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 1 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.398 between cards 1 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 1 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.377 between cards 2 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.339 between cards 2 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.396 between cards 3 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 3 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.396 between cards 3 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.333 between cards 3 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.344 between cards 5 and 7
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.314 between cards 5 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 5 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 5 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.373 between cards 5 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.307 between cards 5 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.313 between cards 6 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 6 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 6 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.330 between cards 7 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.335 between cards 7 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.329 between cards 7 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.389 between cards 7 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.393 between cards 8 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 8 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.355 between cards 9 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.378 between cards 9 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.366 between cards 9 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 10 and 15
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.352 between cards 10 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.337 between cards 10 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 10 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.350 between cards 10 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.380 between cards 11 and 16
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 11 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.387 between cards 12 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.383 between cards 14 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.320 between cards 15 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 15 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.328 between cards 16 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.374 between cards 16 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 16 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.307 between cards 16 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.378 between cards 17 and 22
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.362 between cards 17 and 23
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.351 between cards 18 and 27
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.364 between cards 18 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.303 between cards 19 and 21
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 20 and 25
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.327 between cards 21 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.326 between cards 23 and 26
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.337 between cards 23 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.341 between cards 25 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.343 between cards 26 and 28
+INFO:research_system.triangulation.paraphrase_cluster:Found 230 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,2): similarity=0.420
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: International tourist arrivals increased by 5% in January-March 2025, with aroun...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 2: The OECD Tourism Trends and Policies 2024 edition comes as tourism has rebounded...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,3): similarity=0.424
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: International tourist arrivals increased by 5% in January-March 2025, with aroun...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 3: The 2024 edition of OECD Tourism Trends and Policies comes as tourism has reboun...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,4): similarity=0.505
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: International tourist arrivals increased by 5% in January-March 2025, with aroun...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 4: Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,5): similarity=0.406
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: International tourist arrivals increased by 5% in January-March 2025, with aroun...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 5: The OECD Tourism Trends and Policies 2022 edition follows nearly three unprecede...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (0,6): similarity=0.587
+INFO:research_system.triangulation.paraphrase_cluster:    Card 0: International tourist arrivals increased by 5% in January-March 2025, with aroun...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 6: With the <strong>travel</strong> <strong>and</strong> <strong>tourism</strong> i...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 4 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 0: 26 members from domains {'mylighthouse.com', 'congress.gov', 'oecd.org', 'tourismanalytics.com', 'regiondo.com', 'ustravel.org', 'rezdy.com', 'sec.gov', 'nytimes.com', 'deloitte.com', 'wttc.org', 'amadeus.com', 'explodingtopics.com', 'statista.com', 'unwto.org', 'ahla.com', 'bbc.com', 'sfgate.com', 'goodtourisminstitute.com', 'the-future-of-commerce.com', 'cntraveler.com', 'mckinsey.com', 'dataestur.es'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 26 cards from ['ahla.com', 'amadeus.com', 'bbc.com', 'cntraveler.com', 'congress.gov', 'dataestur.es', 'deloitte.com', 'explodingtopics.com', 'goodtourisminstitute.com', 'mckinsey.com', 'mylighthouse.com', 'nytimes.com', 'oecd.org', 'regiondo.com', 'rezdy.com', 'sec.gov', 'sfgate.com', 'statista.com', 'the-future-of-commerce.com', 'tourismanalytics.com', 'unwto.org', 'ustravel.org', 'wttc.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: Global travel activity has shown a recovery trend in 2022, with our transaction volumes reaching app...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 48 total cards
+INFO:research_system.triangulation.post:Cluster 0: 26 cards from 23 domains ['ahla.com', 'amadeus.com', 'bbc.com']...
+INFO:research_system.triangulation.post:  -> TRIMMING: cluster size 26 > cap 17 (keeping most similar)
+INFO:research_system.triangulation.post:  -> ACCEPTED after trimming to 17 cards
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:After contradiction filtering: 0 paraphrase clusters
+INFO:research_system.orchestrator:Strict mode enabled: skipping backfill passes to match source strategy.
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" site:sec.gov -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%22Q1+2025%22+site%3Asec.gov+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" site:sec.gov -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 6 results for query: global "international_tourist_arrivals" "Q1 2025" site:sec.gov -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 13.61it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 14.42it/s]
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%22Q1+2025%22+site%3Afred.stlouisfed.org+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" site:fred.stlouisfed.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" site:fred.stlouisfed.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 6 results for query: global "international_tourist_arrivals" "Q1 2025" site:fred.stlouisfed.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 66.85it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 18.69it/s]
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%22Q1+2025%22+site%3Aoecd.org+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" site:oecd.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" site:oecd.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 6 results for query: global "international_tourist_arrivals" "Q1 2025" site:oecd.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 51.66it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 10.64it/s]
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%22Q1+2025%22+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "Q1 2025" -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 6 results for query: global "international_tourist_arrivals" "Q1 2025" -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 6 results for query: global "international_tourist_arrivals" "Q1 2025" -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 61.37it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 17.45it/s]
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 64.62it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 20.00it/s]
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%222025%22+site%3Asec.gov+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "2025" site:sec.gov -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: global "international_tourist_arrivals" "2025" site:sec.gov -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 1 results for query: global "international_tourist_arrivals" "2025" site:sec.gov -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 23.67it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 22.95it/s]
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%222025%22+site%3Afred.stlouisfed.org+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "2025" site:fred.stlouisfed.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_serper:No organic results in Serper response
+INFO:research_system.tools.search_serper:Serper search returned 0 results for query: global "international_tourist_arrivals" "2025" site:fred.stlouisfed.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 0 results for query: global "international_tourist_arrivals" "2025" site:fred.stlouisfed.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%222025%22+site%3Aoecd.org+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "2025" site:oecd.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 6 results for query: global "international_tourist_arrivals" "2025" site:oecd.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 0 results for query: global "international_tourist_arrivals" "2025" site:oecd.org -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 71.83it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 19.67it/s]
+INFO:research_system.tools.search_serpapi:SERPAPI_CIRCUIT_OPEN
+INFO:httpx:HTTP Request: GET https://api.search.brave.com/res/v1/web/search?q=global+%22international_tourist_arrivals%22+%222025%22+-%22bitcoin%22+-%22crypto%22+-%22forex%22+-%22get+rich+quick%22+-%22nft%22+-%22penny+stocks%22+-%22trading+signals%22&count=6&country=US&search_lang=en&ui_lang=en-US&safesearch=moderate "HTTP/1.1 200 OK"
+WARNING:research_system.tools.search_brave:No web results in Brave response
+INFO:research_system.tools.search_brave:Brave search returned 0 results for query: global "international_tourist_arrivals" "2025" -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://google.serper.dev/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_serper:Serper search returned 6 results for query: global "international_tourist_arrivals" "2025" -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:httpx:HTTP Request: POST https://api.tavily.com/search "HTTP/1.1 200 OK"
+INFO:research_system.tools.search_tavily:Tavily search returned 6 results for query: global "international_tourist_arrivals" "2025" -"bitcoin" -"crypto" -"forex" -"get rich quick" -"nft" -"penny stocks" -"trading signals"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 65.62it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 22.32it/s]
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 73.01it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 23.91it/s]
+INFO:research_system.orchestrator_adaptive:Adaptive domain balance: cap=0.25 kept=64 from 64 cards across 45 domains
+INFO:research_system.orchestrator:Standard domain cap 25% applied
+INFO:research_system.orchestrator_adaptive:Adaptive credibility floor: filtered 36 low-cred singletons, retained 2 whitelisted/high-cred singletons
+INFO:research_system.orchestrator:Adaptive credibility floor: filtered 36 low-cred sources, retained {'ustravel.org', 'worldbank.org'}
+INFO:research_system.orchestrator:Re-applying domain caps after filtering (max share: 28.57%)
+INFO:research_system.orchestrator_adaptive:Adaptive domain balance: cap=0.25 kept=27 from 28 cards across 9 domains
+INFO:research_system.triangulation.paraphrase_cluster:
+=== TRIANGULATION DEBUG ===
+INFO:research_system.triangulation.paraphrase_cluster:Processing 27 cards, 15 with claim-like text
+INFO:research_system.triangulation.paraphrase_cluster:Card 1: domain=wttc.org, text='In 2024, the sector supported a total of 357 million jobs globally, which is approximately 1 in 10 j...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'in the sector supported a total of million jobs globally which is approximately in jobs...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 2: domain=wttc.org, text='Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong> space from 2022 and...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'learn more about consumer strong trends strong in the strong travel strong space from and beyond...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 3: domain=unwto.org, text='UN Tourism International tourist arrivals grew 5% in Q1 2025...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'un tourism international tourist arrivals grew % in q1...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 4: domain=unwto.org, text='International tourist arrivals increased by 5% in January-March 2025, with around 300 million touris...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'international tourist arrivals increased by % in january-march with around million tourists strong t...'
+INFO:research_system.triangulation.paraphrase_cluster:Card 5: domain=oecd.org, text='OECD International trade statistics: trends in first quarter 2025...'
+INFO:research_system.triangulation.paraphrase_cluster:  Normalized: 'oecd international trade statistics trends in first quarter...'
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+INFO:research_system.triangulation.paraphrase_cluster:
+Using SBERT with threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:Similarity matrix sample (first 5x5):
+INFO:research_system.triangulation.paraphrase_cluster:  Row 0: 1.000 0.233 0.274 0.237 0.312
+INFO:research_system.triangulation.paraphrase_cluster:  Row 1: 0.233 1.000 0.375 0.505 0.319
+INFO:research_system.triangulation.paraphrase_cluster:  Row 2: 0.274 0.375 1.000 0.764 0.323
+INFO:research_system.triangulation.paraphrase_cluster:  Row 3: 0.237 0.505 0.764 1.000 0.317
+INFO:research_system.triangulation.paraphrase_cluster:  Row 4: 0.312 0.319 0.323 0.317 1.000
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.312 between cards 0 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.301 between cards 0 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.375 between cards 1 and 2
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.319 between cards 1 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.364 between cards 1 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.357 between cards 1 and 6
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.392 between cards 1 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.323 between cards 2 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.349 between cards 2 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.317 between cards 3 and 4
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.392 between cards 3 and 5
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.369 between cards 4 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.363 between cards 4 and 10
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.312 between cards 4 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.306 between cards 4 and 13
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.330 between cards 5 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.303 between cards 6 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.379 between cards 6 and 12
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.396 between cards 8 and 9
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.394 between cards 9 and 11
+INFO:research_system.triangulation.paraphrase_cluster:Near-miss similarity 0.352 between cards 12 and 14
+INFO:research_system.triangulation.paraphrase_cluster:Found 67 pairs above threshold 0.4
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,3): similarity=0.505
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 3: International tourist arrivals increased by 5% in January-March 2025, with aroun...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,7): similarity=0.441
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 7: The OECD Tourism Trends and Policies 2024 edition comes as tourism has rebounded...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,8): similarity=0.436
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 8: The 2024 edition of OECD Tourism Trends and Policies comes as tourism has reboun...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,9): similarity=0.505
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 9: Global travel activity has shown a recovery trend in 2022, with our transaction ...
+INFO:research_system.triangulation.paraphrase_cluster:  Pair (1,10): similarity=0.606
+INFO:research_system.triangulation.paraphrase_cluster:    Card 1: Learn more about Consumer <strong>Trends</strong> in the <strong>travel</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:    Card 10: Discover all statistics and data on <strong>Travel</strong> <strong>and</strong>...
+INFO:research_system.triangulation.paraphrase_cluster:
+Found 2 raw groups
+INFO:research_system.triangulation.paraphrase_cluster:Group 4: 14 members from domains {'sec.gov', 'oecd.org', 'mckinsey.com', 'ustravel.org', 'statista.com', 'wttc.org', 'unwto.org'}
+INFO:research_system.triangulation.paraphrase_cluster:  -> Multi-domain cluster found!
+INFO:research_system.triangulation.paraphrase_cluster:
+Final triangulation results: 1 multi-domain clusters
+INFO:research_system.triangulation.paraphrase_cluster:Cluster 0: 14 cards from ['mckinsey.com', 'oecd.org', 'sec.gov', 'statista.com', 'unwto.org', 'ustravel.org', 'wttc.org']
+INFO:research_system.triangulation.paraphrase_cluster:  Representative: UN Tourism International tourist arrivals grew 5% in Q1 2025...
+INFO:research_system.triangulation.post:
+=== SANITIZING PARAPHRASE CLUSTERS ===
+INFO:research_system.triangulation.post:Processing 1 clusters with 27 total cards
+INFO:research_system.triangulation.post:Cluster 0: 14 cards from 7 domains ['mckinsey.com', 'oecd.org', 'sec.gov']...
+INFO:research_system.triangulation.post:  -> TRIMMING: cluster size 14 > cap 10 (keeping most similar)
+INFO:research_system.triangulation.post:  -> ACCEPTED after trimming to 10 cards
+INFO:research_system.triangulation.post:Final result: 1 clusters retained
+INFO:research_system.orchestrator:Strict mode enabled: skipping iterative/last-mile backfill loop
+INFO:research_system.orchestrator:Before v8.13.0 canonicalization: 27 cards
+INFO:research_system.evidence.canonicalize:Removed 1 duplicate cards via canonicalization
+INFO:research_system.orchestrator:After v8.13.0 canonicalization: 26 cards
+INFO:research_system.orchestrator:After v8.13.0 intent filtering for travel: 26 cards
+
+Unexpected error: can't compare offset-naive and offset-aware datetimes

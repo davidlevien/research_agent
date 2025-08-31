@@ -196,7 +196,7 @@ def is_recent_primary(card: Any, days: int = 730) -> bool:
     Returns:
         True if card is recent and primary
     """
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     from research_system.config import Settings
     
     settings = Settings()
@@ -212,13 +212,22 @@ def is_recent_primary(card: Any, days: int = 730) -> bool:
         return False
     
     # Check if recent
-    cutoff = datetime.now() - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     collected_at = getattr(card, 'collected_at', None)
     
     if collected_at:
         try:
             if isinstance(collected_at, str):
-                card_date = datetime.fromisoformat(collected_at.replace('Z', '+00:00'))
+                # Handle both 'Z' suffix and existing timezone info
+                if collected_at.endswith('Z'):
+                    card_date = datetime.fromisoformat(collected_at.replace('Z', '+00:00'))
+                else:
+                    card_date = datetime.fromisoformat(collected_at)
+                
+                # Ensure timezone-aware
+                if card_date.tzinfo is None:
+                    card_date = card_date.replace(tzinfo=timezone.utc)
+                
                 return card_date >= cutoff
         except (ValueError, AttributeError):
             pass

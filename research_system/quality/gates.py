@@ -152,11 +152,11 @@ def calculate_recent_primary_count(cards: list, days: int = 730) -> int:
     Returns:
         Count of recent primary source cards
     """
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     from research_system.config import Settings
     
     settings = Settings()
-    cutoff = datetime.now() - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     count = 0
     
     for card in cards:
@@ -176,7 +176,16 @@ def calculate_recent_primary_count(cards: list, days: int = 730) -> int:
             try:
                 # Parse ISO format
                 if isinstance(collected_at, str):
-                    card_date = datetime.fromisoformat(collected_at.replace('Z', '+00:00'))
+                    # Handle both 'Z' suffix and existing timezone info
+                    if collected_at.endswith('Z'):
+                        card_date = datetime.fromisoformat(collected_at.replace('Z', '+00:00'))
+                    else:
+                        card_date = datetime.fromisoformat(collected_at)
+                    
+                    # Ensure timezone-aware
+                    if card_date.tzinfo is None:
+                        card_date = card_date.replace(tzinfo=timezone.utc)
+                    
                     if card_date >= cutoff:
                         count += 1
             except (ValueError, AttributeError):
