@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 # Export primary URL for tests
 DATAFLOW_URL = "https://stats.oecd.org/sdmx-json/dataflow/ALL"
 
-# All endpoints to try in order (with correct alt host domain)
+# All endpoints to try in order (with mirror host fallback)
 DATAFLOW_URLS = [
     "https://stats.oecd.org/sdmx-json/dataflow/ALL",
     "https://stats.oecd.org/sdmx-json/dataflow",
-    "https://stats.oecd.org/SDMX-JSON/dataflow/ALL",  # Try uppercase as fallback
-    "https://stats.oecd.org/SDMX-JSON/dataflow",       # Uppercase fallback
+    "https://stats-nxd.oecd.org/sdmx-json/dataflow/ALL",  # Mirror host
+    "https://stats-nxd.oecd.org/sdmx-json/dataflow",      # Mirror host
 ]
 
 # Circuit breaker state

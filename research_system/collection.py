@@ -1,3 +1,4 @@
-"""Deprecated module. Use research_system.collection_enhanced instead."""
+"""DEPRECATION SHIM — use collection_enhanced everywhere."""
 
-raise RuntimeError("Deprecated module. Use research_system.collection_enhanced.parallel_provider_search instead")
+# v8.25.0: Forward all imports to enhanced collection
+from .collection_enhanced import *  # noqa

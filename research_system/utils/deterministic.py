@@ -1,32 +1,37 @@
 """Deterministic seeding for reproducible outputs."""
 
+import hashlib
 import os
+import time
 import random
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
 # Default seed for reproducible results
 DEFAULT_SEED = 2025
 
-def set_global_seeds(seed: Optional[int | str] = None) -> int:
+def _coerce_seed(seed_like: Optional[Union[int, str]]) -> int:
+    """Convert various seed types to integer."""
+    if seed_like is None:
+        return int(time.time()) % (2**32)
+    try:
+        return int(seed_like)
+    except (TypeError, ValueError):
+        h = hashlib.sha256(str(seed_like).encode()).hexdigest()[:8]
+        return int(h, 16)
+
+def set_global_seeds(seed_like: Optional[Union[int, str]] = None):
     """
     Set global random seeds for reproducible behavior.
     
     Args:
-        seed: Seed value to use. Can be int or string.
-              If string, will be hashed to create an integer seed.
-              If None, uses DEFAULT_SEED.
-        
-    Returns:
-        The seed value that was set
+        seed_like: Seed value to use. Can be int or string.
+                   If string, will be hashed to create an integer seed.
+                   If None, uses time-based seed.
     """
-    if seed is None:
-        seed = DEFAULT_SEED
-    elif isinstance(seed, str):
-        # Convert string to integer seed using hash
-        seed = abs(hash(seed)) % (2**31 - 1)
+    seed = _coerce_seed(seed_like)
     
     # Set environment variable for hash randomization
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -38,31 +43,21 @@ def set_global_seeds(seed: Optional[int | str] = None) -> int:
     try:
         import numpy as np
         np.random.seed(seed)
-        logger.debug(f"Set numpy random seed to {seed}")
-    except ImportError:
-        logger.debug("NumPy not available, skipping numpy seed setting")
+    except Exception:
+        pass
     
     # Set torch seed if available
     try:
         import torch
         torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(seed)
+        try:
             torch.cuda.manual_seed_all(seed)
-        logger.debug(f"Set torch random seed to {seed}")
-    except ImportError:
-        logger.debug("PyTorch not available, skipping torch seed setting")
+        except Exception:
+            pass
+    except Exception:
+        pass
     
-    # Set tensorflow seed if available
-    try:
-        import tensorflow as tf
-        tf.random.set_seed(seed)
-        logger.debug(f"Set tensorflow random seed to {seed}")
-    except ImportError:
-        logger.debug("TensorFlow not available, skipping tensorflow seed setting")
-    
-    logger.info(f"Set global random seeds to {seed}")
-    return seed
+    logger.info("Global seed set to %s (from %r)", seed, seed_like)
 
 def get_deterministic_random():
     """

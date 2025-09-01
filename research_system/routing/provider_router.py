@@ -81,10 +81,20 @@ def infer_categories(topic: str) -> List[str]:
     return cats[:3]
 
 def choose_providers(topic: str) -> RouterDecision:
-    """Choose providers based on topic analysis."""
+    """Choose providers based on topic analysis.
+    
+    v8.25.0: Guarantees breadth on pass-1 with metasearch providers.
+    """
     cats = infer_categories(topic)
     profiles = _load_profiles()
     chosen: List[str] = []
+    
+    # Always prepend metasearch providers for broad intents to guarantee breadth
+    broad_intents = ["general", "news", "macro", "policy"]
+    if any(c in broad_intents for c in cats):
+        # Prepend metasearch providers for breadth
+        metasearch = ["search_serper", "search_brave", "search_tavily"]
+        chosen.extend(metasearch)
     
     for c in cats:
         chosen.extend(profiles.get(c, []))
@@ -93,5 +103,5 @@ def choose_providers(topic: str) -> RouterDecision:
     seen: Set[str] = set()
     providers = [p for p in chosen if not (p in seen or seen.add(p))]
     
-    reason = json.dumps({"categories": cats})
+    reason = json.dumps({"categories": cats, "broad_search": any(c in broad_intents for c in cats)})
     return RouterDecision(categories=cats, providers=providers, reason=reason)

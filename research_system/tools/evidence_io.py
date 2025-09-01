@@ -125,14 +125,33 @@ def validate_evidence_dict(data: dict) -> None:
         import logging
         logging.warning(f"Evidence has no usable snippet after repair: {data.get('id', 'unknown')}")
 
-def write_jsonl(path: str, items: List[EvidenceCard], *, skip_invalid: bool = True, 
+def _coerce_item(item: Any) -> Dict[str, Any]:
+    """Coerce various object types to dict for JSONL writing."""
+    if isinstance(item, dict):
+        return item
+    if hasattr(item, "to_jsonl_dict"):
+        return item.to_jsonl_dict()
+    if hasattr(item, "model_dump"):
+        return item.model_dump()
+    try:
+        from dataclasses import asdict, is_dataclass
+        if is_dataclass(item):
+            return asdict(item)
+    except Exception:
+        pass
+    # Fallback: use JSON encoding with default handler
+    return json.loads(json.dumps(item, default=lambda o: getattr(o, "__dict__", str(o))))
+
+def write_jsonl(path: str, items: List[Any], *, skip_invalid: bool = True, 
                 errors_path: Optional[str] = None) -> Tuple[int, int]:
     """
     Write evidence cards to JSONL, with resilience against invalid cards.
     
+    Handles dicts, Pydantic models, dataclasses, and objects with to_jsonl_dict.
+    
     Args:
         path: Output JSONL path
-        items: List of EvidenceCard objects
+        items: List of evidence objects (EvidenceCard, dict, dataclass, etc.)
         skip_invalid: If True, skip invalid cards instead of raising
         errors_path: Optional path to write error details
         
@@ -158,8 +177,8 @@ def write_jsonl(path: str, items: List[EvidenceCard], *, skip_invalid: bool = Tr
     
     with p.open("w", encoding="utf-8") as f:
         for i, item in enumerate(items):
-            # Use canonical output format with blueprint fields
-            doc = item.to_jsonl_dict() if hasattr(item, 'to_jsonl_dict') else item.model_dump()
+            # Coerce to dict using enhanced handler
+            doc = _coerce_item(item)
             
             # Apply minimal repairs
             doc = _repair_minimal(doc)

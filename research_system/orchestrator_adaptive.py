@@ -57,8 +57,14 @@ def apply_adaptive_domain_balance(
             domain_cards[domain] = []
         domain_cards[domain].append(card)
     
-    # Apply cap
-    max_per_domain = max(1, int(len(cards) * cap))
+    # Apply cap - v8.25.0: Relax for small samples
+    total = len(cards)
+    if total < 25 or unique_domains < 4:
+        # Small sample: relax cap to preserve evidence
+        cap = max(cap, 0.5)  # Up to 50% on tiny samples
+        adjustment_note += f" (relaxed to {cap:.0%} for small sample)"
+    
+    max_per_domain = max(1, int(total * cap))
     balanced_cards = []
     kept_counts = {}
     

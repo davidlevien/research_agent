@@ -31,6 +31,16 @@ PUBLIC_ALLOWLIST: Set[str] = {
     "www.un.org"
 }
 
+# API hosts exempt from robots.txt circuits
+_EXEMPT_HOSTS: Set[str] = {
+    "api.worldbank.org",
+    "api.openalex.org", 
+    "api.crossref.org",
+    "dataservices.imf.org",
+    "stats.oecd.org",
+    "stats-nxd.oecd.org"
+}
+
 # Cache of parsed robots.txt files
 _ROBOTS_CACHE = {}
 
@@ -49,7 +59,11 @@ def is_allowed(url: str, user_agent: str = "ResearchAgent/1.0") -> bool:
         parsed = urlparse(url)
         host = parsed.netloc.lower()
         
-        # Check allowlist first
+        # Check exempt API hosts first
+        if host in _EXEMPT_HOSTS:
+            return True
+            
+        # Check allowlist 
         if host in PUBLIC_ALLOWLIST:
             return True
         

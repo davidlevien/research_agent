@@ -345,6 +345,29 @@ class Orchestrator:
         # Atomic rename
         os.replace(tmp.name, target)
     
+    def _resolve_doi_cards(self, cards: List[EvidenceCard]):
+        """Resolve DOI URLs to publisher landing pages to prevent doi.org domination.
+        
+        v8.25.0: Critical for proper domain distribution in triangulation.
+        """
+        from urllib.parse import urlparse
+        from research_system.tools.doi import resolve_doi
+        
+        changed = 0
+        for c in cards:
+            if not getattr(c, "url", None):
+                continue
+            host = (urlparse(c.url).hostname or "").lower()
+            if host.endswith("doi.org"):
+                dest = resolve_doi(c.url)
+                if dest:
+                    c.url = dest
+                    c.source_domain = (urlparse(dest).hostname or c.source_domain)
+                    changed += 1
+        
+        if changed:
+            logger.info(f"Resolved {changed} DOI URLs to publisher landing pages")
+    
     def _bool_env(self, name: str, default: bool) -> bool:
         """Parse boolean environment variable."""
         val = os.getenv(name)
@@ -2692,6 +2715,9 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         # Gates passed - continue to final report generation
         logger.info("v8.13.0 Quality gates passed, generating final report")
+        
+        # v8.25.0: Resolve DOI URLs to prevent doi.org domination
+        self._resolve_doi_cards(cards)
         
         # ===== LEGACY METRICS (for backward compatibility) =====
         # FINAL METRICS CALCULATION - Single source of truth after ALL processing

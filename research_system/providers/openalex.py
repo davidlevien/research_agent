@@ -29,11 +29,14 @@ def search_openalex(query: str, per_page: int = 25) -> List[Dict[str, Any]]:
     clean_query = re.sub(r'[^\w\s]', ' ', query).strip()
     clean_query = ' '.join(clean_query.split())[:100]  # Limit length
     
-    # Common parameters
+    # Common parameters - skip mailto if empty or example domain
     common = {
-        "per_page": min(10, per_page),
-        "mailto": contact_email
+        "per_page": min(10, per_page)
     }
+    
+    # Only add mailto if it's a real email (not empty or example.org)
+    if contact_email and not contact_email.endswith("@example.org"):
+        common["mailto"] = contact_email
     
     # Strategy 1: Try fulltext search with select
     try:
