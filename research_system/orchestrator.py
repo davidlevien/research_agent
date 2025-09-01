@@ -146,7 +146,8 @@ class Orchestrator:
             self.s.output_dir = Path(self.s.output_dir)
         self.s.output_dir.mkdir(parents=True, exist_ok=True)
         # Use global registry instead of creating a new one
-        register_search_tools(registry)
+        from research_system.tools.registry import get_registry
+        register_search_tools(get_registry())
         
         # Initialize context dictionary for storing metadata
         self.context = {}
