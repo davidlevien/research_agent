@@ -10,18 +10,23 @@ logger = logging.getLogger(__name__)
 # Default seed for reproducible results
 DEFAULT_SEED = 2025
 
-def set_global_seeds(seed: Optional[int] = None) -> int:
+def set_global_seeds(seed: Optional[int | str] = None) -> int:
     """
     Set global random seeds for reproducible behavior.
     
     Args:
-        seed: Seed value to use. If None, uses DEFAULT_SEED.
+        seed: Seed value to use. Can be int or string.
+              If string, will be hashed to create an integer seed.
+              If None, uses DEFAULT_SEED.
         
     Returns:
         The seed value that was set
     """
     if seed is None:
         seed = DEFAULT_SEED
+    elif isinstance(seed, str):
+        # Convert string to integer seed using hash
+        seed = abs(hash(seed)) % (2**31 - 1)
     
     # Set environment variable for hash randomization
     os.environ["PYTHONHASHSEED"] = str(seed)
