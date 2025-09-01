@@ -16,8 +16,12 @@ from .settings import (
     STRICT_ADJUSTMENTS,
 )
 
+# Alias for backward compatibility
+config = settings
+
 __all__ = [
     "settings",
+    "config",  # Backward compatibility
     "Settings",
     "QualityThresholds",
     "quality_for_intent",

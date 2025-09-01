@@ -203,9 +203,14 @@ class Settings:
     min_evidence_cards: int = field(default_factory=lambda: int(os.getenv("MIN_EVIDENCE_CARDS", "20")))
     
     # API settings
+    SEARCH_PROVIDERS: str = field(default_factory=lambda: os.getenv("SEARCH_PROVIDERS", ""))
+    FRESHNESS_WINDOW: str = field(default_factory=lambda: os.getenv("FRESHNESS_WINDOW", "24 months"))
     enable_free_apis: bool = field(default_factory=lambda: os.getenv("ENABLE_FREE_APIS", "true").lower() == "true")
+    ENABLE_FREE_APIS: bool = field(default_factory=lambda: os.getenv("ENABLE_FREE_APIS", "true").lower() == "true")  # Alias
     use_llm_claims: bool = field(default_factory=lambda: os.getenv("USE_LLM_CLAIMS", "false").lower() == "true")
+    USE_LLM_CLAIMS: bool = field(default_factory=lambda: os.getenv("USE_LLM_CLAIMS", "false").lower() == "true")  # Alias
     use_llm_synth: bool = field(default_factory=lambda: os.getenv("USE_LLM_SYNTH", "false").lower() == "true")
+    USE_LLM_SYNTH: bool = field(default_factory=lambda: os.getenv("USE_LLM_SYNTH", "false").lower() == "true")  # Alias
     
     # Timeout settings
     HTTP_TIMEOUT_SECONDS: int = field(default_factory=lambda: int(os.getenv("HTTP_TIMEOUT_SECONDS", "30")))
@@ -214,6 +219,30 @@ class Settings:
     
     # Contact info for API compliance
     contact_email: str = field(default_factory=lambda: os.getenv("CONTACT_EMAIL", "research@example.com"))
+    CONTACT_EMAIL: str = field(default_factory=lambda: os.getenv("CONTACT_EMAIL", "research@example.com"))  # Alias
+    
+    # Other API keys
+    TAVILY_API_KEY: Optional[str] = field(default_factory=lambda: os.getenv("TAVILY_API_KEY"))
+    BRAVE_API_KEY: Optional[str] = field(default_factory=lambda: os.getenv("BRAVE_API_KEY"))
+    SERPER_API_KEY: Optional[str] = field(default_factory=lambda: os.getenv("SERPER_API_KEY"))
+    SERPAPI_API_KEY: Optional[str] = field(default_factory=lambda: os.getenv("SERPAPI_API_KEY"))
+    
+    # Feature flags
+    ENABLE_AREX: bool = field(default_factory=lambda: os.getenv("ENABLE_AREX", "false").lower() == "true")
+    ENABLE_WARC: bool = field(default_factory=lambda: os.getenv("ENABLE_WARC", "false").lower() == "true")
+    ENABLE_PDF_TABLES: bool = field(default_factory=lambda: os.getenv("ENABLE_PDF_TABLES", "false").lower() == "true")
+    ENABLE_LANGDETECT: bool = field(default_factory=lambda: os.getenv("ENABLE_LANGDETECT", "false").lower() == "true")
+    
+    # LLM settings
+    USE_LLM_RERANK: bool = field(default_factory=lambda: os.getenv("USE_LLM_RERANK", "false").lower() == "true")
+    
+    # Quality settings
+    MIN_CREDIBILITY: float = field(default_factory=lambda: float(os.getenv("MIN_CREDIBILITY", "0.5")))
+    MAX_DOMAIN_CONCENTRATION: float = field(default_factory=lambda: float(os.getenv("MAX_DOMAIN_CONCENTRATION", "0.35")))
+    MIN_TRIANGULATION_RATE: float = field(default_factory=lambda: float(os.getenv("MIN_TRIANGULATION_RATE", "0.25")))
+    
+    # Strict mode
+    STRICT: bool = field(default_factory=lambda: os.getenv("STRICT", "false").lower() == "true")
     
     # Stats-specific configuration
     STATS_ALLOWED_PRIMARY_DOMAINS: set = field(default_factory=lambda: {
@@ -249,6 +278,10 @@ class Settings:
     def thresholds(self, intent: Optional[str], strict: bool = True) -> QualityThresholds:
         """Get quality thresholds for the given intent and mode."""
         return quality_for_intent(intent, strict)
+    
+    def enabled_providers(self) -> list:
+        """Get list of enabled search providers."""
+        return [s.strip() for s in self.SEARCH_PROVIDERS.split(",") if s.strip()]
 
 
 # Global settings instance

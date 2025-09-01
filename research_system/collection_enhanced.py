@@ -14,3 +14,5 @@ warn(
 
 # Forward all imports to the new location
 from research_system.collection.enhanced import *  # noqa
+# Also forward private functions that tests depend on
+from research_system.collection.enhanced import _execute_provider_async  # noqa
