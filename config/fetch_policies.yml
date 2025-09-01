@@ -1,0 +1,98 @@
+# Domain-specific fetch policies for HTTP requests
+# v8.26.0: Configurable headers, alt URLs, and fallback strategies
+
+policies:
+  # US Government - SEC
+  - domain: "*.sec.gov"
+    headers:
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 research_agent/1.0"
+      Accept-Encoding: "gzip, deflate"
+    head_fallback_to_get: true
+
+  # OECD Statistics
+  - domain: "*.oecd.org"
+    headers:
+      Accept: "application/json,text/plain,*/*"
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept-Language: "en-US,en;q=0.9"
+    alt_url:
+      replace:
+        from: "stats.oecd.org"
+        to: "stats-nxd.oecd.org"
+    head_fallback_to_get: true
+
+  # Mastercard
+  - domain: "*.mastercard.com"
+    headers:
+      Referer: "https://www.mastercard.com/newsroom/"
+      Accept: "application/pdf,application/octet-stream;q=0.9,*/*;q=0.8"
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept-Language: "en-US,en;q=0.9"
+    alt_url:
+      replace:
+        from: "www.mastercard.com"
+        to: "newsroom.mastercard.com"
+    head_fallback_to_get: true
+
+  # World Bank
+  - domain: "*.worldbank.org"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "application/json,text/html,application/pdf,*/*;q=0.9"
+      Accept-Language: "en-US,en;q=0.9"
+    head_fallback_to_get: true
+
+  # IMF
+  - domain: "*.imf.org"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "application/json,text/html,application/pdf,*/*;q=0.9"
+      Accept-Language: "en-US,en;q=0.9"
+    head_fallback_to_get: true
+
+  # UN World Tourism Organization
+  - domain: "*.unwto.org"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "text/html,application/pdf,*/*;q=0.9"
+      Accept-Language: "en-US,en;q=0.9"
+    head_fallback_to_get: true
+
+  # World Travel & Tourism Council
+  - domain: "*.wttc.org"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "text/html,application/pdf,*/*;q=0.9"
+      Accept-Language: "en-US,en;q=0.9"
+    head_fallback_to_get: true
+
+  # Federal Reserve Economic Data
+  - domain: "fred.stlouisfed.org"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "application/json,text/html,*/*;q=0.9"
+      Accept-Language: "en-US,en;q=0.9"
+    head_fallback_to_get: true
+
+  # Eurostat
+  - domain: "*.eurostat.ec.europa.eu"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "application/json,text/html,application/xml,*/*;q=0.9"
+      Accept-Language: "en-US,en;q=0.9"
+    head_fallback_to_get: true
+
+  # PubMed/NIH
+  - domain: "*.ncbi.nlm.nih.gov"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "text/html,application/xml,*/*;q=0.9"
+    head_fallback_to_get: true
+
+  # arXiv
+  - domain: "*.arxiv.org"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+      Accept: "text/html,application/pdf,*/*;q=0.9"
+    head_fallback_to_get: true

@@ -47,6 +47,7 @@ INTENT_THRESHOLDS: Dict[str, QualityThresholds] = {
     "travel": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
     "tourism": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
     "travel_tourism": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
+    "travel_macro": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
     
     # Stats/data queries need high primary share
     "stats": QualityThresholds(primary=0.60, triangulation=0.40, domain_cap=0.30),
@@ -83,6 +84,7 @@ STRICT_ADJUSTMENTS: Dict[str, QualityThresholds] = {
     "travel": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
     "tourism": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
     "travel_tourism": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
+    "travel_macro": QualityThresholds(primary=0.30, triangulation=0.25, domain_cap=0.35),
     
     # Stats/data needs exact values in strict mode (not scaled)
     "stats": QualityThresholds(primary=0.60, triangulation=0.40, domain_cap=0.30),
@@ -157,11 +159,7 @@ PER_DOMAIN_HEADERS: Dict[str, Dict[str, str]] = {
     "stats.oecd.org": {
         "Accept": "application/json,text/plain,*/*",
         "User-Agent": "research_agent/1.0",
-    },
-    "stats-nxd.oecd.org": {
-        "Accept": "application/json,text/plain,*/*",
-        "User-Agent": "research_agent/1.0",
-    },
+    }
 }
 
 
@@ -184,7 +182,7 @@ def quality_for_intent(intent: Optional[str], strict: bool = True) -> QualityThr
         # Otherwise use default strict thresholds
         base = INTENT_THRESHOLDS.get(key, INTENT_THRESHOLDS["default"])
         # Apply strict mode scaling (except for already-adjusted intents)
-        if key not in {"travel", "tourism", "travel_tourism"}:
+        if key not in {"travel", "tourism", "travel_tourism", "travel_macro"}:
             return QualityThresholds(
                 primary=min(base.primary * 1.2, 0.70),
                 triangulation=min(base.triangulation * 1.2, 0.60),
@@ -286,3 +284,17 @@ class Settings:
 
 # Global settings instance
 settings = Settings()
+
+# Export all public symbols
+__all__ = [
+    "Settings",
+    "settings",
+    "QualityThresholds",
+    "quality_for_intent",
+    "INTENT_THRESHOLDS",
+    "STRICT_ADJUSTMENTS",
+    "PRIMARY_ORGS",
+    "SEMI_AUTHORITATIVE_ORGS",
+    "INTENT_BLOCKLIST",
+    "PER_DOMAIN_HEADERS",
+]

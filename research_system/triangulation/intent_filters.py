@@ -3,7 +3,7 @@
 import logging
 from urllib.parse import urlparse
 from typing import List, Any, Optional, Set
-from research_system.config_v2 import load_quality_config
+# Intent-based filtering configuration
 
 logger = logging.getLogger(__name__)
 
@@ -67,26 +67,13 @@ def _get_domain_priority(domain: str) -> float:
     """Get priority score for domain (0.0-1.0)."""
     host = _extract_host(domain)
     
-    # Load domain priors from configuration
-    try:
-        cfg = load_quality_config()
-        # Check if domain has explicit priority in tiers
-        if hasattr(cfg, 'tiers') and cfg.tiers:
-            # Map domain to tier based on detection logic
-            if _is_primary_like(domain):
-                return 1.0  # TIER1 equivalent
-            elif any(pattern in host for pattern in ['nber.org', 'ssrn.com', 'arxiv.org']):
-                return 0.75  # TIER2 equivalent 
-            elif any(pattern in host for pattern in ['brookings.edu', 'urban.org']):
-                return 0.6   # TIER3 equivalent
-            else:
-                return 0.3   # TIER4 equivalent
-    except Exception as e:
-        logger.debug(f"Error loading domain priorities: {e}")
-    
-    # Fallback priority calculation
+    # Direct priority calculation based on domain tier
     if _is_primary_like(domain):
-        return 0.9
+        return 1.0  # TIER1 equivalent
+    elif any(pattern in host for pattern in ['nber.org', 'ssrn.com', 'arxiv.org']):
+        return 0.75  # TIER2 equivalent 
+    elif any(pattern in host for pattern in ['brookings.edu', 'urban.org']):
+        return 0.6   # TIER3 equivalent
     elif any(think_tank in host for think_tank in [
         'brookings.edu', 'urban.org', 'cbpp.org', 'taxfoundation.org'
     ]):

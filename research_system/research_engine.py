@@ -18,7 +18,7 @@ from .models import (
 from .orchestrator import Orchestrator
 from .core.quality_assurance import QualityAssurance
 from .tools.storage_tools import StorageTools
-from .config import Settings
+from research_system.config.settings import Settings
 
 logger = structlog.get_logger()
 

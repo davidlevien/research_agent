@@ -74,11 +74,14 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
         logger.info(f"  Normalized: '{texts[j][:100]}...'")
 
     try:
-        # Try SBERT for semantic similarity
-        from sentence_transformers import SentenceTransformer, util
-        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        emb = model.encode(texts, normalize_embeddings=True, batch_size=64, show_progress_bar=False)
-        sim = util.cos_sim(emb, emb).cpu().numpy()
+        # Use cached embeddings model
+        from .embeddings import encode
+        import numpy as np
+        from sklearn.metrics.pairwise import cosine_similarity
+        
+        # Encode all texts at once using cached model
+        emb = encode(texts, normalize=True)
+        sim = cosine_similarity(emb)
         
         # Union-find for clustering
         parent = list(range(len(texts)))
@@ -91,8 +94,33 @@ def cluster_paraphrases(cards: List[Any]) -> List[Dict[str, Any]]:
             ra, rb = find(a), find(b)
             if ra != rb: parent[rb] = ra
 
-        # Use global threshold for similarity
-        TH = THRESHOLD
+        # Calculate adaptive threshold based on similarity distribution
+        def calculate_adaptive_threshold():
+            # Get all non-diagonal similarity values
+            n = len(texts)
+            if n <= 1:
+                return THRESHOLD
+            
+            sim_values = []
+            for i in range(n):
+                for j in range(i+1, n):
+                    sim_values.append(sim[i,j])
+            
+            if not sim_values:
+                return THRESHOLD
+            
+            # Use percentile-based threshold (70th percentile)
+            import numpy as np
+            percentile_70 = float(np.percentile(sim_values, 70))
+            
+            # Bound between 0.32 and 0.48 for stability
+            adaptive_threshold = max(0.32, min(0.48, percentile_70))
+            
+            logger.info(f"Adaptive threshold: {adaptive_threshold:.3f} (70th percentile of similarities)")
+            return adaptive_threshold
+        
+        # Use adaptive threshold or fallback to global
+        TH = calculate_adaptive_threshold() if len(texts) > 5 else THRESHOLD
         n = len(texts)
         
         logger.info(f"\nUsing SBERT with threshold {TH}")

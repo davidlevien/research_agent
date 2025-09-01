@@ -209,8 +209,8 @@ class ObservabilityManager:
         return 0.85
 
 
-class AlertManager:
-    """Alert management system."""
+class MetricsReporter:
+    """Metrics reporting system (renamed from AlertManager to avoid naming conflict)."""
     
     def __init__(self):
         self.alert_thresholds = {

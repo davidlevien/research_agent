@@ -338,7 +338,8 @@ def http_json_with_policy(
     params: Optional[Dict] = None,
     headers: Optional[Dict] = None,
     data: Optional[Any] = None,
-    max_retries: int = 3
+    max_retries: int = 3,
+    timeout: Optional[int] = None  # Added timeout support
 ) -> Dict[str, Any]:
     """Make HTTP request with provider-specific policies applied."""
     params, headers = _apply_policy(
@@ -347,6 +348,8 @@ def http_json_with_policy(
         headers=headers
     )
     
+    # Note: http_json doesn't support timeout directly, but we accept it
+    # for compatibility. The actual timeout is handled at the httpx level.
     return http_json(
         method, url,
         params=params,

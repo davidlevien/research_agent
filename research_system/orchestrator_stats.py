@@ -3,7 +3,7 @@
 import logging
 from typing import List, Tuple, Any, Optional
 
-from research_system.config_v2 import load_quality_config
+# Stats pipeline configuration
 from research_system.retrieval.filters import admit_for_stats
 from research_system.evidence.canonicalize import dedup_by_canonical
 from research_system.quality.domain_weights import mark_primary
@@ -31,8 +31,12 @@ def run_stats_pipeline(
     Returns:
         Tuple of (primary_cards, context_cards)
     """
-    cfg = load_quality_config()
-    stats_config = cfg.intents.get("stats", {})
+    # Hardcoded stats configuration
+    stats_config = {
+        "providers_hard_prefer": ["fred", "oecd", "worldbank", "eurostat"],
+        "data_fallback": ["statista", "tradingeconomics"],
+        "contextual_general": ["wikipedia", "brave", "tavily"]
+    }
     
     logger.info("Running stats-specific pipeline")
     

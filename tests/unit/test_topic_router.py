@@ -329,7 +329,7 @@ class TestBackwardCompatibility:
     
     def test_choose_providers_legacy_interface(self):
         """Test legacy choose_providers function works."""
-        from research_system.routing.topic_router import choose_providers
+        from research_system.routing.provider_router import choose_providers
         
         decision = choose_providers("GDP inflation economic growth")
         

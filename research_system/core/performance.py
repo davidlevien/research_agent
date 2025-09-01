@@ -26,8 +26,21 @@ class CacheConfig:
     enable_memory: bool = True
 
 
-class CacheManager:
-    """Multi-tier caching system."""
+# Deprecated: Import CacheManager from data.cache instead
+from warnings import warn
+warn(
+    "research_system.core.performance.CacheManager is deprecated; "
+    "use research_system.data.cache.CacheManager",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# Re-export for backward compatibility
+from research_system.data.cache import CacheManager
+
+# Keep the old multi-tier version as _LegacyCacheManager if needed
+class _LegacyCacheManager:
+    """Legacy multi-tier caching system - deprecated."""
     
     def __init__(self, config: CacheConfig):
         self.config = config

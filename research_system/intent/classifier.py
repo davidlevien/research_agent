@@ -21,13 +21,22 @@ class Intent(Enum):
     TRAVEL = "travel"
     REGULATORY = "regulatory"
     MEDICAL = "medical"
+    MACRO_TRENDS = "macro_trends"  # Trends/outlook across any domain
+    COMPANY_FILINGS = "company_filings"  # SEC-like filings
+    GOV_STATS = "gov_stats"  # Government statistics
     GENERIC = "generic"
 
 
 # Intent detection rules (order matters - more specific first)
 _RULES: List[Tuple[Intent, str]] = [
+    # Company filings (SEC-like) - check early
+    (Intent.COMPANY_FILINGS, r"\b(10-[kq]|10[kq]|8-k|8k|form 10|annual report|quarterly report|sec filing|earnings report)\b"),
+    # Government statistics - check early
+    (Intent.GOV_STATS, r"\b(census|survey data|statistical dataset|government statistics|official statistics)\b"),
     # Medical patterns (check first as health queries need special handling)
     (Intent.MEDICAL, r"\b(symptoms?|treatment|diagnosis|side effects?|contraindications?|disease|cure|therapy|medical|health condition)\b"),
+    # Macro trends/outlook/forecast - cross-domain
+    (Intent.MACRO_TRENDS, r"\b(trends?|outlook|forecast|macro|market size|growth rate|latest developments|recovery|projections?)\b"),
     # Travel patterns (check before local to catch "beaches in Thailand" etc.)
     (Intent.TRAVEL, r"\b(itinerary|visa|travel|tourist|vacation|trip|where to stay|things to do|destination|beaches? in \w+|resorts?|tourism)\b"),
     # Local intent - location-based searches (after travel to avoid false positives)
@@ -35,15 +44,15 @@ _RULES: List[Tuple[Intent, str]] = [
     # Academic patterns
     (Intent.ACADEMIC, r"\b(systematic review|meta-analysis|peer[- ]reviewed|doi:|arxiv:|journal|research paper|study|academic)\b"),
     # Regulatory/compliance patterns
-    (Intent.REGULATORY, r"\b(10-[kq]|8-k|regulation|sec\.gov|compliance|filing|disclosure|earnings report)\b"),
+    (Intent.REGULATORY, r"\b(regulation|sec\.gov|compliance|filing|disclosure)\b"),
     # Stats and data patterns
-    (Intent.STATS, r"\b(dataset|time series|statistics|GDP|CPI|index|indicator|metric|data analysis|growth rate)\b"),
+    (Intent.STATS, r"\b(dataset|time series|statistics|GDP|CPI|index|indicator|metric|data analysis)\b"),
     # How-to patterns
     (Intent.HOWTO, r"\b(how to|tutorial|step by step|guide|instructions|diy|make|build|setup)\b"),
     # Product/shopping patterns
     (Intent.PRODUCT, r"\b(best|top|vs|versus|review|buy|price|budget|under \$\d+|cheapest|worth it|comparison|recommend)\b"),
     # News patterns
-    (Intent.NEWS, r"\b(today|yesterday|this week|latest|breaking|current|recent|news|update)\b"),
+    (Intent.NEWS, r"\b(today|yesterday|this week|breaking|current|recent|news|update)\b"),
     # Encyclopedia patterns
     (Intent.ENCYCLOPEDIA, r"\b(history of|what is|who is|origins? of|biography|timeline|evolution of|definition)\b"),
 ]
@@ -156,6 +165,17 @@ def classify(query: str, use_hybrid: bool = None) -> Intent:
     
     # Stage A: Try rule-based classification first
     intent = _classify_rules(query)
+    
+    # Special handling for travel queries to detect macro/trend queries
+    if intent == Intent.TRAVEL:
+        q_lower = query.lower()
+        # Check if this is a macro/trend travel query
+        if any(keyword in q_lower for keyword in ["trend", "trends", "forecast", "outlook", "global", "latest", "recovery", "statistics"]):
+            # Log as travel_macro for clarity
+            logger.info(f"Query '{query[:50]}...' classified as travel_macro (travel trends/outlook)")
+            # Still return TRAVEL enum since travel_macro isn't an enum value
+            return Intent.TRAVEL
+    
     if intent is not None:
         logger.info(f"Query '{query[:50]}...' classified as {intent.value} (rules)")
         return intent
@@ -224,6 +244,28 @@ def detect_geographic_ambiguity(query: str) -> Optional[List[str]]:
                 return locations
     
     return None
+
+
+def classify_with_subtype(query: str, use_hybrid: bool = None) -> str:
+    """
+    Classify query and return the string intent value, including subtypes like travel_macro.
+    
+    Args:
+        query: The search query to classify
+        use_hybrid: Whether to use hybrid approach
+        
+    Returns:
+        String intent value (e.g., "travel", "travel_macro", "stats")
+    """
+    intent = classify(query, use_hybrid)
+    
+    # Special handling for travel to detect macro/trend queries
+    if intent == Intent.TRAVEL:
+        q_lower = query.lower()
+        if any(keyword in q_lower for keyword in ["trend", "trends", "forecast", "outlook", "global", "latest", "recovery", "statistics"]):
+            return "travel_macro"
+    
+    return intent.value
 
 
 def get_confidence_threshold(intent: Intent) -> Tuple[float, int]:

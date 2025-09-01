@@ -7,7 +7,7 @@ Handles communication with OpenAI, Anthropic, or other LLM providers.
 import json
 import logging
 from typing import Optional, Dict, Any
-from research_system.config import Settings
+from research_system.config.settings import Settings
 
 logger = logging.getLogger(__name__)
 

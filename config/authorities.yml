@@ -1,0 +1,72 @@
+# Domain suffix patterns that indicate likely primary sources
+# v8.26.0: Configurable authority detection for cross-domain research
+
+primary_domains:
+  # US Government
+  - "*.treasury.gov"
+  - "*.irs.gov"
+  - "*.bls.gov"
+  - "*.bea.gov"
+  - "*.census.gov"
+  - "*.cbo.gov"
+  - "*.gao.gov"
+  - "*.federalreserve.gov"
+  - "*.sec.gov"
+  - "*.faa.gov"
+  - "*.cdc.gov"
+  - "*.nih.gov"
+  - "*.fda.gov"
+  
+  # International Organizations
+  - "*.oecd.org"
+  - "*.imf.org"
+  - "*.worldbank.org"
+  - "*.un.org"
+  - "*.who.int"
+  - "*.europa.eu"
+  - "*.ecb.europa.eu"
+  - "*.eurostat.ec.europa.eu"
+  - "*.bis.org"
+  
+  # Central Banks & Federal Reserve
+  - "fred.stlouisfed.org"
+  - "*.newyorkfed.org"
+  - "*.chicagofed.org"
+  - "*.bankofengland.co.uk"
+  - "*.banquedefrance.fr"
+  - "*.bundesbank.de"
+  - "*.boj.or.jp"
+  
+  # Other National Statistics
+  - "*.statcan.gc.ca"  # Canada
+  - "*.ons.gov.uk"     # UK
+  - "*.destatis.de"    # Germany
+  - "*.insee.fr"       # France
+  - "*.abs.gov.au"     # Australia
+  - "*.stats.govt.nz"  # New Zealand
+  
+  # Tourism & Travel Organizations
+  - "*.unwto.org"      # UN World Tourism Organization
+  - "*.wttc.org"       # World Travel & Tourism Council
+  
+  # Energy & Climate
+  - "*.iea.org"        # International Energy Agency
+  - "*.ipcc.ch"        # Intergovernmental Panel on Climate Change
+  
+  # Academic & Research
+  - "*.nber.org"       # National Bureau of Economic Research
+  - "*.ssrn.com"       # Social Science Research Network
+  - "*.arxiv.org"      # arXiv preprints
+  
+# Minimum numeric tokens required for primary classification
+numeric_min_tokens: 2
+
+# Patterns that boost primary likelihood
+primary_boost_patterns:
+  - "official statistics"
+  - "government report"
+  - "annual report"
+  - "quarterly report"
+  - "statistical bulletin"
+  - "data release"
+  - "press release"

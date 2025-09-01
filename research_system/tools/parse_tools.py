@@ -7,7 +7,7 @@ from typing import Dict, Any, List, Optional
 from bs4 import BeautifulSoup
 import logging
 
-from .registry import tool_registry
+from .registry import get_registry
 
 logger = logging.getLogger(__name__)
 
@@ -23,22 +23,22 @@ class ParseTools:
         from .registry import ToolSpec
         
         # Check if tools are already registered to avoid duplicates
-        if "extract_text" not in tool_registry._tools:
-            tool_registry.register(ToolSpec(
+        # Register tool
+        get_registry().register(ToolSpec(
                 name="extract_text",
                 fn=self.extract_text,
                 description="Extract clean text from HTML"
             ))
         
-        if "clean_html" not in tool_registry._tools:
-            tool_registry.register(ToolSpec(
+        # Register tool
+        get_registry().register(ToolSpec(
                 name="clean_html",
                 fn=self.clean_html,
                 description="Clean and sanitize HTML"
             ))
         
-        if "extract_metadata" not in tool_registry._tools:
-            tool_registry.register(ToolSpec(
+        # Register tool
+        get_registry().register(ToolSpec(
                 name="extract_metadata",
                 fn=self.extract_metadata,
                 description="Extract metadata from HTML"

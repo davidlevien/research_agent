@@ -11,7 +11,7 @@ from datetime import datetime
 import logging
 
 from ..models import EvidenceCard, ResearchReport
-from .registry import tool_registry
+from .registry import get_registry
 
 logger = logging.getLogger(__name__)
 

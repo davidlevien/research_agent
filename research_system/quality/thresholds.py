@@ -47,24 +47,23 @@ class QualityThresholds:
             )
         
         # Intent-specific overrides
-        # Travel/tourism needs lower thresholds due to diverse sources
-        if intent in {"travel", "tourism", "travel_tourism"}:
+        # Macro trends need moderate thresholds (cross-domain queries)
+        if intent in {"macro_trends", "travel", "tourism", "travel_tourism"}:
             if strict:
-                # Even in strict mode, travel queries need realistic thresholds
                 return QualityThresholds(
-                    primary=0.30,      # Lower primary requirement
-                    triangulation=0.25, # Lower triangulation requirement
+                    primary=0.30,      # Moderate primary requirement
+                    triangulation=0.25, # Moderate triangulation requirement
                     domain_cap=0.35    # Higher domain diversity allowed
                 )
             else:
                 return QualityThresholds(
-                    primary=0.30,
-                    triangulation=0.25,
-                    domain_cap=0.35
+                    primary=0.20,      # Lower for lenient mode
+                    triangulation=0.15,
+                    domain_cap=0.40
                 )
         
         # Stats/data queries need high primary share
-        elif intent in {"stats", "statistics", "data", "economic"}:
+        elif intent in {"stats", "statistics", "data", "economic", "gov_stats"}:
             if strict:
                 return QualityThresholds(
                     primary=0.60,      # High primary requirement
@@ -78,8 +77,8 @@ class QualityThresholds:
                     domain_cap=0.35
                 )
         
-        # Finance/regulatory queries need authoritative sources
-        elif intent in {"finance", "regulatory", "company", "corporate"}:
+        # Company filings and regulatory queries need authoritative sources
+        elif intent in {"company_filings", "finance", "regulatory", "company", "corporate"}:
             if strict:
                 return QualityThresholds(
                     primary=0.55,      # High primary requirement

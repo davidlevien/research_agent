@@ -10,7 +10,7 @@ import logging
 
 from ..config import Settings
 from ..exceptions import APIError, RateLimitError
-from .registry import tool_registry
+from .registry import get_registry
 
 logger = logging.getLogger(__name__)
 

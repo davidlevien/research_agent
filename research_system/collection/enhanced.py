@@ -5,7 +5,7 @@ import os
 import time
 import re
 from typing import Dict, List, Optional, Any
-from research_system.config import Settings
+from research_system.config.settings import Settings
 from research_system.tools.registry import Registry
 from research_system.tools.search_models import SearchRequest, SearchHit
 from research_system.monitoring_metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY

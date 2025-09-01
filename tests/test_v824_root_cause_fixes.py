@@ -206,9 +206,8 @@ class TestOECDEndpointsAndHeaders:
         # Should have multiple endpoints
         assert len(DATAFLOW_URLS) >= 4
         
-        # Should include both main and alt hosts
+        # Should include main host
         assert any("stats.oecd.org" in url for url in DATAFLOW_URLS)
-        assert any("stats-nsd.oecd.org" in url for url in DATAFLOW_URLS)
         
         # Should use lowercase sdmx-json
         assert any("sdmx-json" in url for url in DATAFLOW_URLS)

@@ -4,7 +4,7 @@ import re
 import logging
 from typing import List, Any, Optional, Dict
 
-from research_system.config_v2 import load_quality_config
+# Quote rescue configuration
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,8 @@ def allow_quote(card: Any, quote: str) -> bool:
     Returns:
         True if quote should be included
     """
-    cfg = load_quality_config()
+    # Use constant for numeric quote minimum density
+    NUMERIC_QUOTE_MIN_DENSITY = 0.1
     
     # Check if card is from a primary source
     is_primary = (
@@ -100,8 +101,8 @@ def allow_quote(card: Any, quote: str) -> bool:
     
     # Check numeric density
     density = numeric_density(quote)
-    if density >= cfg.numeric_quote_min_density:
-        logger.debug(f"Quote accepted: numeric density {density:.3f} >= {cfg.numeric_quote_min_density}")
+    if density >= NUMERIC_QUOTE_MIN_DENSITY:
+        logger.debug(f"Quote accepted: numeric density {density:.3f} >= {NUMERIC_QUOTE_MIN_DENSITY}")
         return True
     
     # Check if it's a statistical claim

@@ -1,5 +1,7 @@
 from typing import Any, Callable, Dict, get_origin, get_args, List, Optional, Type
 from pydantic import BaseModel
+from threading import RLock
+from warnings import warn
 
 Model = BaseModel
 
@@ -13,11 +15,15 @@ class ToolSpec(BaseModel):
 class Registry:
     def __init__(self):
         self._tools: Dict[str, ToolSpec] = {}
+        self._lock = RLock()
 
     def register(self, spec: ToolSpec):
-        if spec.name in self._tools:
-            raise ValueError(f"Duplicate tool name: {spec.name}")
-        self._tools[spec.name] = spec
+        with self._lock:
+            if spec.name in self._tools:
+                # Idempotent: ignore duplicates but warn once
+                warn(f"Duplicate tool registration ignored: {spec.name}", RuntimeWarning, stacklevel=2)
+                return
+            self._tools[spec.name] = spec
 
     def execute(self, name: str, payload: Dict[str, Any]) -> Any:
         if name not in self._tools:
@@ -44,11 +50,22 @@ class Registry:
 
         return result
 
+# ---- Global singleton pattern ----
+_GLOBAL: Optional[Registry] = None
+
+def get_registry() -> Registry:
+    """Get the global tool registry singleton."""
+    global _GLOBAL
+    if _GLOBAL is None:
+        _GLOBAL = Registry()
+    return _GLOBAL
+
 # ---- Compatibility: export ToolRegistry alias for backward compatibility ----
 ToolRegistry = Registry
 
 # ---- Compatibility shim for tests that expect a global registry ----
-tool_registry = Registry()
+tool_registry = get_registry()  # Use the singleton
 
 def register_tool(spec: ToolSpec) -> None:
-    tool_registry.register(spec)
+    """Register a tool with the global registry."""
+    get_registry().register(spec)

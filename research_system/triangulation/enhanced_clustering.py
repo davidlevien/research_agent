@@ -71,7 +71,7 @@ def cluster_claims(cards: List[Any], intent: str, threshold: float = 0.40) -> Li
     Returns:
         List of Cluster objects
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     # Adjust threshold for stats
@@ -275,7 +275,7 @@ def sanitize_clusters(clusters: List[Cluster], intent: str) -> List[Cluster]:
     
     For stats intent, enforces primary domain requirements.
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     kept = []

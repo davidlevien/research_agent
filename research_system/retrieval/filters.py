@@ -5,7 +5,7 @@ import logging
 from urllib.parse import urlparse
 from typing import Any, Optional, List
 
-from research_system.config_v2 import load_quality_config
+# Config for partisan sources
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,18 @@ def is_partisan(url: str) -> bool:
     if not url:
         return False
     
-    cfg = load_quality_config()
+    # Hardcoded partisan sources list
+    partisan_domains = {
+        'breitbart.com', 'infowars.com', 'dailykos.com', 'thinkprogress.org',
+        'mediamatters.org', 'newsmax.com', 'oann.com', 'rt.com', 'sputniknews.com'
+    }
     u = urlparse(url)
     full = f"{u.scheme}://{u.netloc}{u.path}".lower()
     
     # Check against partisan exclusion list
-    for pattern in cfg.sources.get("partisan_exclude_default", []):
-        if pattern.lower() in full:
+    host = u.netloc.lower()
+    for domain in partisan_domains:
+        if domain in host:
             logger.debug(f"Filtered partisan source: {u.netloc}")
             return True
     

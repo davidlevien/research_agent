@@ -27,7 +27,7 @@ def meets_minimum_bar(metrics: Dict, intent: str) -> bool:
     Returns:
         True if quality gates pass, False otherwise
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     if intent == settings.STATS_INTENT:
@@ -72,7 +72,7 @@ def explain_bar(metrics: Dict, intent: str) -> Dict[str, Tuple[Any, Any]]:
     
     Returns dict mapping metric name to (actual_value, required_value) tuples.
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     logger.info(f"=== Quality Gate Analysis for intent={intent} ===")
@@ -153,7 +153,7 @@ def calculate_recent_primary_count(cards: list, days: int = 730) -> int:
         Count of recent primary source cards
     """
     from datetime import datetime, timedelta, timezone
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     
     settings = Settings()
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
@@ -226,7 +226,7 @@ def calculate_stats_metrics(cards: list, clusters: list) -> Dict:
     Returns:
         Dict with stats-specific metrics
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     # Count primary sources

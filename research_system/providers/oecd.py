@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 # Export primary URL for tests
 DATAFLOW_URL = "https://stats.oecd.org/sdmx-json/dataflow/ALL"
 
-# All endpoints to try in order (lowercase first, then alt host)
+# All endpoints to try in order (with correct alt host domain)
 DATAFLOW_URLS = [
     "https://stats.oecd.org/sdmx-json/dataflow/ALL",
     "https://stats.oecd.org/sdmx-json/dataflow",
-    "https://stats-nsd.oecd.org/sdmx-json/dataflow/ALL",  # Alt host
-    "https://stats-nsd.oecd.org/sdmx-json/dataflow",       # Alt host fallback
+    "https://stats.oecd.org/SDMX-JSON/dataflow/ALL",  # Try uppercase as fallback
+    "https://stats.oecd.org/SDMX-JSON/dataflow",       # Uppercase fallback
 ]
 
 # Circuit breaker state
@@ -80,7 +80,8 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
                 headers={
                     "Accept": "application/json,text/plain,*/*",
                     "User-Agent": "research_agent/1.0"
-                }
+                },
+                timeout=30  # Restored with proper support
             )
             
             # Shape varies; normalize

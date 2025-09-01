@@ -4,7 +4,7 @@ import logging
 from urllib.parse import urlparse
 from typing import Any, Optional
 
-from research_system.config_v2 import load_quality_config
+from research_system.config.settings import settings as config_settings
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +88,15 @@ def credibility_weight(card: Any) -> float:
     Returns:
         Weight between 0.0 and 1.0
     """
-    cfg = load_quality_config()
+    # Tier weights - higher tier = higher credibility
+    tier_weights = {
+        "TIER1": 1.0,   # Official stats, peer-reviewed
+        "TIER2": 0.8,   # Working papers, gov reports
+        "TIER3": 0.6,   # Think tanks, curated aggregators
+        "TIER4": 0.4    # General web sources
+    }
     t = tier_for(card)
-    return cfg.tiers.get(t, 0.20)
+    return tier_weights.get(t, 0.20)
 
 def mark_primary(card: Any) -> None:
     """

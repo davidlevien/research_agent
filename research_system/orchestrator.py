@@ -19,9 +19,9 @@ from research_system.models import EvidenceCard, RelatedTopic
 from research_system.utils.datetime_safe import safe_format_dt, format_duration
 from research_system.utils.deterministic import set_global_seeds, ensure_deterministic_environment
 from research_system.tools.evidence_io import write_jsonl
-from research_system.tools.registry import tool_registry as registry
+from research_system.tools.registry import get_registry as registry
 from research_system.tools.search_registry import register_search_tools
-from research_system.collection import parallel_provider_search, collect_from_free_apis
+from research_system.collection_enhanced import parallel_provider_search, collect_from_free_apis
 from research_system.routing.provider_router import choose_providers
 from research_system.config.settings import Settings, settings
 from research_system.intent.classifier import classify, Intent, get_confidence_threshold
@@ -67,7 +67,19 @@ from research_system.strict.adaptive_guard import (
 
 # v8.13.0 imports for scholarly-grade improvements
 from research_system.utils.file_ops import run_transaction, atomic_write_text, atomic_write_json
-from research_system.config_v2 import load_quality_config
+# Create a config wrapper to replace deprecated config_v2
+class _QualityConfig:
+    def __init__(self):
+        self.primary_share_floor = 0.50
+        self.triangulation_floor = 0.45
+        self.domain_concentration_cap = 0.25
+        self.primary_share = type('obj', (object,), {'target_pct': 0.50})()
+        self.triangulation = type('obj', (object,), {'target_normal_pct': 0.45})()
+        self.domain_balance = type('obj', (object,), {'cap_default': 0.25})()
+
+def load_quality_config():
+    return _QualityConfig()
+
 from research_system.quality.metrics_v2 import compute_metrics, gates_pass, write_metrics, FinalMetrics
 from research_system.metrics.run import RunMetrics
 from research_system.metrics.adapters import from_quality_metrics_v2
@@ -358,20 +370,25 @@ class Orchestrator:
         evdir = output_dir / "evidence"
         evdir.mkdir(parents=True, exist_ok=True)
         
-        def _write_jsonl(path: Path, rows: List):
-            with open(path, "w", encoding="utf-8") as f:
-                for r in rows:
-                    if hasattr(r, '__dict__'):
-                        # Convert EvidenceCard to dict
-                        r = r.__dict__
-                    f.write(json.dumps(r, ensure_ascii=False, default=str) + "\n")
+        # Use shared JSONL writer from evidence_io
+        from research_system.tools.evidence_io import write_jsonl
+        
+        # Convert cards to dicts if needed
+        def to_dict_list(cards):
+            result = []
+            for c in cards or []:
+                if hasattr(c, '__dict__'):
+                    result.append(c.__dict__)
+                else:
+                    result.append(c)
+            return result
         
         # final cards are the most useful; always write
-        _write_jsonl(evdir / "final_cards.jsonl", final_cards or [])
+        write_jsonl(str(evdir / "final_cards.jsonl"), to_dict_list(final_cards))
         
         # if available, also write the full working set
         if all_cards is not None:
-            _write_jsonl(evdir / "all_cards.jsonl", all_cards)
+            write_jsonl(str(evdir / "all_cards.jsonl"), to_dict_list(all_cards))
         
         # flat source appendix (domain, title, url, quote)
         with open(evdir / "sources.csv", "w", newline="", encoding="utf-8") as f:
@@ -429,7 +446,8 @@ class Orchestrator:
         try:
             # Try to get more cards from free APIs with very relaxed constraints
             # Focus on trusted sources
-            target_providers = ['wikipedia', 'duckduckgo']  # Free providers
+            # v8.24.0: Use more safe, high-signal providers for recovery
+            target_providers = ['wikipedia', 'worldbank', 'oecd', 'imf', 'eurostat']  # Safe providers
             
             additional_cards = collect_from_free_apis(
                 topic,
@@ -2568,6 +2586,10 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             final_metrics.domain_concentration
         )
         
+        # Write gate debug information for diagnostics
+        from research_system.quality.metrics_v2 import write_gate_debug
+        write_gate_debug(self.s.output_dir, final_metrics, thresholds)
+        
         logger.info(
             "v8.24.0 Final metrics (intent=%s, strict=%s): primary_share=%.3f (floor=%.2f), triangulation=%.3f (floor=%.2f), domain_concentration=%.3f (cap=%.2f)",
             intent, self.s.strict,
@@ -2608,9 +2630,11 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             if len(cards) < 50:  # Only if we don't have many cards
                 # Try to get more cards with relaxed filtering
                 try:
+                    # v8.24.0: Use more safe, high-signal providers for recovery
+                    recovery_providers = ['wikipedia', 'worldbank', 'oecd', 'imf', 'eurostat']
                     additional_cards = collect_from_free_apis(
                         self.s.topic,
-                        providers=['wikipedia', 'duckduckgo'],  # Free providers
+                        providers=recovery_providers,  # Safe, high-signal providers
                         settings=self.settings
                     )
                     if additional_cards:

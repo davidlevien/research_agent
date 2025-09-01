@@ -1,8 +1,8 @@
-# Research System v8.25.0 - Production-Grade Resilient Intelligence
+# Research System v8.26.0 - All-Topic Production-Grade Intelligence
 
-A battle-tested, enterprise research system that delivers **scholarly-grade** intelligence for **any search query**. Built with v8.25.0's **unified architecture**, **intent-aware thresholds**, **enhanced primary detection**, and **module consolidation** ensuring successful evidence collection and triangulation for diverse query types.
+A battle-tested, enterprise research system that delivers **scholarly-grade** intelligence for **any search query** across **all domains**. Built with v8.26.0's comprehensive **root cause fixes**, **generic intent classification**, **cached model loading**, **adaptive triangulation**, and **configurable fetch policies** ensuring successful evidence collection from finance to health, climate to technology.
 
-**Status**: ✅ Production-ready with 450+ passing tests, unified configuration, zero module duplication
+**Status**: ✅ Production-ready with all root cause fixes applied, zero module duplication, single source of truth
 
 ## 🚀 Quick Start
 
@@ -36,42 +36,83 @@ SEARCH_PROVIDERS="" ENABLE_FREE_APIS=true python3.11 -m research_system \
   --topic "your topic" --strict --output-dir outputs
 ```
 
-## 🏗️ v8.25.0: Module Consolidation & Unified Architecture
+## 🏗️ v8.26.0: All-Topic Root Cause Fixes
 
 ### Overview
-Version 8.25.0 completes a major architectural consolidation, eliminating module duplication and configuration drift. The system now has a **single source of truth** for configuration, collection, and metrics, while maintaining full backward compatibility through deprecation forwarders.
+Version 8.26.0 implements comprehensive root cause fixes that work for **any research topic** - from finance to health, climate to technology. The system uses **generic intents**, **configurable authorities**, and **domain-agnostic triangulation** to deliver consistent results across all domains.
 
-### Key Achievements
-- **Unified Configuration**: All settings in `config/settings.py`
-- **Unified Collection**: Merged collection modules with enhanced features
-- **Unified Metrics**: Single RunMetrics model with adapters
-- **Import Guard**: Prevents legacy module mixing
-- **~40% Code Reduction**: Eliminated duplicate implementations
-- **Zero Breaking Changes**: Full backward compatibility
+### Key Root Cause Fixes Applied
+- **Generic Intent System**: Universal intents (`macro_trends`, `company_filings`, `gov_stats`) work across all domains
+- **Cached Embeddings Model**: Single `@lru_cache` SentenceTransformer in `triangulation/embeddings.py` - no reloading
+- **Adaptive Triangulation**: Auto-adjusts similarity threshold based on data distribution (70th percentile, bounded 0.32-0.48)
+- **Configurable Authorities**: YAML-based primary source detection in `config/authorities.yml` - add any domain
+- **Domain Fetch Policies**: YAML-based HTTP headers/fallbacks in `config/fetch_policies.yml` - configure any site
+- **Recovery Providers**: High-signal providers (worldbank, oecd, imf, eurostat, wikipedia) for automatic recovery
+- **Gate Debug Output**: Writes `gate_debug.json` with metrics, thresholds, and pass/fail decisions
 
-## 🛡️ v8.24.0: Root Cause Fixes for Diverse Query Success
+## 🛡️ v8.26.0: Production-Hardened Features
 
-Version 8.24.0 implements surgical fixes addressing root causes identified in travel/tourism research queries. The system now successfully handles diverse query types with **intent-aware quality thresholds**, **enhanced primary detection**, and **domain-specific optimizations**.
+### Generic Intent Classification
+- **Domain-Agnostic Intents**: Works for any topic without hardcoded domains
+  - `macro_trends`: Trends, outlooks, forecasts across any field
+  - `company_filings`: SEC-like documents (10-K, 10-Q, 8-K, annual reports)
+  - `gov_stats`: Census, surveys, official statistics
+  - `medical`, `academic`, `news`, `howto`: Specialized query types
+- **Intent-Aware Thresholds**: Each intent has appropriate quality gates
+  - Macro Trends: 30% primary, 25% triangulation
+  - Company Filings: 40% primary, 30% triangulation  
+  - Gov Stats: 35% primary, 25% triangulation
+  - Medical: 65% primary, 50% triangulation
 
-### v8.24.0 Root Cause Fixes
+### Enhanced Triangulation System
+- **Cached Model Loading**: Single SentenceTransformer instance via `@lru_cache` - no duplicate models
+- **Adaptive Thresholds**: Uses 70th percentile of similarity distribution (bounded 0.32-0.48)
+- **Numeric Token Boost**: Cards sharing 2+ years/percentages get similarity boost
+- **Smart Contradiction Filter**: Checks units, periods, and relative differences (35% tolerance)
 
-#### 1. Intent-Aware Quality Thresholds
-- **Travel/Tourism**: 30% primary, 25% triangulation (even in strict mode)
-- **Stats/Economic**: 60% primary, 40% triangulation (strict mode)
-- **Medical/Health**: 65% primary, 50% triangulation (strict mode)
-- Automatic intent detection and threshold selection
+### Configurable Domain Policies
 
-#### 2. Enhanced Primary Source Detection
-- Recognizes authoritative PDFs with numeric content
-- Includes Mastercard, Deloitte, PwC reports as primary when containing metrics
-- Any .gov/.edu PDF with numbers is primary
-- Dramatically improves primary share for travel/tourism queries
+#### 1. Authority Detection (`config/authorities.yml`)
+- **50+ Primary Domains**: Government, international orgs, central banks, academic
+- **Pattern Matching**: Supports wildcards (`*.oecd.org`, `*.gov`)
+- **Numeric Requirements**: Configurable minimum tokens for primary classification
+- **Easy Extension**: Add your industry-specific authorities via YAML
 
-#### 3. Domain-Specific HTTP Headers
-- **Mastercard**: Browser-like headers with referrer to avoid 403s
-- **SEC**: Proper contact email in User-Agent
-- **OECD**: JSON accept headers for SDMX endpoints
-- Configurable per-domain header system
+#### 2. Fetch Policies (`config/fetch_policies.yml`)
+- **Per-Domain Headers**: Custom User-Agent, Accept, Referer headers
+- **Alternative URLs**: Fallback hosts when primary fails (e.g., OECD alt host)
+- **HEAD→GET Fallback**: Automatic retry strategy for restrictive servers
+- **Easy Extension**: Add new domains without code changes
+
+#### 3. Provider Groups (`providers/groups.py`)
+- **Reusable Groups**: `macro_econ`, `encyclopedic`, `academic`, `filings`
+- **Intent Composition**: Combine groups for each intent type
+- **Easy Extension**: Add new provider groups for your domain
+
+### All-Topic Examples
+
+The v8.26.0 system works seamlessly across all domains:
+
+```bash
+# Finance/Economics
+./run_full_features.sh "GDP growth forecast 2025"
+./run_full_features.sh "Apple 10-K filing analysis"
+
+# Health/Medical
+./run_full_features.sh "diabetes treatment clinical trials"
+./run_full_features.sh "COVID-19 vaccine efficacy studies"
+
+# Climate/Environment  
+./run_full_features.sh "renewable energy trends 2024"
+./run_full_features.sh "carbon emissions reduction policies"
+
+# Technology
+./run_full_features.sh "AI chip market outlook"
+./run_full_features.sh "quantum computing breakthroughs 2024"
+
+# Travel/Tourism (still works!)
+./run_full_features.sh "global tourism recovery trends"
+```
 
 #### 4. Smarter Contradiction Filtering
 - 35% tolerance for numeric disagreements (was stricter)

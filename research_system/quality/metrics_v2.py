@@ -5,7 +5,17 @@ from typing import Dict, List, Any, Optional
 from collections import Counter
 import logging
 
-from research_system.config_v2 import load_quality_config
+from research_system.config.settings import Settings
+# Create a config object that mimics the old interface
+class _ConfigWrapper:
+    def __init__(self):
+        self.settings = Settings()
+        self.primary_share_floor = 0.50
+        self.triangulation_floor = 0.45
+        self.domain_concentration_cap = 0.25
+
+def load_quality_config():
+    return _ConfigWrapper()
 from research_system.utils.file_ops import atomic_write_json
 
 logger = logging.getLogger(__name__)
@@ -225,3 +235,51 @@ def write_metrics(run_dir: str, m: FinalMetrics, intent: str = None) -> None:
         }
     })
     logger.info(f"Wrote metrics to {run_dir}/metrics.json")
+
+def write_gate_debug(output_dir, metrics: FinalMetrics, thresholds) -> None:
+    """
+    Write gate debug information to help diagnose quality gate failures.
+    
+    Args:
+        output_dir: Directory to write debug file
+        metrics: Computed final metrics
+        thresholds: QualityThresholds object with the gates being used
+    """
+    import os
+    from pathlib import Path
+    
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    debug_data = {
+        "metrics": {
+            "primary_share": round(metrics.primary_share, 4),
+            "triangulation_rate": round(metrics.triangulation_rate, 4),
+            "domain_concentration": round(metrics.domain_concentration, 4),
+            "unique_domains": metrics.unique_domains,
+            "credible_cards": metrics.credible_cards,
+            "provider_error_rate": round(metrics.provider_error_rate, 4),
+            "recent_primary_count": metrics.recent_primary_count,
+            "triangulated_clusters": metrics.triangulated_clusters,
+            "sample_sizes": metrics.sample_sizes
+        },
+        "effective_thresholds": thresholds.to_dict() if hasattr(thresholds, 'to_dict') else {
+            "primary": thresholds.primary,
+            "triangulation": thresholds.triangulation,
+            "domain_cap": thresholds.domain_cap
+        },
+        "decision": {
+            "primary_ok": metrics.primary_share >= thresholds.primary,
+            "triangulation_ok": metrics.triangulation_rate >= thresholds.triangulation,
+            "domain_ok": metrics.domain_concentration <= thresholds.domain_cap,
+            "overall_pass": (
+                metrics.primary_share >= thresholds.primary and
+                metrics.triangulation_rate >= thresholds.triangulation and
+                metrics.domain_concentration <= thresholds.domain_cap
+            )
+        }
+    }
+    
+    debug_file = output_path / "gate_debug.json"
+    atomic_write_json(str(debug_file), debug_data)
+    logger.info(f"Wrote gate debug info to {debug_file}")

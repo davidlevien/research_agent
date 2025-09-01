@@ -3,7 +3,7 @@
 import logging
 from typing import Optional, List, Dict, Any
 
-from research_system.config_v2 import load_quality_config
+from research_system.quality.thresholds import QualityThresholds
 from research_system.utils.file_ops import atomic_write_text
 from research_system.quality.metrics_v2 import FinalMetrics
 
@@ -26,7 +26,8 @@ def write_insufficient_evidence_report(
         intent: Research intent
         errors: Optional list of specific error messages
     """
-    cfg = load_quality_config()
+    # Get thresholds based on intent
+    thresholds = QualityThresholds.for_intent(intent, strict=True)
     
     # Build the report content
     lines = [
@@ -43,24 +44,24 @@ def write_insufficient_evidence_report(
     ]
     
     # Primary share check
-    primary_status = "✅" if metrics.primary_share >= cfg.primary_share_floor else "❌"
+    primary_status = "✅" if metrics.primary_share >= thresholds.primary else "❌"
     lines.append(
         f"| Primary Sources | **{metrics.primary_share:.1%}** | "
-        f"{cfg.primary_share_floor:.0%} | {primary_status} |"
+        f"{thresholds.primary:.0%} | {primary_status} |"
     )
     
     # Triangulation check
-    tri_status = "✅" if metrics.triangulation_rate >= cfg.triangulation_floor else "❌"
+    tri_status = "✅" if metrics.triangulation_rate >= thresholds.triangulation else "❌"
     lines.append(
         f"| Triangulation Rate | **{metrics.triangulation_rate:.1%}** | "
-        f"{cfg.triangulation_floor:.0%} | {tri_status} |"
+        f"{thresholds.triangulation:.0%} | {tri_status} |"
     )
     
     # Domain concentration check
-    conc_status = "✅" if metrics.domain_concentration <= cfg.domain_concentration_cap else "❌"
+    conc_status = "✅" if metrics.domain_concentration <= thresholds.domain_cap else "❌"
     lines.append(
         f"| Domain Concentration | **{metrics.domain_concentration:.1%}** | "
-        f"≤{cfg.domain_concentration_cap:.0%} | {conc_status} |"
+        f"≤{thresholds.domain_cap:.0%} | {conc_status} |"
     )
     
     # Stats-specific checks
@@ -127,7 +128,7 @@ def write_insufficient_evidence_report(
     lines.extend([
         "## Technical Details",
         "",
-        f"- Quality configuration: v{cfg.__dict__.get('version', 1)}",
+        f"- Quality thresholds: {thresholds}",
         f"- Run status: Quality gates not passed",
         f"- Output: `insufficient_evidence_report.md` only",
         "",
@@ -163,23 +164,24 @@ def format_gate_failure_message(
     Returns:
         Formatted failure message
     """
-    cfg = load_quality_config()
+    # Get thresholds based on intent
+    thresholds = QualityThresholds.for_intent(intent, strict=True)
     
     failures = []
     
-    if metrics.primary_share < cfg.primary_share_floor:
+    if metrics.primary_share < thresholds.primary:
         failures.append(
-            f"primary_share={metrics.primary_share:.1%}<{cfg.primary_share_floor:.0%}"
+            f"primary_share={metrics.primary_share:.1%}<{thresholds.primary:.0%}"
         )
     
-    if metrics.triangulation_rate < cfg.triangulation_floor:
+    if metrics.triangulation_rate < thresholds.triangulation:
         failures.append(
-            f"triangulation={metrics.triangulation_rate:.1%}<{cfg.triangulation_floor:.0%}"
+            f"triangulation={metrics.triangulation_rate:.1%}<{thresholds.triangulation:.0%}"
         )
     
-    if metrics.domain_concentration > cfg.domain_concentration_cap:
+    if metrics.domain_concentration > thresholds.domain_cap:
         failures.append(
-            f"concentration={metrics.domain_concentration:.1%}>{cfg.domain_concentration_cap:.0%}"
+            f"concentration={metrics.domain_concentration:.1%}>{thresholds.domain_cap:.0%}"
         )
     
     if intent == "stats":

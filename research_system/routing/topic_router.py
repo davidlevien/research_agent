@@ -337,15 +337,17 @@ def route_query(user_query: str, strategy: str = "broad_coverage") -> RouterDeci
 # Backward compatibility with existing codebase
 def choose_providers(topic: str) -> RouterDecision:
     """Legacy interface for backward compatibility."""
-    decision = route_query(topic, strategy="broad_coverage")
-    
-    # Create legacy RouterDecision format
-    from research_system.routing.provider_router import RouterDecision as LegacyDecision
-    return LegacyDecision(
-        categories=[decision.topic_match.topic_key],
-        providers=decision.providers,
-        reason=decision.reasoning
+    from warnings import warn
+    warn(
+        "research_system.routing.topic_router.choose_providers is deprecated; "
+        "use research_system.routing.provider_router.choose_providers",
+        DeprecationWarning,
+        stacklevel=2,
     )
+    
+    # Forward to provider_router
+    from research_system.routing.provider_router import choose_providers as _impl
+    return _impl(topic)
 
 def route_topic(topic: str):
     """Legacy route_topic function for policy compatibility."""

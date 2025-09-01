@@ -4,14 +4,13 @@ import numpy as np
 import logging
 from typing import List, Tuple, Any, Optional
 from urllib.parse import urlparse
-from sentence_transformers import SentenceTransformer
+# Use cached embeddings module instead of loading model directly
 
 from research_system.quality.domain_weights import credibility_weight
-from research_system.config_v2 import load_quality_config
+# Topic similarity threshold
+TOPIC_SIMILARITY_FLOOR = 0.35
 
 logger = logging.getLogger(__name__)
-
-_model: Optional[SentenceTransformer] = None
 
 def _extract_domain(card: Any) -> str:
     """Extract domain from card."""
@@ -38,13 +37,10 @@ def _validate_cluster_domains(cards: List[Any]) -> bool:
     
     return len(domains) >= 2
 
-def _get_embedding_model() -> SentenceTransformer:
-    """Get or initialize the embedding model."""
-    global _model
-    if _model is None:
-        _model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        logger.info("Loaded embedding model for representative selection")
-    return _model
+def _get_embeddings(texts: List[str]) -> Any:
+    """Get embeddings using cached model."""
+    from .embeddings import encode
+    return encode(texts, normalize=True)
 
 def pick_representative(cluster: List[Tuple[Any, str]], query_text: str) -> str:
     """
@@ -72,16 +68,15 @@ def pick_representative(cluster: List[Tuple[Any, str]], query_text: str) -> str:
     if len(cluster) == 1:
         return cluster[0][1]
     
-    cfg = load_quality_config()
+    # Use constant for topic similarity threshold
     
     # Extract sentences and cards
     cards = [c for (c, _) in cluster]
     sents = [s for (_, s) in cluster]
     
-    # Get embeddings
+    # Get embeddings using cached model
     try:
-        emb = _get_embedding_model()
-        E = emb.encode([query_text] + sents, normalize_embeddings=True)
+        E = _get_embeddings([query_text] + sents)
         qv, Sv = E[0], E[1:]
     except Exception as e:
         logger.warning(f"Embedding failed: {e}, using first sentence")
@@ -91,11 +86,11 @@ def pick_representative(cluster: List[Tuple[Any, str]], query_text: str) -> str:
     topic_sim = Sv @ qv
     
     # Apply topic similarity floor
-    mask = topic_sim >= cfg.topic_similarity_floor
+    mask = topic_sim >= TOPIC_SIMILARITY_FLOOR
     if not mask.any():
         # If nothing passes the floor, take the most similar
         mask = topic_sim == topic_sim.max()
-        logger.debug(f"No sentences passed topic floor {cfg.topic_similarity_floor}, using max similarity")
+        logger.debug(f"No sentences passed topic floor {TOPIC_SIMILARITY_FLOOR}, using max similarity")
     
     # Get credibility weights
     weights = np.array([credibility_weight(c) for c in cards])

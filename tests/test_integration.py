@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from research_system.models import EvidenceCard
-from research_system.tools.registry import tool_registry
+from research_system.tools.registry import get_registry
 from research_system.core.quality_assurance import QualityAssurance
 
 
@@ -23,8 +23,8 @@ class TestToolRegistry:
         
         from research_system.tools.registry import ToolSpec
         
-        if "test_get_strings" not in tool_registry._tools:
-            tool_registry.register(ToolSpec(
+        # Register tool
+        get_registry().register(ToolSpec(
                 name="test_get_strings",
                 fn=get_strings,
                 description="Test tool",
@@ -32,22 +32,22 @@ class TestToolRegistry:
             ))
         
         # Execute and validate
-        result = tool_registry.execute("test_get_strings", {})
+        result = get_registry().execute("test_get_strings", {})
         assert result == ["a", "b", "c"]
         
         # Register a tool that returns List[Dict]
         def get_dicts() -> list:
             return [{"key": "value1"}, {"key": "value2"}]
         
-        if "test_get_dicts" not in tool_registry._tools:
-            tool_registry.register(ToolSpec(
+        # Register tool
+        get_registry().register(ToolSpec(
                 name="test_get_dicts",
                 fn=get_dicts,
                 description="Test tool",
                 output_model=list[dict]
             ))
         
-        result = tool_registry.execute("test_get_dicts", {})
+        result = get_registry().execute("test_get_dicts", {})
         assert len(result) == 2
         assert all(isinstance(item, dict) for item in result)
     
@@ -60,8 +60,8 @@ class TestToolRegistry:
         # First registration should succeed
         from research_system.tools.registry import ToolSpec
         
-        if "unique_tool" not in tool_registry._tools:
-            tool_registry.register(ToolSpec(
+        # Register tool
+        get_registry().register(ToolSpec(
                 name="unique_tool",
                 fn=dummy_tool,
                 description="Test"

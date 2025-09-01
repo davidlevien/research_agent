@@ -88,7 +88,7 @@ def rerank(
     if use_llm:
         try:
             from research_system.llm.llm_client import LLMClient
-            from research_system.config import Settings
+            from research_system.config.settings import Settings
             
             settings = Settings()
             if settings.LLM_PROVIDER != "disabled":

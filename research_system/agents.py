@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 
 from .models import ResearchRequest, ResearchPlan, EvidenceCard
-from .config import Settings
+from research_system.config.settings import Settings
 
 logger = logging.getLogger(__name__)
 

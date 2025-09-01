@@ -15,7 +15,7 @@ from research_system.llm.claims_schema import (
     AtomicClaim, ClaimSet, ClaimExtractionRequest, GroundednessCheck
 )
 from research_system.models import EvidenceCard
-from research_system.config import Settings
+from research_system.config.settings import Settings
 
 logger = logging.getLogger(__name__)
 

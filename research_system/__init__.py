@@ -26,6 +26,6 @@ def __getattr__(name: str):
         from .orchestrator import OrchestratorSettings
         return OrchestratorSettings
     elif name == "Settings":
-        from .config import Settings
+        from research_system.config.settings import Settings
         return Settings
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

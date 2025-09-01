@@ -22,7 +22,7 @@ def is_admissible(card: Any, intent: str) -> bool:
     Returns:
         True if card is admissible, False otherwise
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     if intent != settings.STATS_INTENT:
@@ -93,7 +93,7 @@ def classify_sources(cards: List[Any]) -> Dict[str, List[Any]]:
     - 'media': News media
     - 'other': Everything else
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     categories = {
@@ -155,7 +155,7 @@ def enforce_source_diversity(cards: List[Any], intent: str, min_primary: int = 2
     Returns:
         Filtered cards meeting diversity requirements
     """
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     settings = Settings()
     
     if intent != settings.STATS_INTENT:
@@ -197,7 +197,7 @@ def is_recent_primary(card: Any, days: int = 730) -> bool:
         True if card is recent and primary
     """
     from datetime import datetime, timedelta, timezone
-    from research_system.config import Settings
+    from research_system.config.settings import Settings
     
     settings = Settings()
     

@@ -4,7 +4,7 @@ Ensures no duplicate registries and all tools accessible.
 """
 
 import pytest
-from research_system.tools.registry import tool_registry, Registry
+from research_system.tools.registry import get_registry, Registry
 from research_system.tools.search_registry import register_search_tools
 
 
@@ -13,17 +13,17 @@ class TestRegistryUnification:
     
     def test_global_registry_exists(self):
         """Test that global registry is available."""
-        assert tool_registry is not None
-        assert isinstance(tool_registry, Registry)
+        assert get_registry() is not None
+        assert isinstance(get_registry(), Registry)
     
     def test_search_tools_register_to_global(self):
         """Test that search tools register to global registry."""
         # Register search tools
-        register_search_tools(tool_registry)
+        register_search_tools(get_registry())
         
         # Check that search tools are registered
-        assert hasattr(tool_registry, '_tools')
-        tools = tool_registry._tools
+        assert hasattr(get_registry(), '_tools')
+        tools = get_registry()._tools
         
         # Should have search tools registered
         expected_tools = [
