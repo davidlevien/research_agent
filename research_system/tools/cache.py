@@ -7,13 +7,15 @@ import httpx
 from datetime import datetime, timedelta
 from typing import Tuple, Dict, Optional, Any
 import logging
-from ..config import get_settings
+# Use default cache dir
+HTTP_CACHE_DIR = "./.http_cache"
 
 logger = logging.getLogger(__name__)
 
 # Lazy load settings to avoid import-time instantiation
 def _get_cache_dir():
-    return get_settings().HTTP_CACHE_DIR
+    import os
+    return os.environ.get("HTTP_CACHE_DIR", HTTP_CACHE_DIR)
 
 DEFAULT_TTL = timedelta(days=7)
 

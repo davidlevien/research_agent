@@ -95,3 +95,51 @@ def is_primary_domain(url_or_domain: str, additional_domains: set[str] = None, p
             return True
     
     return False
+
+# v8.24.0: Enhanced primary detection for authoritative orgs
+PRIMARY_ORGS = {
+    "unwto.org", "wttc.org", "worldbank.org", "oecd.org",
+    "imf.org", "fred.stlouisfed.org", "eurostat.ec.europa.eu",
+    "who.int", "un.org", "unesco.org", "weforum.org"
+}
+
+def is_primary_domain_enhanced(url_or_domain: str, card=None) -> bool:
+    """
+    v8.24.0: Enhanced primary detection that considers numeric content for authoritative orgs.
+    
+    Args:
+        url_or_domain: URL or domain to check
+        card: Optional evidence card to check for numeric tokens
+    
+    Returns:
+        True if domain is primary (traditional check or authoritative org with numbers)
+    """
+    # First try traditional primary check
+    if is_primary_domain(url_or_domain):
+        return True
+    
+    # v8.24.0: Check if this is an authoritative org with numeric content
+    domain = canonical_domain(url_or_domain)
+    
+    # Check if domain is an authoritative organization
+    for org in PRIMARY_ORGS:
+        if domain.endswith(org):
+            # If we have a card, check for numeric tokens
+            if card:
+                numeric_token_count = getattr(card, "numeric_token_count", 0)
+                # Also check for numbers in the text if numeric_token_count not set
+                if numeric_token_count == 0:
+                    text = getattr(card, "snippet", "") or getattr(card, "supporting_text", "")
+                    import re
+                    numbers = re.findall(r'\b\d+(?:\.\d+)?%?\b', text)
+                    numeric_token_count = len(numbers)
+                
+                # Consider primary if has 2+ numeric signals
+                if numeric_token_count >= 2:
+                    return True
+            else:
+                # Without card context, authoritative orgs are borderline primary
+                # Let caller decide based on other factors
+                return False
+    
+    return False

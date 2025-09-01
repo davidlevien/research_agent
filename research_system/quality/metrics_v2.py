@@ -59,8 +59,31 @@ def compute_metrics(cards: List[Any], clusters: Optional[List] = None,
                 primary += 1
     primary_share = primary / n
     
-    # Triangulation rate: share of cards in multi-domain clusters
-    tri_support = sum(1 for c in cards if getattr(c, "triangulated", False))
+    # v8.24.0: Triangulation rate based on post-sanitization clusters
+    # If clusters are provided, use them to determine triangulated cards
+    tri_support = 0
+    if clusters:
+        # Collect all card indices that are in multi-domain clusters
+        triangulated_indices = set()
+        for cluster in clusters:
+            # Check if cluster has multiple domains
+            cluster_domains = getattr(cluster, 'domains', [])
+            if isinstance(cluster, dict):
+                cluster_domains = cluster.get('domains', [])
+            
+            if len(cluster_domains) >= 2:
+                # Add all card indices from this cluster
+                cluster_indices = getattr(cluster, 'indices', [])
+                if isinstance(cluster, dict):
+                    cluster_indices = cluster.get('indices', [])
+                triangulated_indices.update(cluster_indices)
+        
+        # Count cards that are in triangulated clusters
+        tri_support = len(triangulated_indices)
+    else:
+        # Fallback to card-level triangulated attribute
+        tri_support = sum(1 for c in cards if getattr(c, "triangulated", False))
+    
     triangulation_rate = tri_support / n
     
     # Domain concentration
@@ -117,6 +140,7 @@ def compute_metrics(cards: List[Any], clusters: Optional[List] = None,
 def gates_pass(m: FinalMetrics, intent: str = "generic") -> bool:
     """
     Check if metrics pass quality gates for given intent.
+    v8.22.0: Use intent-specific thresholds when available.
     
     Args:
         m: Computed metrics
@@ -127,11 +151,28 @@ def gates_pass(m: FinalMetrics, intent: str = "generic") -> bool:
     """
     cfg = load_quality_config()
     
-    # Basic gates for all intents
+    # v8.22.0: Get intent-specific thresholds if available
+    try:
+        from research_system.providers.intent_registry import get_intent_thresholds
+        intent_thresholds = get_intent_thresholds(intent)
+        
+        # Use intent-specific thresholds if they exist
+        primary_floor = intent_thresholds.get("primary_share", cfg.primary_share_floor)
+        triangulation_floor = intent_thresholds.get("triangulation", cfg.triangulation_floor)
+        domain_cap = intent_thresholds.get("domain_cap", cfg.domain_concentration_cap)
+        
+        logger.info(f"Using intent-specific thresholds for {intent}: primary={primary_floor}, triangulation={triangulation_floor}, domain_cap={domain_cap}")
+    except ImportError:
+        # Fall back to default config if intent registry not available
+        primary_floor = cfg.primary_share_floor
+        triangulation_floor = cfg.triangulation_floor
+        domain_cap = cfg.domain_concentration_cap
+    
+    # Basic gates with intent-specific thresholds
     basic_pass = (
-        m.primary_share >= cfg.primary_share_floor and
-        m.triangulation_rate >= cfg.triangulation_floor and
-        m.domain_concentration <= cfg.domain_concentration_cap
+        m.primary_share >= primary_floor and
+        m.triangulation_rate >= triangulation_floor and
+        m.domain_concentration <= domain_cap
     )
     
     # Additional gates for stats intent
@@ -144,8 +185,24 @@ def gates_pass(m: FinalMetrics, intent: str = "generic") -> bool:
     
     return basic_pass
 
-def write_metrics(run_dir: str, m: FinalMetrics) -> None:
-    """Write metrics to JSON file atomically."""
+def write_metrics(run_dir: str, m: FinalMetrics, intent: str = None) -> None:
+    """
+    Write metrics to JSON file atomically.
+    v8.23.0: Include pass/fail status aligned with intent-specific gates.
+    """
+    # Get intent-specific thresholds
+    from research_system.providers.intent_registry import get_intent_thresholds
+    intent_thresholds = get_intent_thresholds(intent) if intent else {}
+    
+    # Use intent-specific or default thresholds
+    from research_system.quality_config.quality import QualityConfig
+    cfg = QualityConfig()
+    # Use defaults from config or intent-specific overrides
+    primary_floor = intent_thresholds.get("primary_share", cfg.primary_share.target_pct)
+    triangulation_floor = intent_thresholds.get("triangulation", cfg.triangulation.target_normal_pct)
+    domain_cap = intent_thresholds.get("domain_cap", cfg.domain_balance.cap_default)
+    
+    # v8.23.0: Write metrics with pass/fail status aligned to gates
     atomic_write_json(f"{run_dir}/metrics.json", {
         "primary_share": round(m.primary_share, 4),
         "triangulation_rate": round(m.triangulation_rate, 4),
@@ -155,6 +212,16 @@ def write_metrics(run_dir: str, m: FinalMetrics) -> None:
         "provider_error_rate": round(m.provider_error_rate, 4),
         "recent_primary_count": m.recent_primary_count,
         "triangulated_clusters": m.triangulated_clusters,
-        "sample_sizes": m.sample_sizes
+        "sample_sizes": m.sample_sizes,
+        # v8.23.0: Add pass/fail status aligned with actual gates
+        "pass_primary": m.primary_share >= primary_floor,
+        "pass_triangulation": m.triangulation_rate >= triangulation_floor,
+        "pass_concentration": m.domain_concentration <= domain_cap,
+        "thresholds_used": {
+            "primary_share_floor": primary_floor,
+            "triangulation_floor": triangulation_floor,
+            "domain_cap": domain_cap,
+            "intent": intent or "generic"
+        }
     })
     logger.info(f"Wrote metrics to {run_dir}/metrics.json")

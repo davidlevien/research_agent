@@ -1,12 +1,36 @@
 import httpx
 import logging
-from typing import Dict, Any
+import time
+from typing import Dict, Any, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from ..config import Settings
-from ..metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
+from ..monitoring_metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
 from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
+
+# Simple in-module circuit/bucket (no external dep):
+_CIRCUIT_OPEN_UNTIL: Optional[float] = None
+_BUCKET_TOKENS = 5           # burst
+_BUCKET_REFILL_RATE = 0.5    # tokens/sec
+_BUCKET_LAST_REFILL = time.time()
+
+def _bucket_take() -> bool:
+    global _BUCKET_TOKENS, _BUCKET_LAST_REFILL
+    now = time.time()
+    _BUCKET_TOKENS = min(5, _BUCKET_TOKENS + (now - _BUCKET_LAST_REFILL) * _BUCKET_REFILL_RATE)
+    _BUCKET_LAST_REFILL = now
+    if _BUCKET_TOKENS >= 1:
+        _BUCKET_TOKENS -= 1
+        return True
+    return False
+
+def reset_serper_circuit():
+    """Reset the circuit breaker state (for testing)"""
+    global _CIRCUIT_OPEN_UNTIL, _BUCKET_TOKENS, _BUCKET_LAST_REFILL
+    _CIRCUIT_OPEN_UNTIL = None
+    _BUCKET_TOKENS = 5
+    _BUCKET_LAST_REFILL = time.time()
 
 @retry(
     stop=stop_after_attempt(3),
@@ -15,6 +39,19 @@ logger = logging.getLogger(__name__)
 )
 def _make_serper_request(query: str, count: int, api_key: str, gl: str = "us", hl: str = "en", timeout: int = 30) -> Dict[str, Any]:
     """Make HTTP request to Serper.dev API with retry logic"""
+    global _CIRCUIT_OPEN_UNTIL
+    
+    # Check circuit breaker
+    now = time.time()
+    if _CIRCUIT_OPEN_UNTIL and now < _CIRCUIT_OPEN_UNTIL:
+        logger.info("Serper circuit open, skipping call for %.0fs", _CIRCUIT_OPEN_UNTIL - now)
+        return {"organic": []}
+    
+    # Check token bucket
+    if not _bucket_take():
+        logger.info("Serper bucket empty; deferring this call.")
+        return {"organic": []}
+    
     url = "https://google.serper.dev/search"
     headers = {
         "X-API-KEY": api_key,
@@ -30,6 +67,15 @@ def _make_serper_request(query: str, count: int, api_key: str, gl: str = "us", h
     
     with httpx.Client(timeout=timeout) as client:
         response = client.post(url, json=payload, headers=headers)
+        
+        # v8.22.0: Enhanced rate limit handling with circuit breaker
+        if response.status_code in (429, 430):
+            # open circuit 5 minutes with jitter
+            backoff = 300 + int(60 * (time.time() % 1))
+            _CIRCUIT_OPEN_UNTIL = time.time() + backoff
+            logger.warning("Serper rate limited (%s). Opening circuit for %ss", response.status_code, backoff)
+            return {"organic": []}
+        
         response.raise_for_status()
         return response.json()
 

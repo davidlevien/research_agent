@@ -11,16 +11,19 @@ from collections import defaultdict, Counter
 from urllib.parse import urlparse
 from .models import Discipline
 
+# Import guard to ensure clean module usage
+from research_system.guard import assert_no_legacy_mix
+assert_no_legacy_mix()
+
 from research_system.models import EvidenceCard, RelatedTopic
 from research_system.utils.datetime_safe import safe_format_dt, format_duration
 from research_system.utils.deterministic import set_global_seeds, ensure_deterministic_environment
 from research_system.tools.evidence_io import write_jsonl
 from research_system.tools.registry import tool_registry as registry
 from research_system.tools.search_registry import register_search_tools
-from research_system.collection import parallel_provider_search
-from research_system.collection_enhanced import collect_from_free_apis
+from research_system.collection import parallel_provider_search, collect_from_free_apis
 from research_system.routing.provider_router import choose_providers
-from research_system.config import Settings
+from research_system.config.settings import Settings, settings
 from research_system.intent.classifier import classify, Intent, get_confidence_threshold
 from research_system.providers.intent_registry import expand_providers_for_intent
 from research_system.controversy import ControversyDetector
@@ -32,8 +35,8 @@ from research_system.tools.fetch import extract_article
 from research_system.tools.snapshot import save_wayback
 from research_system.tools.url_norm import canonicalize_url, domain_of, normalized_hash
 from research_system.tools.domain_norm import (
-    canonical_domain, is_primary_domain, PRIMARY_CANONICALS, 
-    PRIMARY_CONFIG, PRIMARY_PATTERNS
+    canonical_domain, is_primary_domain, is_primary_domain_enhanced, 
+    PRIMARY_CANONICALS, PRIMARY_CONFIG, PRIMARY_PATTERNS
 )
 from research_system.tools.anchor import build_anchors
 from research_system.routing.topic_router import route_topic, classify_topic_multi
@@ -66,6 +69,9 @@ from research_system.strict.adaptive_guard import (
 from research_system.utils.file_ops import run_transaction, atomic_write_text, atomic_write_json
 from research_system.config_v2 import load_quality_config
 from research_system.quality.metrics_v2 import compute_metrics, gates_pass, write_metrics, FinalMetrics
+from research_system.metrics.run import RunMetrics
+from research_system.metrics.adapters import from_quality_metrics_v2
+from research_system.config.settings import QualityThresholds, quality_for_intent
 from research_system.evidence.canonicalize import dedup_by_canonical, get_canonical_domain
 from research_system.quality.domain_weights import mark_primary, credibility_weight
 from research_system.retrieval.filters import filter_for_intent, detect_jurisdiction_from_query
@@ -135,8 +141,8 @@ class Orchestrator:
         
         # If max_cost_usd not specified, get from global settings
         if self.s.max_cost_usd is None:
-            from research_system.config import get_settings
-            self.s.max_cost_usd = get_settings().MAX_COST_USD
+            from research_system.config.settings import settings as global_settings
+            self.s.max_cost_usd = 2.50  # Default budget
         
         # Initialize v8.13.0 quality configuration - single source of truth
         self.v813_config = load_quality_config()
@@ -576,6 +582,40 @@ class Orchestrator:
 Maximum cost: ${self.s.max_cost_usd:.2f}
 """
 
+    def _sanitize_query(self, query: str, intent: str = None) -> str:
+        """Sanitize query by removing None values and inappropriate site filters"""
+        # v8.22.0: Strip "None" and empty facets
+        _DROP_TOKENS = {"None", "null", "", "N/A", "na", "undefined"}
+        
+        # Remove None/null tokens
+        parts = []
+        for part in query.split():
+            if part.strip() not in _DROP_TOKENS and str(part).strip() not in _DROP_TOKENS:
+                parts.append(part)
+        
+        query = " ".join(parts)
+        
+        # v8.24.0: Intent-aware domain blocklists
+        # Block domains that are irrelevant for specific intents
+        INTENT_SITE_BLOCKLIST = {
+            "travel": {"sec.gov", "fred.stlouisfed.org", "edgar.sec.gov"},
+            "tourism": {"sec.gov", "fred.stlouisfed.org", "edgar.sec.gov"}, 
+            "travel_tourism": {"sec.gov", "fred.stlouisfed.org", "edgar.sec.gov"},
+            "encyclopedia": {"sec.gov", "fred.stlouisfed.org"},
+            "medical": {"mastercard.com", "visa.com", "amex.com"},
+            "health": {"mastercard.com", "visa.com", "amex.com"},
+        }
+        
+        blocked_domains = INTENT_SITE_BLOCKLIST.get(intent, set())
+        if blocked_domains:
+            # Remove any site: filters for blocked domains
+            for domain in blocked_domains:
+                query = re.sub(rf'\s+site:{re.escape(domain)}\b', "", query, flags=re.I)
+        
+        # Collapse double spaces
+        query = re.sub(r"\s{2,}", " ", query)
+        return query.strip()
+    
     def _generate_intent_queries(self, intent: str, topic: str) -> list[str]:
         """Generate intent-specific query expansions"""
         queries = [topic]  # Always include the base query
@@ -621,8 +661,15 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
                 f"{topic} data",
                 f"site:.gov {topic} data"
             ])
+        
+        # v8.22.0: Sanitize all queries to remove None/null and inappropriate site filters
+        sanitized = []
+        for q in queries:
+            sanitized_q = self._sanitize_query(q, intent)
+            if sanitized_q:  # Only add non-empty queries
+                sanitized.append(sanitized_q)
             
-        return queries[:5]  # Limit to 5 queries to avoid overwhelming the system
+        return sanitized[:5]  # Limit to 5 queries to avoid overwhelming the system
     
     def _generate_source_strategy(self) -> str:
         """Generate source strategy document"""
@@ -1027,7 +1074,7 @@ Maximum cost: ${self.s.max_cost_usd:.2f}
                 struct_tris = tri_data.get("structured_triangles", [])
                 
                 from research_system.report.final_report import generate_final_report
-                from research_system.config import Settings
+                from research_system.config.settings import Settings, settings
                 
                 return generate_final_report(
                     cards=cards,
@@ -1361,17 +1408,6 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
     def run(self):
         """Main orchestrator run method with v8.13.0 transaction support."""
         
-        # Load v8.13.0 configuration
-        cfg = self.v813_config
-        
-        # Log v8.13.0 configuration once at start
-        logger.info(
-            "v8.13.0 Quality thresholds: primary_share=%.0f%%, triangulation=%.0f%%, domain_cap=%.0f%%",
-            cfg.primary_share_floor * 100,
-            cfg.triangulation_floor * 100,
-            cfg.domain_concentration_cap * 100
-        )
-        
         # Wrap entire run in transaction for atomic writes
         with run_transaction(str(self.s.output_dir)):
             self._run_internal()
@@ -1396,6 +1432,38 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         # Get intent-specific thresholds
         min_triangulation, min_sources = get_confidence_threshold(intent)
         logger.info(f"Intent thresholds: triangulation={min_triangulation}, sources={min_sources}")
+        
+        # v8.24.0: Log intent-specific quality gates that will be used
+        try:
+            from research_system.providers.intent_registry import get_intent_thresholds
+            intent_thresholds = get_intent_thresholds(intent.value)
+            
+            # Load default config as fallback
+            cfg = self.v813_config
+            
+            # Use intent-specific thresholds if they exist
+            primary_floor = intent_thresholds.get("primary_share", cfg.primary_share_floor)
+            triangulation_floor = intent_thresholds.get("triangulation", cfg.triangulation_floor)
+            domain_cap = intent_thresholds.get("domain_cap", cfg.domain_concentration_cap)
+            
+            logger.info(
+                "v8.13.0 Quality thresholds (strict=%s, intent=%s): primary_share=%.0f%%, triangulation=%.0f%%, domain_cap=%.0f%%",
+                self.s.strict,
+                intent.value,
+                primary_floor * 100,
+                triangulation_floor * 100,
+                domain_cap * 100
+            )
+        except ImportError:
+            # Fall back to default config if intent registry not available
+            cfg = self.v813_config
+            logger.info(
+                "v8.13.0 Quality thresholds (strict=%s): primary_share=%.0f%%, triangulation=%.0f%%, domain_cap=%.0f%%",
+                self.s.strict,
+                cfg.primary_share_floor * 100,
+                cfg.triangulation_floor * 100,
+                cfg.domain_concentration_cap * 100
+            )
         
         # Generate intent-specific query expansions
         expanded_queries = self._generate_intent_queries(intent.value, self.s.topic)
@@ -1627,6 +1695,16 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     # Also update snippet if it's still the placeholder
                     if c.snippet and "Content from" in c.snippet:
                         c.snippet = excerpt[:200]
+        
+        # v8.24.0: Re-evaluate primary status with card context for authoritative orgs
+        for c in cards:
+            if not c.is_primary_source:  # Only upgrade, never downgrade
+                domain = c.source_domain or canonical_domain(c.url or "")
+                if domain:
+                    # Check with card context now that we have enriched content
+                    if is_primary_domain_enhanced(domain, c):
+                        c.is_primary_source = True
+                        logger.debug(f"v8.24.0: Upgraded {domain} to primary based on numeric content")
         
         # Import quote rescue for primary sources
         from research_system.enrich.ensure_quotes import ensure_quotes_for_primaries
@@ -1903,84 +1981,86 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         if self.s.strict:
             logger.info("Strict mode enabled: skipping backfill passes to match source strategy.")
             # No backfill, proceed to finalize with current evidence
-        # v8.16.0: Use configured threshold (default 33%) consistently
-        elif primary_share < getattr(self.v813_config, 'primary_share_floor', 0.33):
-            min_primary_threshold = getattr(self.v813_config, 'primary_share_floor', 0.33)
-            logger.info(f"Primary share {primary_share:.2%} < {min_primary_threshold:.0%}, running backfill")
-            from research_system.enrich.primary_fill import primary_fill_for_families
-            
-            # Get families that need primaries
-            families = para_clusters + structured_matches
-            families = [f for f in families if len(set(f.get("domains", []))) >= 2]
-            
-            # Simple search wrapper
-            def search_wrapper(query, n):
-                try:
-                    results = asyncio.run(parallel_provider_search(registry, query, n, None, None))
-                    # Flatten results from all providers
-                    all_results = []
-                    for provider, hits in results.items():
-                        all_results.extend(hits)
-                    return all_results[:n]
-                except:
-                    return []
-            
-            # Extract wrapper  
-            def extract_wrapper(url):
-                try:
-                    content = extract_article(url, timeout=20)
-                    if content and content.text:
-                        # Create minimal card
-                        from research_system.models import EvidenceCard
-                        return EvidenceCard(
-                            id=str(uuid.uuid4()),
-                            title=content.title or url,
-                            url=url,
-                            snippet=content.text[:500],
-                            provider="primary_backfill",
-                            credibility_score=0.85,
-                            relevance_score=0.75,
-                            confidence=0.80,
-                            is_primary_source=True,
-                            source_domain=canonical_domain(domain_of(url)),
-                            claim=content.title or "",
-                            supporting_text=content.text[:1000],
-                            subtopic_name=self.s.topic,
-                            collected_at=datetime.now(timezone.utc).isoformat()
-                        )
-                except:
-                    return None
+        # v8.24.0: Use intent-aware threshold for backfill decision
+        else:
+            # Get intent-aware thresholds (use lenient for backfill decision)
+            backfill_thresholds = quality_for_intent(intent, strict=False)
+            if primary_share < backfill_thresholds.primary:
+                logger.info(f"Primary share {primary_share:.2%} < {backfill_thresholds.primary:.0%} (intent={intent}), running backfill")
+                from research_system.enrich.primary_fill import primary_fill_for_families
+                
+                # Get families that need primaries
+                families = para_clusters + structured_matches
+                families = [f for f in families if len(set(f.get("domains", []))) >= 2]
+                
+                # Simple search wrapper
+                def search_wrapper(query, n):
+                    try:
+                        results = asyncio.run(parallel_provider_search(registry, query, n, None, None))
+                        # Flatten results from all providers
+                        all_results = []
+                        for provider, hits in results.items():
+                            all_results.extend(hits)
+                        return all_results[:n]
+                    except:
+                        return []
+                
+                # Extract wrapper  
+                def extract_wrapper(url):
+                    try:
+                        content = extract_article(url, timeout=20)
+                        if content and content.text:
+                            # Create minimal card
+                            from research_system.models import EvidenceCard
+                            return EvidenceCard(
+                                id=str(uuid.uuid4()),
+                                title=content.title or url,
+                                url=url,
+                                snippet=content.text[:500],
+                                provider="primary_backfill",
+                                credibility_score=0.85,
+                                relevance_score=0.75,
+                                confidence=0.80,
+                                is_primary_source=True,
+                                source_domain=canonical_domain(domain_of(url)),
+                                claim=content.title or "",
+                                supporting_text=content.text[:1000],
+                                subtopic_name=self.s.topic,
+                                collected_at=datetime.now(timezone.utc).isoformat()
+                            )
+                    except:
+                        return None
+                        
+                # Run primary backfill with pack-specific domains
+                new_cards = primary_fill_for_families(
+                    families=families,
+                    topic=self.s.topic,
+                    search_fn=search_wrapper,
+                    extract_fn=extract_wrapper,
+                    k_per_family=2,
+                    primary_domains=pack_domains,
+                    primary_patterns=pack_patterns
+                )
+                
+                if new_cards:
+                    logger.info(f"Added {len(new_cards)} primary source cards")
+                    # Merge and re-triangulate
+                    cards = self._dedup(cards + new_cards)
                     
-            # Run primary backfill with pack-specific domains
-            new_cards = primary_fill_for_families(
-                families=families,
-                topic=self.s.topic,
-                search_fn=search_wrapper,
-                extract_fn=extract_wrapper,
-                k_per_family=2,
-                primary_domains=pack_domains,
-                primary_patterns=pack_patterns
-            )
-            
-            if new_cards:
-                logger.info(f"Added {len(new_cards)} primary source cards")
-                # Merge and re-triangulate
-                cards = self._dedup(cards + new_cards)
-                
-                # Re-run quote rescue on new cards
-                ensure_quotes_for_primaries(cards, only=new_cards)
-                
-                # Re-compute triangulation with new cards
-                para_clusters = cluster_paraphrases(cards)
-                para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
-                para_clusters = filter_contradictory_clusters(para_clusters)
-                structured_matches = compute_structured_triangles(cards)
-                tri_union = union_rate(para_clusters, structured_matches, len(cards))
-                
-                # Recalculate values needed for final metrics
-                primary_share = primary_share_in_union(cards, para_clusters, structured_matches,
-                                                      primary_domains=pack_domains,
-                                                      primary_patterns=pack_patterns)
+                    # Re-run quote rescue on new cards
+                    ensure_quotes_for_primaries(cards, only=new_cards)
+                    
+                    # Re-compute triangulation with new cards
+                    para_clusters = cluster_paraphrases(cards)
+                    para_clusters = sanitize_paraphrase_clusters(para_clusters, cards)
+                    para_clusters = filter_contradictory_clusters(para_clusters)
+                    structured_matches = compute_structured_triangles(cards)
+                    tri_union = union_rate(para_clusters, structured_matches, len(cards))
+                    
+                    # Recalculate values needed for final metrics
+                    primary_share = primary_share_in_union(cards, para_clusters, structured_matches,
+                                                          primary_domains=pack_domains,
+                                                          primary_patterns=pack_patterns)
         
         # CONTRADICTION DETECTION
         claim_texts = [
@@ -2086,7 +2166,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                         credibility_score=credibility,
                                         relevance_score=0.75,  # Higher relevance for filtered AREX
                                         confidence=credibility * 0.75,
-                                        is_primary_source=is_primary_domain(domain),
+                                        is_primary_source=is_primary_domain_enhanced(domain, None),  # v8.24.0: Will check later with card
                                         search_provider=provider,
                                         source_domain=canonical_domain(domain),
                                         collected_at=datetime.now(timezone.utc).isoformat(),
@@ -2270,11 +2350,17 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         max_attempts = getattr(settings, 'MAX_BACKFILL_ATTEMPTS', 3)
         min_cards = getattr(settings, 'MIN_EVIDENCE_CARDS', 24)
         
-        # v8.18.0: Skip iterative backfill loop entirely in strict mode
-        if self.s.strict:
-            logger.info("Strict mode enabled: skipping iterative/last-mile backfill loop")
+        # v8.22.0: Check if strict mode failed once and should degrade
+        strict_failed_once = self.context.get("strict_failed_once", False)
+        skip_backfill = self.s.strict and not strict_failed_once
         
-        while not self.s.strict and backfill_attempts < max_attempts:
+        # v8.18.0: Skip iterative backfill loop entirely in strict mode (unless already failed once)
+        if skip_backfill:
+            logger.info("Strict mode enabled: skipping iterative/last-mile backfill loop")
+        elif self.s.strict and strict_failed_once:
+            logger.info("v8.22.0: Strict mode previously failed; enabling a single last-mile backfill pass")
+        
+        while not skip_backfill and backfill_attempts < max_attempts:
             needs_backfill = False
             backfill_reason = []
             
@@ -2380,7 +2466,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                                 credibility_score=credibility,
                                 relevance_score=0.7,
                                 confidence=credibility * 0.7,
-                                is_primary_source=is_primary_domain(domain),
+                                is_primary_source=is_primary_domain_enhanced(domain, None),  # v8.24.0: Will check later with card
                                 search_provider=provider,
                                 source_domain=canonical_domain(domain),
                                 collected_at=datetime.now(timezone.utc).isoformat(),
@@ -2449,15 +2535,17 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         logger.info(f"After v8.13.0 intent filtering for {intent}: {len(cards)} cards")
         
         # 4. Compute v8.13.0 unified metrics once
+        # v8.24.0: Use post-sanitization clusters for accurate triangulation metrics
         final_metrics = compute_metrics(
             cards=cards,
-            clusters=paraphrase_cluster_sets if 'paraphrase_cluster_sets' in locals() else [],
+            clusters=para_clusters_final if 'para_clusters_final' in locals() else [],
             provider_errors=self.provider_errors,
             provider_attempts=self.provider_attempts
         )
         
         # 5. Write v8.13.0 metrics to file
-        write_metrics(str(self.s.output_dir), final_metrics)
+        # v8.23.0: Pass intent to write_metrics for aligned thresholds
+        write_metrics(str(self.s.output_dir), final_metrics, intent)
         
         # v8.21.0: Always persist evidence bundle BEFORE quality gates
         try:
@@ -2470,25 +2558,42 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         except Exception as e:
             logger.exception(f"Failed to persist evidence bundle: {e}")
         
-        # 6. Check v8.13.0 quality gates (HARD GATE)
-        cfg = self.v813_config
-        gates_passed = gates_pass(final_metrics, intent)
+        # 6. Check v8.24.0 quality gates (HARD GATE)
+        # v8.24.0: Use intent-aware thresholds from QualityThresholds
+        thresholds = quality_for_intent(intent, strict=self.s.strict)
+        
+        gates_passed = thresholds.passes(
+            final_metrics.primary_share,
+            final_metrics.triangulation_rate,
+            final_metrics.domain_concentration
+        )
         
         logger.info(
-            "v8.13.0 Final metrics: primary_share=%.3f (floor=%.2f), triangulation=%.3f (floor=%.2f), domain_concentration=%.3f (cap=%.2f)",
-            final_metrics.primary_share, cfg.primary_share_floor,
-            final_metrics.triangulation_rate, cfg.triangulation_floor,
-            final_metrics.domain_concentration, cfg.domain_concentration_cap
+            "v8.24.0 Final metrics (intent=%s, strict=%s): primary_share=%.3f (floor=%.2f), triangulation=%.3f (floor=%.2f), domain_concentration=%.3f (cap=%.2f)",
+            intent, self.s.strict,
+            final_metrics.primary_share, thresholds.primary,
+            final_metrics.triangulation_rate, thresholds.triangulation,
+            final_metrics.domain_concentration, thresholds.domain_cap
         )
         
         if not gates_passed:
-            # v8.20.0: Try lenient fallback before giving up
-            logger.warning(f"v8.13.0 Quality gates failed: primary_share={final_metrics.primary_share:.2%}, triangulation={final_metrics.triangulation_rate:.2%}")
-            logger.info("v8.20.0: Launching lenient recovery pass to salvage the research")
+            # v8.22.0: Set strict_failed_once flag for degradation
+            if self.s.strict:
+                self.context["strict_failed_once"] = True
+                logger.info("v8.22.0: Strict mode failed quality gates - marking for degradation")
             
-            # 1) Define relaxed thresholds for this topic
-            relaxed_primary_floor = 0.30    # Was 0.40-0.50
-            relaxed_triangulation_floor = 0.20  # Was 0.25-0.35
+            # v8.23.0: Enhanced lenient recovery with intent-aware relaxation
+            logger.warning(f"v8.13.0 Quality gates failed: primary_share={final_metrics.primary_share:.2%}, triangulation={final_metrics.triangulation_rate:.2%}")
+            logger.info("v8.23.0: Launching enhanced lenient recovery pass to salvage the research")
+            
+            # v8.23.0: Use LENIENT_MINIMA with intent-aware adjustments
+            from research_system.providers.intent_registry import get_intent_thresholds
+            intent_thresholds = get_intent_thresholds(intent)
+            
+            # Start with intent-specific thresholds, then apply lenient minima
+            LENIENT_MINIMA = {"primary_share_floor": 0.15, "triangulation_floor": 0.15}
+            relaxed_primary_floor = min(intent_thresholds.get("primary_share", 0.30), LENIENT_MINIMA["primary_share_floor"])
+            relaxed_triangulation_floor = min(intent_thresholds.get("triangulation", 0.20), LENIENT_MINIMA["triangulation_floor"])
             relaxed_concentration_cap = 0.60    # Was 0.50
             
             # 2) Widen cluster threshold so near-synonyms cluster better
@@ -2524,6 +2629,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             paraphrase_cluster_sets = sanitize_paraphrase_clusters(paraphrase_clusters, cards, max_frac=0.2)
             
             # Recompute metrics with new clustering
+            # v8.24.0: Also apply contradiction filtering for consistent metrics
+            paraphrase_cluster_sets = filter_contradictory_clusters(paraphrase_cluster_sets)
             final_metrics = compute_metrics(
                 cards=cards,
                 clusters=paraphrase_cluster_sets,
@@ -2789,9 +2896,17 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     self._last_mile_backfill(self.s.topic, cards)
                     
                     # Recompute metrics after backfill
+                    # v8.24.0: Recalculate clusters after backfill for accurate metrics
+                    if 'para_clusters_final' not in locals():
+                        para_clusters_post_backfill = cluster_paraphrases(cards)
+                        para_clusters_post_backfill = sanitize_paraphrase_clusters(para_clusters_post_backfill, cards)
+                        para_clusters_post_backfill = filter_contradictory_clusters(para_clusters_post_backfill)
+                    else:
+                        para_clusters_post_backfill = para_clusters_final
+                    
                     final_metrics = compute_metrics(
                         cards=cards,
-                        clusters=paraphrase_cluster_sets if 'paraphrase_cluster_sets' in locals() else [],
+                        clusters=para_clusters_post_backfill,
                         provider_errors=self.provider_errors,
                         provider_attempts=self.provider_attempts
                     )

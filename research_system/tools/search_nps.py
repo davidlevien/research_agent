@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any, List
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from ..config import Settings
-from ..metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
+from ..monitoring_metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
 from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)

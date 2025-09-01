@@ -5,6 +5,11 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# v8.22.0: Make the wrapper work from anywhere
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR")"
+cd "$REPO_ROOT"
+
 # Check Python version
 if ! command -v python3.11 &> /dev/null; then
     echo "Error: Python 3.11+ is required"

@@ -1,6 +1,11 @@
 #!/bin/bash
 # Research Agent Runner Script
 
+# v8.22.0: Make the wrapper work from anywhere
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR")"
+cd "$REPO_ROOT"
+
 # Check if Python 3.11+ is available (required by project)
 if command -v python3.11 &> /dev/null; then
     PYTHON_CMD="python3.11"

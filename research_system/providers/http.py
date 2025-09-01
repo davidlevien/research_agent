@@ -15,6 +15,77 @@ logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = httpx.Timeout(10.0, connect=5.0, read=7.0)
 RETRY_STATUSES = {408, 429, 500, 502, 503, 504}
 
+# v8.23.0: Enhanced default HTTP headers with better compatibility
+DEFAULT_HEADERS = {
+    "User-Agent": "ResearchAgent/1.0 (+https://example.com/contact) python-httpx",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+}
+
+# v8.23.0: Domains requiring specific headers for compliance
+PER_DOMAIN_HEADERS = {
+    # SEC blocks generic/bot UAs; must include contact email
+    "www.sec.gov": {
+        "User-Agent": "ResearchAgent/1.0 ({})".format(
+            os.getenv("SEC_CONTACT_EMAIL", os.getenv("CONTACT_EMAIL", "research@example.com"))
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "identity",  # SEC prefers uncompressed
+    },
+    "sec.gov": {
+        "User-Agent": "ResearchAgent/1.0 ({})".format(
+            os.getenv("SEC_CONTACT_EMAIL", os.getenv("CONTACT_EMAIL", "research@example.com"))
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "identity",
+    },
+    # OECD SDMX endpoints sometimes 404 if Accept is not JSON
+    "stats.oecd.org": {
+        "Accept": "application/json,text/plain,*/*",
+        "User-Agent": "ResearchAgent/1.0 ({})".format(
+            os.getenv("CONTACT_EMAIL", "research@example.com")
+        ),
+    },
+    "stats-nxd.oecd.org": {
+        "Accept": "application/json,text/plain,*/*",
+        "User-Agent": "ResearchAgent/1.0 ({})".format(
+            os.getenv("CONTACT_EMAIL", "research@example.com")
+        ),
+    },
+    # Mastercard blocks headless clients without proper headers
+    "www.mastercard.com": {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/pdf,application/octet-stream;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.mastercard.com/newsroom/",
+    },
+    "mastercard.com": {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/pdf,application/octet-stream;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.mastercard.com/newsroom/",
+    },
+}
+
+def _merge_headers_for_domain(url: str, base_headers: Optional[Dict] = None) -> Dict[str, str]:
+    """Merge domain-specific headers with base headers."""
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(url).netloc.lower()
+    except Exception:
+        host = None
+    
+    merged = dict(DEFAULT_HEADERS)
+    if base_headers:
+        merged.update(base_headers)
+    
+    if host and host in PER_DOMAIN_HEADERS:
+        merged.update(PER_DOMAIN_HEADERS[host])
+    
+    return merged
+
 # Per-provider policies for compliance with API terms
 POLICY = {
     "openalex": {
@@ -230,9 +301,12 @@ def http_json(
     backoff = 0.5
     last_error = None
     
+    # v8.23.0: Use domain-aware header merging
+    merged_headers = _merge_headers_for_domain(url, headers)
+    
     for attempt in range(1, max_retries + 1):
         try:
-            with httpx.Client(timeout=DEFAULT_TIMEOUT, headers=headers) as client:
+            with httpx.Client(timeout=DEFAULT_TIMEOUT, headers=merged_headers) as client:
                 response = client.request(method, url, params=params, json=data)
             
             if response.status_code in RETRY_STATUSES:

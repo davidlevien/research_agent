@@ -1,7 +1,31 @@
+"""Legacy config.py - maintained for backward compatibility.
+
+This module is deprecated. Use research_system.config.settings instead.
+"""
+
+from warnings import warn
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
 from typing import Literal, Optional, List
 from functools import lru_cache
+
+# Import from new unified config
+from research_system.config.settings import (
+    settings as unified_settings,
+    QualityThresholds,
+    quality_for_intent,
+    PRIMARY_ORGS,
+    SEMI_AUTHORITATIVE_ORGS,
+    INTENT_BLOCKLIST,
+    PER_DOMAIN_HEADERS,
+)
+
+# Emit deprecation warning on import
+warn(
+    "research_system.config is deprecated. Import from research_system.config.settings instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 DEFAULT_LLM: str = "disabled"  # CI-safe default, no secrets required
 

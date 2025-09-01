@@ -1,12 +1,36 @@
 import httpx
 import logging
-from typing import Dict, Any
+import time
+from typing import Dict, Any, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from ..config import Settings
-from ..metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
+from ..monitoring_metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
 from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
+
+# Simple in-module circuit/bucket (no external dep):
+_CIRCUIT_OPEN_UNTIL: Optional[float] = None
+_BUCKET_TOKENS = 5           # burst
+_BUCKET_REFILL_RATE = 0.5    # tokens/sec
+_BUCKET_LAST_REFILL = time.time()
+
+def _bucket_take() -> bool:
+    global _BUCKET_TOKENS, _BUCKET_LAST_REFILL
+    now = time.time()
+    _BUCKET_TOKENS = min(5, _BUCKET_TOKENS + (now - _BUCKET_LAST_REFILL) * _BUCKET_REFILL_RATE)
+    _BUCKET_LAST_REFILL = now
+    if _BUCKET_TOKENS >= 1:
+        _BUCKET_TOKENS -= 1
+        return True
+    return False
+
+def reset_tavily_circuit():
+    """Reset the circuit breaker state (for testing)"""
+    global _CIRCUIT_OPEN_UNTIL, _BUCKET_TOKENS, _BUCKET_LAST_REFILL
+    _CIRCUIT_OPEN_UNTIL = None
+    _BUCKET_TOKENS = 5
+    _BUCKET_LAST_REFILL = time.time()
 
 @retry(
     stop=stop_after_attempt(3),
@@ -15,6 +39,19 @@ logger = logging.getLogger(__name__)
 )
 def _make_tavily_request(query: str, count: int, api_key: str, timeout: int = 30) -> Dict[str, Any]:
     """Make HTTP request to Tavily API with retry logic"""
+    global _CIRCUIT_OPEN_UNTIL
+    
+    # Check circuit breaker
+    now = time.time()
+    if _CIRCUIT_OPEN_UNTIL and now < _CIRCUIT_OPEN_UNTIL:
+        logger.info("Tavily circuit open, skipping call for %.0fs", _CIRCUIT_OPEN_UNTIL - now)
+        return {"results": []}
+    
+    # Check token bucket
+    if not _bucket_take():
+        logger.info("Tavily bucket empty; deferring this call.")
+        return {"results": []}
+    
     url = "https://api.tavily.com/search"
     headers = {
         "Content-Type": "application/json"
@@ -32,9 +69,12 @@ def _make_tavily_request(query: str, count: int, api_key: str, timeout: int = 30
     with httpx.Client(timeout=timeout) as client:
         response = client.post(url, json=payload, headers=headers)
         
-        # v8.20.0: Handle Tavily's non-standard 432 status during protection windows
-        if response.status_code == 432:
-            logger.warning("Tavily returned 432 (rate limited), returning empty results")
+        # v8.23.0: Enhanced rate limit handling with 10-minute circuit breaker
+        if response.status_code in (429, 430, 431, 432):
+            # Open circuit for 10 minutes
+            COOL_OFF_SECONDS = 600  # 10 minutes
+            _CIRCUIT_OPEN_UNTIL = time.time() + COOL_OFF_SECONDS
+            logger.warning("Tavily %s (rate limited) – opening circuit for %ss", response.status_code, COOL_OFF_SECONDS)
             return {"results": []}
         
         response.raise_for_status()

@@ -1,10 +1,31 @@
-"""Quality configuration loader for v8.13.0."""
+"""Legacy config_v2.py - maintained for backward compatibility.
 
+This module is deprecated. Use research_system.config.settings instead.
+"""
+
+from warnings import warn
 import json
 import yaml
 import os
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+
+# Import from new unified config
+from research_system.config.settings import (
+    settings as SettingsV2,
+    QualityThresholds as QualityConfigV2Base,
+    quality_for_intent,
+    PRIMARY_ORGS,
+    INTENT_BLOCKLIST,
+    PER_DOMAIN_HEADERS,
+)
+
+# Emit deprecation warning on import
+warn(
+    "config_v2 is deprecated. Use research_system.config.settings instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 @dataclass(frozen=True)
 class QualityConfigV2:

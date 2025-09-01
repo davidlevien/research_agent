@@ -15,7 +15,7 @@ except ImportError:
         pass
 
 from ..config import Settings
-from ..metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
+from ..monitoring_metrics import SEARCH_REQUESTS, SEARCH_ERRORS, SEARCH_LATENCY
 from .search_models import SearchRequest, SearchHit
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,8 @@ _serpapi_state = {
     "circuit_open_until": 0.0
 }
 
-CIRCUIT_COOLDOWN_SEC = 60
+# v8.23.0: 10-minute cooldown for rate limits
+CIRCUIT_COOLDOWN_SEC = 600  # 10 minutes
 
 @retry(
     stop=stop_after_attempt(3),
@@ -260,11 +261,11 @@ def run(req: SearchRequest) -> list[SearchHit]:
                 logger.warning("SERPAPI_RATE_LIMIT", extra={"q": req.query, "status": 429})
                 if use_circuit_breaker:
                     _serpapi_state["consecutive_429s"] += 1
-                    # Trip the circuit immediately on first 429 (matches tests)
+                    # v8.23.0: Trip the circuit immediately on first 429
                     if trip_on_429 and _serpapi_state["consecutive_429s"] >= 1:
                         _serpapi_state["circuit_open_until"] = time.time() + CIRCUIT_COOLDOWN_SEC
                         _serpapi_state["is_open"] = True  # Keep for backward compatibility
-                        logger.warning("SERPAPI_CIRCUIT_TRIPPED", extra={"q": req.query, "consecutive_429s": _serpapi_state["consecutive_429s"]})
+                        logger.warning("SerpAPI 429 (rate limited) – opening circuit for %ss", CIRCUIT_COOLDOWN_SEC, extra={"q": req.query, "consecutive_429s": _serpapi_state["consecutive_429s"]})
             logger.error(f"SerpAPI search failed for query '{req.query}': {e}")
             SEARCH_ERRORS.labels(provider="serpapi").inc()
             return []

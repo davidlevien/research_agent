@@ -9,24 +9,16 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.21.0: Enhanced OECD endpoints with more variants to handle case/path issues
-# Try multiple combinations to maximize success rate
-_DATAFLOW_CANDIDATES = [
-    # Correct/working lowercase paths first
+# v8.24.0: Multiple OECD endpoints with fallback to alt host
+# Export primary URL for tests
+DATAFLOW_URL = "https://stats.oecd.org/sdmx-json/dataflow/ALL"
+
+# All endpoints to try in order (lowercase first, then alt host)
+DATAFLOW_URLS = [
+    "https://stats.oecd.org/sdmx-json/dataflow/ALL",
     "https://stats.oecd.org/sdmx-json/dataflow",
-    "https://stats.oecd.org/sdmx-json/dataflow/",
-    "https://stats.oecd.org/sdmx-json/dataflow/all",
-    "https://stats.oecd.org/sdmx-json/dataflow/all/",
-    # Mixed case variations (some proxies/CDNs are case-sensitive)
-    "https://stats.oecd.org/Sdmx-Json/dataflow",
-    "https://stats.oecd.org/Sdmx-Json/dataflow/",
-    "https://stats.oecd.org/Sdmx-Json/dataflow/ALL",
-    "https://stats.oecd.org/Sdmx-Json/dataflow/all",
-    # Older/legacy uppercase fallbacks (some environments still serve these)
-    "https://stats.oecd.org/SDMX-JSON/dataflow",
-    "https://stats.oecd.org/SDMX-JSON/dataflow/",
-    "https://stats.oecd.org/SDMX-JSON/dataflow/ALL",
-    "https://stats.oecd.org/SDMX-JSON/dataflow/ALL/",
+    "https://stats-nsd.oecd.org/sdmx-json/dataflow/ALL",  # Alt host
+    "https://stats-nsd.oecd.org/sdmx-json/dataflow",       # Alt host fallback
 ]
 
 # Circuit breaker state
@@ -73,16 +65,23 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
         logger.debug("OECD returning cached catalog")
         return _circuit_state["catalog_cache"]
     
-    # v8.18.0: Try multiple endpoints in sequence until one works
+    # v8.24.0: Try multiple endpoints with fallback to alt hosts
     last_err = None
-    for url in _DATAFLOW_CANDIDATES:
+    
+    for url in DATAFLOW_URLS:
         try:
-            logger.info(f"Trying OECD dataflows endpoint: {url}")
+            logger.info(f"Fetching OECD dataflows from: {url}")
+            
+            # Use explicit JSON accept header - critical for OECD
             data = http_json(
                 "oecd", 
                 "GET", 
                 url,
-                headers={"Accept": "application/json"}
+                headers={
+                    "Accept": "application/json,text/plain,*/*",
+                    "User-Agent": "research_agent/1.0"
+                },
+                timeout=30
             )
             
             # Shape varies; normalize
@@ -109,11 +108,13 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
             
         except Exception as e:
             last_err = e
-            logger.info(f"OECD dataflows endpoint failed ({url}): {e}")
+            logger.debug(f"OECD endpoint {url} failed: {e}")
             continue
     
     # All endpoints failed
-    logger.warning(f"OECD dataflows fetch failed after all fallbacks: {last_err}")
+    logger.warning(f"All OECD endpoints failed: {last_err}")
+    
+    # All attempts failed
     _circuit_state["consecutive_failures"] += 1
     _circuit_state["last_failure"] = current_time
     

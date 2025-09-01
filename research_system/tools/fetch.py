@@ -1,6 +1,7 @@
 from __future__ import annotations
 import httpx, datetime as dt, os, logging, re
 from typing import Optional, Dict, Any, Tuple
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -32,32 +33,68 @@ from .doi_fallback import doi_rescue, extract_doi_from_url
 from .warc_dump import warc_capture
 from .langpipe import to_english, detect_language
 from .pdf_tables import find_numeric_cells
-from ..config import get_settings
+# Import removed - using environment variables directly
+from research_system.config.settings import PER_DOMAIN_HEADERS
 
 # Lazy load UA to avoid import-time Settings instantiation
-def _get_ua(url: str = ""):
-    """Get appropriate User-Agent for the URL."""
-    # SEC requires specific format with email
-    if "sec.gov" in url or "edgar" in url.lower():
-        return {"User-Agent": "ResearchSystem/1.0 (research@example.com)"}
-    # Default for other sites
-    return {"User-Agent": "ResearchSystem/1.0 (+https://github.com/research-system)"}
+def _get_headers(url: str = "") -> Dict[str, str]:
+    """Get appropriate headers for the URL using unified config.
+    
+    v8.24.0: Enhanced with per-domain headers from unified config.
+    """
+    try:
+        hostname = urlparse(url).hostname or ""
+        hostname = hostname.lower()
+    except Exception:
+        hostname = ""
+    
+    # Check for domain-specific headers
+    headers = {}
+    
+    # Try exact hostname match first
+    if hostname in PER_DOMAIN_HEADERS:
+        headers.update(PER_DOMAIN_HEADERS[hostname])
+    else:
+        # Try partial matches for subdomains
+        for domain, domain_headers in PER_DOMAIN_HEADERS.items():
+            if hostname.endswith(domain):
+                headers.update(domain_headers)
+                break
+    
+    # Add default User-Agent if not already set
+    if "User-Agent" not in headers:
+        # SEC requires specific format with email
+        if "sec.gov" in url or "edgar" in url.lower():
+            headers["User-Agent"] = "ResearchSystem/1.0 (research@example.com)"
+        else:
+            headers["User-Agent"] = "ResearchSystem/1.0 (+https://github.com/research-system)"
+    
+    return headers
 
 def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
     """Fetch HTML with caching, politeness, and paywall detection."""
     try:
-        settings = get_settings()
+        import os
         # Check robots.txt if enabled
-        if settings.ENABLE_POLITENESS:
+        if os.environ.get("ENABLE_POLITENESS", "false").lower() == "true":
             if not allowed(url):
                 return None, None
             sync_host_throttle(url)
         
         # Use cache if enabled
-        if settings.ENABLE_HTTP_CACHE:
-            status, headers, content = cached_get(url, headers=_get_ua(url), timeout=25)
+        if os.environ.get("ENABLE_HTTP_CACHE", "false").lower() == "true":
+            status, headers, content = cached_get(url, headers=_get_headers(url), timeout=25)
             
             # Handle blocked/paywalled domains
+            if status in (403, 404) and "oecd.org" in url:
+                # v8.24.0: Try OECD mirror on 403/404
+                alt_url = url.replace("stats.oecd.org", "stats-nxd.oecd.org")
+                if alt_url != url:
+                    logger.info(f"Trying OECD mirror: {alt_url}")
+                    alt_status, alt_headers, alt_content = cached_get(alt_url, headers=_get_headers(alt_url), timeout=30)
+                    if 200 <= alt_status < 400:
+                        return alt_content, (alt_headers.get("content-type") or "").lower()
+            
             if status == 403:
                 blocked_domains = ("nejm.org", "politico.com", "publications.aap.org", "wsj.com", "ft.com")
                 if any(d in url for d in blocked_domains):
@@ -80,7 +117,7 @@ def fetch_html(url: str) -> Tuple[Optional[str], Optional[str]]:
                 return content, (headers.get("content-type") or "").lower()
         else:
             # Direct fetch without cache
-            r = httpx.get(url, timeout=25, headers=_get_ua(url), follow_redirects=True)
+            r = httpx.get(url, timeout=25, headers=_get_headers(url), follow_redirects=True)
             if 200 <= r.status_code < 400:
                 url_str = str(r.url or "")
                 if "statista.com/sso" in url_str or "statista.com/login" in url_str:
@@ -109,13 +146,13 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
         alt = resolve_paywall(url, None, None)
         if alt:
             return alt
-        return {}
+        return {"title": None, "text": "", "date": None, "publisher": None, "quotes": []}
     
     # Check circuit breaker
     host = urlparse(url).netloc.lower()
     if not CIRCUIT.allow(host):
         logger.warning(f"Circuit open for {host}, skipping")
-        return {}
+        return {"title": None, "text": "", "date": None, "publisher": None, "quotes": []}
     
     if html is None:
         # Check cache first
@@ -186,7 +223,7 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
                 status = r.status_code
             except PermissionError:
                 CIRCUIT.fail(host)
-                return {}  # Cloudflare block
+                return {"title": None, "text": "", "date": None, "publisher": None, "quotes": []}  # Cloudflare block
             except Exception as e:
                 CIRCUIT.fail(host)
                 logger.debug(f"Fetch failed for {url}: {e}")
@@ -202,7 +239,8 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
     
     # If still no content and looks like it should be a PDF
     if not html and not (html_ct and "pdf" in html_ct) and not (url or "").lower().endswith(".pdf"):
-        return {}
+        # Return minimal structure for non-HTML content
+        return {"title": None, "text": "", "date": None, "publisher": None, "quotes": []}
     # PDF path with enhanced extraction
     if (html_ct and "pdf" in html_ct) or (url or "").lower().endswith(".pdf"):
         try:
@@ -246,8 +284,9 @@ def extract_article(url: str, html: Optional[str] = None) -> Dict[str, Any]:
                 "quotes": quotes
             }
         except Exception:
-            return {}
-        return {}
+            # Return minimal structure on PDF extraction failure
+            return {"title": None, "text": "", "date": None, "publisher": None, "quotes": []}
+        return {"title": None, "text": "", "date": None, "publisher": None, "quotes": []}
     
     base_url = get_base_url(html, url)
     meta = {}

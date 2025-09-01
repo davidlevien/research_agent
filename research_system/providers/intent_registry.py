@@ -36,6 +36,36 @@ CAPABILITY_MATRIX = {
     }
 }
 
+# v8.22.0: Intent-specific quality thresholds (from patch feedback)
+INTENT_THRESHOLDS = {
+    "travel": {"triangulation": 0.25, "primary_share": 0.30, "domain_cap": 0.35},
+    "tourism": {"triangulation": 0.25, "primary_share": 0.30, "domain_cap": 0.35},
+    "encyclopedia": {"triangulation": 0.30, "primary_share": 0.35, "domain_cap": 0.35},
+    "stats": {"triangulation": 0.40, "primary_share": 0.50, "domain_cap": 0.25},
+    "news": {"triangulation": 0.35, "primary_share": 0.40, "domain_cap": 0.30},
+    "academic": {"triangulation": 0.45, "primary_share": 0.55, "domain_cap": 0.25},
+    "regulatory": {"triangulation": 0.40, "primary_share": 0.60, "domain_cap": 0.20},
+    # Default fallback for unspecified intents
+    "default": {"triangulation": 0.45, "primary_share": 0.50, "domain_cap": 0.25}
+}
+
+def get_intent_thresholds(intent: str) -> Dict[str, float]:
+    """
+    Get quality thresholds for a specific intent.
+    
+    Args:
+        intent: Intent name (string)
+        
+    Returns:
+        Dict with triangulation, primary_share, and domain_cap thresholds
+    """
+    # Convert Intent enum to string if needed
+    if hasattr(intent, 'value'):
+        intent = intent.value
+    
+    intent_lower = str(intent).lower()
+    return INTENT_THRESHOLDS.get(intent_lower, INTENT_THRESHOLDS["default"])
+
 def plan_capabilities(query: str) -> List[str]:
     """
     Plan capability topics based on query.
