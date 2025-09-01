@@ -80,8 +80,7 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
                 headers={
                     "Accept": "application/json,text/plain,*/*",
                     "User-Agent": "research_agent/1.0"
-                },
-                timeout=30
+                }
             )
             
             # Shape varies; normalize

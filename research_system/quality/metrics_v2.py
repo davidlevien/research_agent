@@ -102,7 +102,7 @@ def compute_metrics(cards: List[Any], clusters: Optional[List] = None,
     
     # Recent primary count (from gates.py if available)
     recent_primary_count = 0
-    if hasattr(cards[0], '__class__'):  # Check if we can import
+    if cards and hasattr(cards[0], '__class__'):  # Check if we can import
         try:
             from research_system.quality.gates import calculate_recent_primary_count
             recent_primary_count = calculate_recent_primary_count(cards)
