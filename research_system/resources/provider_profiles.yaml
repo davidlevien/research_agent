@@ -1,7 +1,12 @@
 # Provider profiles for topic-based routing
 # Extend/adjust anytime without code changes
+# v8.26.4: Added web search providers with API key support
 
 general:
+  - tavily      # Web search - prioritized when API key available
+  - brave       # Web search - good for recent content
+  - serper      # Google search results
+  - serpapi     # Alternative Google search
   - wikipedia
   - wikidata
   - openalex
@@ -10,6 +15,9 @@ general:
   - wayback
 
 news:
+  - tavily      # Web search for current news
+  - brave       # Web search with news focus
+  - serper      # Google news search
   - gdelt
   - wikipedia
   - wayback
@@ -23,6 +31,8 @@ biomed:
   - wayback
 
 macro:
+  - tavily      # Web search for latest economic data
+  - serper      # Google search for trends
   - worldbank
   - oecd
   - eurostat
@@ -72,3 +82,14 @@ policy:
   - openalex
   - crossref
   - wayback
+
+# v8.26.4: Added trends profile for current/latest queries
+trends:
+  - tavily      # Primary web search for latest trends
+  - brave       # Alternative web search
+  - serper      # Google search for trends
+  - serpapi     # Backup Google search
+  - gdelt       # Global events database
+  - worldbank   # Economic indicators
+  - oecd        # Economic data
+  - wikipedia   # Current events

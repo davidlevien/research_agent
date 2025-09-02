@@ -167,13 +167,17 @@ def quality_for_intent(intent: Optional[str], strict: bool = True) -> QualityThr
     """Get quality thresholds based on intent and mode.
     
     Args:
-        intent: The classified intent (e.g., 'travel', 'stats', 'finance')
+        intent: The classified intent (e.g., 'travel', 'stats', 'finance', or Intent enum)
         strict: Whether to use strict validation mode
         
     Returns:
         QualityThresholds configured for the intent and mode
     """
-    key = (intent or "default").lower()
+    # Handle Intent enum objects
+    if hasattr(intent, 'value'):
+        key = (intent.value or "default").lower()
+    else:
+        key = (intent or "default").lower()
     
     if strict:
         # Check for strict mode adjustments first

@@ -21,7 +21,7 @@ from research_system.utils.deterministic import set_global_seeds, ensure_determi
 from research_system.tools.evidence_io import write_jsonl
 from research_system.tools.registry import get_registry as registry
 from research_system.tools.search_registry import register_search_tools
-from research_system.collection_enhanced import parallel_provider_search, collect_from_free_apis
+from research_system.collection import parallel_provider_search, collect_from_free_apis
 from research_system.routing.provider_router import choose_providers
 from research_system.config.settings import Settings, settings
 from research_system.intent.classifier import classify, Intent, get_confidence_threshold

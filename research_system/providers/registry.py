@@ -133,52 +133,132 @@ def get_provider(name: str) -> Dict[str, Callable]:
     return PROVIDERS.get(name, {})
 
 
-def register_paid_providers():
-    """v8.26.1: Register paid search providers dynamically if API keys are available."""
+def register_web_search_providers():
+    """v8.26.4: Register web search providers if API keys are available.
+    
+    These providers all have free tiers with API keys.
+    They should be used based on query needs, not artificial free/paid distinction.
+    """
     import os
     
-    # Check for paid provider API keys and register if available
+    # Tavily - Best for general web search
     if os.getenv("TAVILY_API_KEY"):
         try:
             from research_system.tools import search_tavily
+            from research_system.tools.search_models import SearchRequest
+            
+            def tavily_search(query: str, limit: int = 10):
+                req = SearchRequest(query=query, count=limit)
+                return search_tavily.run(req.model_dump())
+            
+            def tavily_to_cards(results):
+                cards = []
+                for r in results:
+                    cards.append({
+                        "title": r.get("title", ""),
+                        "url": r.get("url", ""),
+                        "snippet": r.get("snippet", ""),
+                        "source_domain": r.get("domain", "")
+                    })
+                return cards
+            
             PROVIDERS["tavily"] = {
-                "search": lambda query, limit=10: search_tavily.run({"query": query, "count": limit}),
-                "to_cards": lambda results: [{"title": r.get("title"), "url": r.get("url"), 
-                                             "snippet": r.get("snippet"), "source_domain": r.get("domain")} 
-                                            for r in results]
+                "search": tavily_search,
+                "to_cards": tavily_to_cards
             }
-            logger.debug("Registered Tavily provider")
-        except ImportError:
-            pass
+            logger.info("Registered Tavily web search provider")
+        except Exception as e:
+            logger.debug(f"Could not register Tavily: {e}")
     
+    # Brave - Good for privacy-focused and recent content
     if os.getenv("BRAVE_API_KEY"):
         try:
             from research_system.tools import search_brave
+            from research_system.tools.search_models import SearchRequest
+            
+            def brave_search(query: str, limit: int = 10):
+                req = SearchRequest(query=query, count=limit)
+                return search_brave.run(req.model_dump())
+            
+            def brave_to_cards(results):
+                cards = []
+                for r in results:
+                    cards.append({
+                        "title": r.get("title", ""),
+                        "url": r.get("url", ""),
+                        "snippet": r.get("snippet", ""),
+                        "source_domain": r.get("domain", "")
+                    })
+                return cards
+            
             PROVIDERS["brave"] = {
-                "search": lambda query, limit=10: search_brave.run({"query": query, "count": limit}),
-                "to_cards": lambda results: [{"title": r.get("title"), "url": r.get("url"),
-                                             "snippet": r.get("snippet"), "source_domain": r.get("domain")}
-                                            for r in results]
+                "search": brave_search,
+                "to_cards": brave_to_cards
             }
-            logger.debug("Registered Brave provider")
-        except ImportError:
-            pass
+            logger.info("Registered Brave web search provider")
+        except Exception as e:
+            logger.debug(f"Could not register Brave: {e}")
     
+    # Serper - Google search results
     if os.getenv("SERPER_API_KEY"):
         try:
             from research_system.tools import search_serper
+            from research_system.tools.search_models import SearchRequest
+            
+            def serper_search(query: str, limit: int = 10):
+                req = SearchRequest(query=query, count=limit)
+                return search_serper.run(req.model_dump())
+            
+            def serper_to_cards(results):
+                cards = []
+                for r in results:
+                    cards.append({
+                        "title": r.get("title", ""),
+                        "url": r.get("url", ""),
+                        "snippet": r.get("snippet", ""),
+                        "source_domain": r.get("domain", "")
+                    })
+                return cards
+            
             PROVIDERS["serper"] = {
-                "search": lambda query, limit=10: search_serper.run({"query": query, "count": limit}),
-                "to_cards": lambda results: [{"title": r.get("title"), "url": r.get("url"),
-                                             "snippet": r.get("snippet"), "source_domain": r.get("domain")}
-                                            for r in results]
+                "search": serper_search,
+                "to_cards": serper_to_cards
             }
-            logger.debug("Registered Serper provider")
-        except ImportError:
-            pass
+            logger.info("Registered Serper web search provider")
+        except Exception as e:
+            logger.debug(f"Could not register Serper: {e}")
+    
+    # SerpAPI - Alternative Google search
+    if os.getenv("SERPAPI_API_KEY"):
+        try:
+            from research_system.tools import search_serpapi
+            from research_system.tools.search_models import SearchRequest
+            
+            def serpapi_search(query: str, limit: int = 10):
+                req = SearchRequest(query=query, count=limit)
+                return search_serpapi.run(req.model_dump())
+            
+            def serpapi_to_cards(results):
+                cards = []
+                for r in results:
+                    cards.append({
+                        "title": r.get("title", ""),
+                        "url": r.get("url", ""),
+                        "snippet": r.get("snippet", ""),
+                        "source_domain": r.get("domain", "")
+                    })
+                return cards
+            
+            PROVIDERS["serpapi"] = {
+                "search": serpapi_search,
+                "to_cards": serpapi_to_cards
+            }
+            logger.info("Registered SerpAPI web search provider")
+        except Exception as e:
+            logger.debug(f"Could not register SerpAPI: {e}")
 
-# v8.26.1: Auto-register paid providers on module import
+# v8.26.4: Auto-register web search providers on module import
 try:
-    register_paid_providers()
+    register_web_search_providers()
 except Exception as e:
-    logger.debug(f"Could not register paid providers: {e}")
+    logger.debug(f"Could not register web search providers: {e}")

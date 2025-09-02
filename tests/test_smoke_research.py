@@ -24,29 +24,42 @@ def test_smoke_trends(monkeypatch):
     monkeypatch.setenv("ENABLE_HTTP_CACHE", "false")
     
     # Import after environment setup
-    from research_system.orchestrator import Orchestrator
+    from research_system.orchestrator import Orchestrator, OrchestratorSettings
+    from pathlib import Path
+    import tempfile
     
-    # Create orchestrator
-    o = Orchestrator()
-    
-    # Run a basic search
-    metrics = o.run("latest travel & tourism trends")
-    
-    # Basic sanity checks on breadth
-    assert hasattr(metrics, 'unique_domains'), "Metrics should have unique_domains"
-    assert metrics.unique_domains >= 2, "Should have at least 2 domains in smoke test"
-    
-    # Primary share should be reasonable
-    assert hasattr(metrics, 'primary_share'), "Metrics should have primary_share"
-    assert metrics.primary_share >= 0.0, "Primary share should be non-negative"
-    
-    # Triangulation should not be negative
-    assert hasattr(metrics, 'triangulation_rate'), "Metrics should have triangulation_rate"
-    assert metrics.triangulation_rate >= 0.0, "Triangulation rate should be non-negative"
-    
-    # Domain concentration should be bounded
-    assert hasattr(metrics, 'domain_concentration'), "Metrics should have domain_concentration"
-    assert 0.0 <= metrics.domain_concentration <= 1.0, "Domain concentration should be between 0 and 1"
+    # Create temporary directory for output
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create settings with the test query
+        s = OrchestratorSettings(
+            topic="latest travel & tourism trends",
+            depth="quick",
+            output_dir=Path(tmpdir),
+            strict=False,
+            verbose=False
+        )
+        
+        # Create orchestrator with settings
+        o = Orchestrator(s)
+        
+        # Run the search
+        metrics = o.run()
+        
+        # Basic sanity checks on breadth
+        assert hasattr(metrics, 'unique_domains'), "Metrics should have unique_domains"
+        assert metrics.unique_domains >= 2, "Should have at least 2 domains in smoke test"
+        
+        # Primary share should be reasonable
+        assert hasattr(metrics, 'primary_share'), "Metrics should have primary_share"
+        assert metrics.primary_share >= 0.0, "Primary share should be non-negative"
+        
+        # Triangulation should not be negative
+        assert hasattr(metrics, 'triangulation_rate'), "Metrics should have triangulation_rate"
+        assert metrics.triangulation_rate >= 0.0, "Triangulation rate should be non-negative"
+        
+        # Domain concentration should be bounded
+        assert hasattr(metrics, 'domain_concentration'), "Metrics should have domain_concentration"
+        assert 0.0 <= metrics.domain_concentration <= 1.0, "Domain concentration should be between 0 and 1"
 
 
 def test_seed_accepts_strings():
