@@ -8,6 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Public report domains that should always be accessible
+# v8.26.0: Added API subdomains for data providers
 PUBLIC_ALLOWLIST: Set[str] = {
     "unwto.org",
     "www.unwto.org",
@@ -19,10 +20,15 @@ PUBLIC_ALLOWLIST: Set[str] = {
     "www.weforum.org",
     "oecd.org",
     "www.oecd.org",
+    "stats.oecd.org",  # Statistics API
+    "sdmx.oecd.org",   # New SDMX API
     "worldbank.org",
     "www.worldbank.org",
+    "data.worldbank.org",  # Data API
+    "api.worldbank.org",   # API endpoint
     "imf.org",
     "www.imf.org",
+    "dataservices.imf.org",  # IMF data services
     "who.int",
     "www.who.int",
     "unesco.org",

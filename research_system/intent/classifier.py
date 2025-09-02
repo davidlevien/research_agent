@@ -163,18 +163,16 @@ def classify(query: str, use_hybrid: bool = None) -> Intent:
     if use_hybrid is None:
         use_hybrid = os.getenv("INTENT_USE_HYBRID", "true").lower() == "true"
     
+    # v8.26.0: Pre-check for travel/tourism + trends to avoid misclassification
+    q_lower = query.lower()
+    if any(travel_word in q_lower for travel_word in ["travel", "tourism", "tourist", "vacation"]):
+        if any(trend_word in q_lower for trend_word in ["trend", "trends", "outlook", "forecast", "latest"]):
+            # This is a travel trends query, not general macro trends
+            logger.info(f"Query '{query[:50]}...' classified as TRAVEL (travel-specific trends)")
+            return Intent.TRAVEL
+    
     # Stage A: Try rule-based classification first
     intent = _classify_rules(query)
-    
-    # Special handling for travel queries to detect macro/trend queries
-    if intent == Intent.TRAVEL:
-        q_lower = query.lower()
-        # Check if this is a macro/trend travel query
-        if any(keyword in q_lower for keyword in ["trend", "trends", "forecast", "outlook", "global", "latest", "recovery", "statistics"]):
-            # Log as travel_macro for clarity
-            logger.info(f"Query '{query[:50]}...' classified as travel_macro (travel trends/outlook)")
-            # Still return TRAVEL enum since travel_macro isn't an enum value
-            return Intent.TRAVEL
     
     if intent is not None:
         logger.info(f"Query '{query[:50]}...' classified as {intent.value} (rules)")

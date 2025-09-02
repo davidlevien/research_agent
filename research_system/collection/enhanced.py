@@ -13,6 +13,7 @@ from research_system.providers.registry import PROVIDERS
 from research_system.tools.domain_norm import canonical_domain
 from research_system.models import EvidenceCard
 from research_system.routing.provider_router import choose_providers
+from research_system.routing.topic_router import is_off_topic
 import logging
 import uuid
 from datetime import datetime
@@ -104,8 +105,7 @@ async def _execute_provider_async(
                     seed_cards = to_cards_fn(results)
                     for s in seed_cards:
                         # Apply off-topic filtering if topic_key is provided
-                        # Skip off-topic check for now - TODO: implement if needed
-                        if False:  # topic_key and is_off_topic(s, topic_key):
+                        if topic_key and is_off_topic(s, topic_key):
                             if settings and hasattr(settings, 'logger'):
                                 settings.logger.debug(f"Filtered off-topic content from {provider_name}: {s.get('title', 'No title')[:50]}...")
                             continue
@@ -126,8 +126,7 @@ async def _execute_provider_async(
                     seed_cards = to_cards_fn(events)
                     for s in seed_cards:
                         # Apply off-topic filtering if topic_key is provided
-                        # Skip off-topic check for now - TODO: implement if needed
-                        if False:  # topic_key and is_off_topic(s, topic_key):
+                        if topic_key and is_off_topic(s, topic_key):
                             if settings and hasattr(settings, 'logger'):
                                 settings.logger.debug(f"Filtered off-topic GDELT content: {s.get('title', 'No title')[:50]}...")
                             continue

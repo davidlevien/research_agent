@@ -2664,6 +2664,8 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                     if additional_cards:
                         logger.info(f"Added {len(additional_cards)} cards from free APIs")
                         cards.extend(additional_cards)
+                        # v8.26.0: Fix missing import for canonical_id
+                        from research_system.evidence.canonicalize import canonical_id
                         cards = list({canonical_id(c): c for c in cards}.values())  # Dedup
                 except Exception as e:
                     logger.warning(f"Failed to get additional cards: {e}")

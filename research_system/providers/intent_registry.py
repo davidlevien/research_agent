@@ -131,10 +131,11 @@ INTENT_REGISTRY: Dict[Intent, Dict[str, List[str]]] = {
         "paid_fallback": ["tavily", "brave"]  # Added brave as secondary fallback
     },
     Intent.TRAVEL: {
+        # v8.26.0: Enhanced for travel trends queries - prioritize web search
         "free_primary": ["wikivoyage", "wikipedia", "wikidata"],
-        "free_fallback": ["osmtags", "nominatim", "overpass"],
-        "paid_primary": ["tavily", "brave"],
-        "paid_fallback": ["serper"]
+        "free_fallback": ["osmtags", "nominatim", "overpass", "worldbank", "oecd"],  # Added stats for trends
+        "paid_primary": ["tavily", "brave", "serper"],  # Added serper to primary for better coverage
+        "paid_fallback": ["serpapi"]
     },
     Intent.REGULATORY: {
         "free_primary": ["edgar"],  # To be implemented
@@ -153,6 +154,14 @@ INTENT_REGISTRY: Dict[Intent, Dict[str, List[str]]] = {
         "free_fallback": ["openalex", "crossref"],
         "paid_primary": [],
         "paid_fallback": ["tavily"]
+    },
+    Intent.MACRO_TRENDS: {
+        # v8.26.0: Added MACRO_TRENDS intent mapping
+        # For cross-domain trends/outlook queries - prioritize web search for breadth
+        "free_primary": ["wikipedia", "wikidata"],  # General knowledge base
+        "free_fallback": ["worldbank", "oecd", "fred"],  # Stats providers as fallback
+        "paid_primary": ["tavily", "brave", "serper"],  # Web search is critical for trends
+        "paid_fallback": ["serpapi"]
     },
     Intent.GENERIC: {
         "free_primary": ["wikipedia", "wikidata"],

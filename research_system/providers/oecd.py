@@ -9,16 +9,16 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.24.0: Multiple OECD endpoints with fallback to alt host
+# v8.26.0: Updated OECD endpoints for 2024+ API migration
 # Export primary URL for tests
-DATAFLOW_URL = "https://stats.oecd.org/sdmx-json/dataflow/ALL"
+DATAFLOW_URL = "https://sdmx.oecd.org/public/rest/dataflow/OECD"
 
-# All endpoints to try in order (with mirror host fallback)
+# All endpoints to try in order (new API first, then legacy fallbacks)
 DATAFLOW_URLS = [
-    "https://stats.oecd.org/sdmx-json/dataflow/ALL",
-    "https://stats.oecd.org/sdmx-json/dataflow",
-    "https://stats-nxd.oecd.org/sdmx-json/dataflow/ALL",  # Mirror host
-    "https://stats-nxd.oecd.org/sdmx-json/dataflow",      # Mirror host
+    "https://sdmx.oecd.org/public/rest/dataflow/OECD",  # New 2024+ API
+    "https://sdmx.oecd.org/public/rest/dataflow",       # New API without agency
+    "https://stats.oecd.org/sdmx-json/dataflow/ALL",    # Legacy endpoint (may still work)
+    "https://stats.oecd.org/sdmx-json/dataflow",        # Legacy without ALL
 ]
 
 # Circuit breaker state
@@ -72,15 +72,25 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
         try:
             logger.info(f"Fetching OECD dataflows from: {url}")
             
-            # Use explicit JSON accept header - critical for OECD
+            # v8.26.0: Updated headers for new and legacy OECD APIs
+            # New API uses application/vnd.sdmx.structure+json for JSON responses
+            headers = {
+                "Accept": "application/vnd.sdmx.structure+json,application/json,text/plain,*/*",
+                "User-Agent": "research_agent/1.0"
+            }
+            
+            # For new sdmx.oecd.org endpoints, add format parameter
+            if "sdmx.oecd.org" in url:
+                if "?" in url:
+                    url += "&format=sdmx-json"
+                else:
+                    url += "?format=sdmx-json"
+            
             data = http_json(
                 "oecd", 
                 "GET", 
                 url,
-                headers={
-                    "Accept": "application/json,text/plain,*/*",
-                    "User-Agent": "research_agent/1.0"
-                },
+                headers=headers,
                 timeout=30  # Restored with proper support
             )
             
