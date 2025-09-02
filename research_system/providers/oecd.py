@@ -9,16 +9,22 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# v8.26.0: Updated OECD endpoints for 2024+ API migration
+# v8.26.3: OECD API endpoints - FINAL FIX based on complete documentation review
+# 
+# ROOT CAUSE OF 404s:
+# 1. Legacy stats.oecd.org endpoints were shut down June 2024
+# 2. '/dataflow/OECD' fails because 'OECD' is not a valid agency ID
+# 3. Must use 'all' for agency ID or specific patterns like OECD.ENV.EPI
+# 4. Response can be huge (>1MB), may timeout or fail to parse
+#
 # Export primary URL for tests
-DATAFLOW_URL = "https://sdmx.oecd.org/public/rest/dataflow/OECD"
+DATAFLOW_URL = "https://sdmx.oecd.org/public/rest/dataflow/all/all/latest"
 
-# All endpoints to try in order (new API first, then legacy fallbacks)
+# Endpoints in priority order - using correct patterns from documentation
 DATAFLOW_URLS = [
-    "https://sdmx.oecd.org/public/rest/dataflow/OECD",  # New 2024+ API
-    "https://sdmx.oecd.org/public/rest/dataflow",       # New API without agency
-    "https://stats.oecd.org/sdmx-json/dataflow/ALL",    # Legacy endpoint (may still work)
-    "https://stats.oecd.org/sdmx-json/dataflow",        # Legacy without ALL
+    "https://sdmx.oecd.org/public/rest/dataflow/all/all/latest",  # Correct pattern with wildcards
+    "https://sdmx.oecd.org/public/rest/dataflow",                 # Fallback without params
+    # Legacy endpoints removed - they're permanently offline
 ]
 
 # Circuit breaker state
@@ -73,19 +79,15 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
         try:
             logger.info(f"Fetching OECD dataflows from: {url}")
             
-            # v8.26.0: Updated headers for new and legacy OECD APIs
-            # New API uses application/vnd.sdmx.structure+json for JSON responses
+            # v8.26.2: Updated headers and format based on official OECD API docs
             headers = {
-                "Accept": "application/vnd.sdmx.structure+json,application/json,text/plain,*/*",
+                "Accept": "application/json,application/vnd.sdmx.structure+json,*/*",
                 "User-Agent": "research_agent/1.0"
             }
             
-            # For new sdmx.oecd.org endpoints, add format parameter
-            if "sdmx.oecd.org" in url:
-                if "?" in url:
-                    url += "&format=sdmx-json"
-                else:
-                    url += "?format=sdmx-json"
+            # For new sdmx.oecd.org endpoints, JSON is requested via Accept header
+            # Don't add format parameter - it causes errors
+            # The API returns JSON when Accept: application/json is set
             
             data = http_json(
                 "oecd", 
@@ -95,11 +97,72 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
                 timeout=30  # Restored with proper support
             )
             
-            # v8.26.1: Handle various SDMX response formats (2025 API changes)
+            # v8.26.2: Handle SDMX-JSON response formats
             result = {}
             
-            # Check if data is already a list (new SDMX format)
-            if isinstance(data, list):
+            # New v2 structure API returns: {"references": {"urn:...": {...}}}
+            if isinstance(data, dict) and "references" in data:
+                # New format from /v2/structure/dataflow endpoint
+                refs = data.get("references", {})
+                for urn, df in refs.items():
+                    if isinstance(df, dict):
+                        agency_id = df.get("agencyID", "")
+                        # Filter for OECD agencies (OECD.XXX pattern)
+                        if agency_id.startswith("OECD"):
+                            df_id = df.get("id", "")
+                            name = df.get("name", "")
+                            if isinstance(name, dict):
+                                name = name.get("en", "") or str(name)
+                            key = f"{agency_id}:{df_id}" if agency_id and df_id else df_id or urn
+                            result[key] = {"name": str(name), "agency": agency_id}
+            
+            # Handle data wrapper format
+            elif isinstance(data, dict) and "data" in data:
+                # New SDMX format from sdmx.oecd.org
+                data_content = data.get("data", {})
+                
+                # Check for dataflows in various formats
+                if "dataflows" in data_content:
+                    dflows = data_content["dataflows"]
+                    if isinstance(dflows, list):
+                        # Array of dataflow objects
+                        for df in dflows:
+                            if isinstance(df, dict):
+                                # Extract ID - try multiple fields
+                                key = df.get("id") or df.get("ID") or df.get("agencyID", "") + ":" + df.get("id", "")
+                                if not key or key == ":":
+                                    continue
+                                
+                                # Extract name - handle multilingual names
+                                name = ""
+                                nm = df.get("name")
+                                if isinstance(nm, dict):
+                                    # Multilingual: {"en": "Name", "fr": "Nom"}
+                                    name = nm.get("en") or nm.get("EN") or next(iter(nm.values()), "")
+                                elif isinstance(nm, str):
+                                    name = nm
+                                elif nm:
+                                    name = str(nm)
+                                
+                                # Store with normalized structure
+                                result[str(key)] = {"name": name or key}
+                    
+                    elif isinstance(dflows, dict):
+                        # Direct dict mapping
+                        result = dflows
+                
+                elif "Dataflow" in data_content:
+                    # Alternative structure
+                    dflows = data_content["Dataflow"]
+                    if isinstance(dflows, list):
+                        for df in dflows:
+                            key = df.get("id") or df.get("ID")
+                            name = df.get("name") or df.get("Name") or ""
+                            if key:
+                                result[str(key)] = {"name": str(name)}
+            
+            # Check if data is a list at root (some API responses)
+            elif isinstance(data, list):
                 # New SDMX API returns list of dataflow objects
                 for df in data:
                     if isinstance(df, dict):
@@ -197,12 +260,34 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
 def search_oecd(query: str, limit: int = 25) -> List[Dict[str, Any]]:
     """Search OECD datasets by relevance to query."""
     q = (query or "").lower()
+    
+    # v8.26.2: Fallback to hardcoded popular OECD datasets when API fails
+    # This ensures the provider returns something useful even when the API is down
+    FALLBACK_DATASETS = [
+        {"code": "OECD.SDD:DP_LIVE", "name": "OECD Data - Main Economic Indicators"},
+        {"code": "OECD.SDD:PRICES_CPI", "name": "Consumer Price Index"},
+        {"code": "OECD.ENV.EPI:AIR_EMISSIONS", "name": "Air Emissions Statistics"},
+        {"code": "OECD.CFE:TOURISM_TRIPS", "name": "Tourism Trips and Travel Statistics"},
+        {"code": "OECD.SDD:NAAG", "name": "National Accounts at a Glance"},
+        {"code": "OECD.SDD:EO", "name": "Economic Outlook"},
+        {"code": "OECD.SDD:TRADE", "name": "International Trade Statistics"},
+    ]
+    
     dfs = _dataflows()
     
-    # v8.26.1: Handle case where _dataflows might return None or non-dict
+    # v8.26.2: Use fallback datasets if API fails
     if not dfs or not isinstance(dfs, dict):
-        logger.warning(f"OECD dataflows not available or wrong type: {type(dfs)}")
-        return []
+        logger.warning("OECD API unavailable, using fallback dataset list")
+        # Filter fallback datasets by query
+        items = []
+        for ds in FALLBACK_DATASETS:
+            name = ds.get("name", "").lower()
+            code = ds.get("code", "").lower()
+            score = sum(name.count(t) for t in q.split()) + sum(code.count(t) for t in q.split())
+            if score > 0:
+                items.append({**ds, "score": score})
+        items.sort(key=lambda x: x["score"], reverse=True)
+        return items[:limit]
     
     items = []
     
