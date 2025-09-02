@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 from typing import Dict, Callable, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .openalex import search_openalex, to_cards as openalex_to_cards
 from .crossref import crossref_query, to_cards as crossref_to_cards
@@ -128,3 +131,54 @@ PROVIDERS: Dict[str, Dict[str, Callable[..., Any]]] = {
 def get_provider(name: str) -> Dict[str, Callable]:
     """Get provider implementation by name."""
     return PROVIDERS.get(name, {})
+
+
+def register_paid_providers():
+    """v8.26.1: Register paid search providers dynamically if API keys are available."""
+    import os
+    
+    # Check for paid provider API keys and register if available
+    if os.getenv("TAVILY_API_KEY"):
+        try:
+            from research_system.tools import search_tavily
+            PROVIDERS["tavily"] = {
+                "search": lambda query, limit=10: search_tavily.run({"query": query, "count": limit}),
+                "to_cards": lambda results: [{"title": r.get("title"), "url": r.get("url"), 
+                                             "snippet": r.get("snippet"), "source_domain": r.get("domain")} 
+                                            for r in results]
+            }
+            logger.debug("Registered Tavily provider")
+        except ImportError:
+            pass
+    
+    if os.getenv("BRAVE_API_KEY"):
+        try:
+            from research_system.tools import search_brave
+            PROVIDERS["brave"] = {
+                "search": lambda query, limit=10: search_brave.run({"query": query, "count": limit}),
+                "to_cards": lambda results: [{"title": r.get("title"), "url": r.get("url"),
+                                             "snippet": r.get("snippet"), "source_domain": r.get("domain")}
+                                            for r in results]
+            }
+            logger.debug("Registered Brave provider")
+        except ImportError:
+            pass
+    
+    if os.getenv("SERPER_API_KEY"):
+        try:
+            from research_system.tools import search_serper
+            PROVIDERS["serper"] = {
+                "search": lambda query, limit=10: search_serper.run({"query": query, "count": limit}),
+                "to_cards": lambda results: [{"title": r.get("title"), "url": r.get("url"),
+                                             "snippet": r.get("snippet"), "source_domain": r.get("domain")}
+                                            for r in results]
+            }
+            logger.debug("Registered Serper provider")
+        except ImportError:
+            pass
+
+# v8.26.1: Auto-register paid providers on module import
+try:
+    register_paid_providers()
+except Exception as e:
+    logger.debug(f"Could not register paid providers: {e}")

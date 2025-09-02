@@ -14,21 +14,52 @@ providers:
     retry_after_seconds: 60
     
   tavily:
-    requests_per_minute: 60
-    requests_per_day: 1000
-    concurrent_requests: 5
-    retry_after_seconds: 30
+    requests_per_minute: 30  # v8.26.1: Reduced from 60 to avoid 429s
+    requests_per_day: 500    # v8.26.1: Reduced from 1000 for better stability
+    concurrent_requests: 3   # v8.26.1: Reduced from 5 to avoid overwhelming
+    retry_after_seconds: 45  # v8.26.1: Increased from 30 for better recovery
     
   serper:
-    requests_per_minute: 100
-    requests_per_day: 2500
-    concurrent_requests: 10
+    requests_per_minute: 50   # v8.26.1: Reduced from 100 to avoid 429s
+    requests_per_day: 1000    # v8.26.1: Reduced from 2500 for better stability
+    concurrent_requests: 5    # v8.26.1: Reduced from 10 to avoid overwhelming
+    retry_after_seconds: 60   # v8.26.1: Increased from 30 for better recovery
+  
+  # v8.26.1: Added configurations for additional providers
+  brave:
+    requests_per_minute: 40
+    requests_per_day: 800
+    concurrent_requests: 4
+    retry_after_seconds: 45
+  
+  serpapi:
+    requests_per_minute: 30
+    requests_per_day: 600
+    concurrent_requests: 3
+    retry_after_seconds: 60
+  
+  # Free API providers with conservative limits
+  oecd:
+    requests_per_minute: 20
+    concurrent_requests: 2
+    retry_after_seconds: 30
+    timeout_seconds: 60      # OECD can be slow
+  
+  imf:
+    requests_per_minute: 15
+    concurrent_requests: 2
+    retry_after_seconds: 45
+    timeout_seconds: 60      # IMF API can timeout
+  
+  worldbank:
+    requests_per_minute: 30
+    concurrent_requests: 3
     retry_after_seconds: 30
 
 global:
-  max_concurrent_operations: 20
+  max_concurrent_operations: 15  # v8.26.1: Reduced from 20 for stability
   max_queue_size: 100
-  timeout_seconds: 30
+  timeout_seconds: 45            # v8.26.1: Increased from 30 for slower APIs
   
 cost_limits:
   per_request:

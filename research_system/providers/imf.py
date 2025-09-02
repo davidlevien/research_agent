@@ -21,9 +21,10 @@ _circuit_state = {
 }
 
 # Configuration
-CIRCUIT_COOLDOWN = int(os.getenv("IMF_CIRCUIT_COOLDOWN", "300"))  # 5 minutes
-CIRCUIT_THRESHOLD = int(os.getenv("IMF_CIRCUIT_THRESHOLD", "2"))  # Trip after 2 failures
-CACHE_TTL = int(os.getenv("IMF_CACHE_TTL", "3600"))  # 1 hour
+# v8.26.1: Increased thresholds to be more tolerant of transient failures
+CIRCUIT_COOLDOWN = int(os.getenv("IMF_CIRCUIT_COOLDOWN", "600"))  # 10 minutes (was 5)
+CIRCUIT_THRESHOLD = int(os.getenv("IMF_CIRCUIT_THRESHOLD", "5"))  # Trip after 5 failures (was 2)
+CACHE_TTL = int(os.getenv("IMF_CACHE_TTL", "7200"))  # 2 hours (was 1)
 
 def _dataflows() -> List[Dict[str, Any]]:
     """Fetch IMF dataflows catalog with circuit breaker and caching."""

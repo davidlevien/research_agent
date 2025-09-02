@@ -1617,11 +1617,12 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
         
         per_provider = all_results
         
-        # ADD FREE API PROVIDERS
+        # v8.26.1: Enhanced collection including paid providers when needed
+        # ADD FREE API PROVIDERS AND WEB SEARCH
         if getattr(settings, 'ENABLE_FREE_APIS', True):
-            logger.info(f"Collecting from free APIs for topic: {self.s.topic}")
+            logger.info(f"Collecting from APIs for topic: {self.s.topic}")
             
-            # Use intent-based provider selection for free APIs too
+            # Use intent-based provider selection
             intent_providers = expand_providers_for_intent(intent)
             
             # Use router to select appropriate providers
@@ -1630,9 +1631,26 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             
             # Merge with intent providers
             merged_providers = intent_providers + [p for p in decision.providers if p not in intent_providers]
-            # Create new decision object with updated providers (can't modify frozen dataclass)
+            
+            # v8.26.1: For trends queries, ensure web search providers are prioritized
+            query_lower = self.s.topic.lower()
+            is_trends_query = any(word in query_lower for word in ['trend', 'trends', 'latest', 'recent', 'outlook', 'forecast', 'current'])
+            
+            if is_trends_query and intent in [Intent.TRAVEL, Intent.BUSINESS, Intent.MACRO_TRENDS]:
+                # Prioritize web search providers for trends queries
+                web_search_providers = ['search_tavily', 'search_brave', 'search_serper', 'tavily', 'brave', 'serper']
+                available_web_search = [p for p in web_search_providers if p in selected_providers]
+                
+                if available_web_search:
+                    logger.info(f"Trends query detected - adding web search providers: {available_web_search}")
+                    # Put web search providers first for trends
+                    merged_providers = available_web_search + [p for p in merged_providers if p not in available_web_search]
+                else:
+                    logger.warning("Trends query but no web search providers available - results may be limited")
+            
+            # Create new decision object with updated providers
             from dataclasses import replace
-            decision = replace(decision, providers=merged_providers[:15])  # Limit for free APIs
+            decision = replace(decision, providers=merged_providers[:15])  # Limit for APIs
             
             # Collect from free APIs
             free_api_cards = collect_from_free_apis(
@@ -1642,6 +1660,32 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             )
             
             logger.info(f"Collected {len(free_api_cards)} cards from free APIs")
+            
+            # v8.26.1: If we have web search providers and got few results, try web search
+            if len(free_api_cards) < 5 and available_web_search:
+                logger.info("Low results from free APIs, attempting web search")
+                try:
+                    # Use parallel_provider_search for web search
+                    web_results = asyncio.run(
+                        parallel_provider_search(
+                            registry,
+                            query=self.s.topic,
+                            count=10,
+                            freshness=settings.FRESHNESS_WINDOW,
+                            region="US"
+                        )
+                    )
+                    
+                    # Convert web search results to cards
+                    for provider, hits in web_results.items():
+                        if provider in available_web_search:
+                            for hit in hits[:5]:  # Limit per provider
+                                card = EvidenceCard.from_search_hit(hit)
+                                free_api_cards.append(card)
+                    
+                    logger.info(f"Added {len(free_api_cards) - len(free_api_cards)} cards from web search")
+                except Exception as e:
+                    logger.warning(f"Web search failed: {e}")
             
             # These will be added to cards list below
         else:
@@ -2650,25 +2694,60 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             # 3) Try one more backfill iteration with relaxed config
             logger.info("Running lenient backfill with relaxed thresholds...")
             
+            # v8.26.1: Enhanced recovery with provider skip list
             # Add more cards if we can
             if len(cards) < 50:  # Only if we don't have many cards
                 # Try to get more cards with relaxed filtering
                 try:
-                    # v8.24.0: Use more safe, high-signal providers for recovery
-                    recovery_providers = ['wikipedia', 'worldbank', 'oecd', 'imf', 'eurostat']
-                    additional_cards = collect_from_free_apis(
-                        self.s.topic,
-                        providers=recovery_providers,  # Safe, high-signal providers
-                        settings=self.settings
-                    )
-                    if additional_cards:
-                        logger.info(f"Added {len(additional_cards)} cards from free APIs")
-                        cards.extend(additional_cards)
-                        # v8.26.0: Fix missing import for canonical_id
-                        from research_system.evidence.canonicalize import canonical_id
-                        cards = list({canonical_id(c): c for c in cards}.values())  # Dedup
+                    # v8.26.1: Skip providers that have already failed
+                    failed_providers = set()
+                    
+                    # Extract failed providers from provider_errors
+                    for provider, error_info in self.provider_errors.items():
+                        if error_info and (isinstance(error_info, str) or 
+                                         (isinstance(error_info, dict) and error_info.get('error'))):
+                            failed_providers.add(provider)
+                            logger.debug(f"Skipping failed provider in recovery: {provider}")
+                    
+                    # v8.26.1: Use different providers for recovery based on intent
+                    if intent in [Intent.TRAVEL, Intent.BUSINESS, Intent.MACRO_TRENDS]:
+                        # For trends/travel, try web search if available
+                        all_recovery_providers = ['search_tavily', 'search_brave', 'wikipedia', 'wikidata', 
+                                                 'worldbank', 'fred', 'eurostat']
+                    elif intent == Intent.ACADEMIC:
+                        # For academic, try scholarly sources
+                        all_recovery_providers = ['openalex', 'crossref', 'arxiv', 'pubmed', 'wikipedia']
+                    elif intent == Intent.STATS:
+                        # For stats, try data providers
+                        all_recovery_providers = ['worldbank', 'fred', 'eurostat', 'imf', 'oecd']
+                    else:
+                        # Default recovery providers
+                        all_recovery_providers = ['wikipedia', 'worldbank', 'oecd', 'imf', 'eurostat', 'wikidata']
+                    
+                    # Filter out failed providers
+                    recovery_providers = [p for p in all_recovery_providers if p not in failed_providers]
+                    
+                    if not recovery_providers:
+                        logger.warning("All recovery providers have failed - skipping recovery attempt")
+                    else:
+                        logger.info(f"Recovery attempting with providers: {recovery_providers[:5]} (skipping {len(failed_providers)} failed)")
+                        
+                        additional_cards = collect_from_free_apis(
+                            self.s.topic,
+                            providers=recovery_providers[:5],  # Limit to avoid overwhelming
+                            settings=self.settings
+                        )
+                        
+                        if additional_cards:
+                            logger.info(f"Recovery added {len(additional_cards)} cards from {len(recovery_providers)} providers")
+                            cards.extend(additional_cards)
+                            # v8.26.0: Fix missing import for canonical_id
+                            from research_system.evidence.canonicalize import canonical_id
+                            cards = list({canonical_id(c): c for c in cards}.values())  # Dedup
+                        else:
+                            logger.warning("Recovery attempt returned no additional cards")
                 except Exception as e:
-                    logger.warning(f"Failed to get additional cards: {e}")
+                    logger.warning(f"Recovery attempt failed: {e}")
             
             # Re-cluster with lenient threshold
             from research_system.triangulation.post import sanitize_paraphrase_clusters
