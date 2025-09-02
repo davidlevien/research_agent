@@ -19,7 +19,7 @@ def validate_integration():
     try:
         from research_system.orchestrator import Orchestrator
         from research_system.routing.provider_router import choose_providers
-        from research_system.collection_enhanced import collect_from_free_apis
+        from research_system.collection import collect_from_free_apis
         from research_system.providers.registry import PROVIDERS
         from research_system.tools.domain_norm import canonical_domain
         print("   ✅ All core modules importable")
@@ -53,11 +53,11 @@ def validate_integration():
         with open("research_system/orchestrator.py") as f:
             content = f.read()
         
-        if "collection_enhanced" in content:
-            print("   ✅ collection_enhanced imported")
+        if "from research_system.collection import" in content:
+            print("   ✅ collection module imported")
         else:
-            warnings.append("collection_enhanced not imported in orchestrator")
-            print("   ⚠️  collection_enhanced not imported")
+            warnings.append("collection module not imported in orchestrator")
+            print("   ⚠️  collection module not imported")
             
         if "choose_providers" in content:
             print("   ✅ Router integrated")

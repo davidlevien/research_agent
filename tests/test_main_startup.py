@@ -66,7 +66,7 @@ try:
     from research_system.orchestrator import Orchestrator, OrchestratorSettings
     from research_system.config.settings import Settings
     from research_system.utils.deterministic import set_global_seeds
-    from research_system.collection_enhanced import collect_from_free_apis
+    from research_system.collection import collect_from_free_apis
     from research_system.triangulation.embeddings import get_model
     from pathlib import Path
     

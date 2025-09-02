@@ -76,7 +76,7 @@ async def targeted_primary_arex(
     Perform targeted AREX expansion for uncorroborated keys lacking primary sources.
     Returns enriched list of cards.
     """
-    from research_system.collection_enhanced import parallel_provider_search
+    from research_system.collection import parallel_provider_search
     from research_system.models import EvidenceCard
     from research_system.tools.url_norm import domain_of
     from research_system.policy import POLICIES

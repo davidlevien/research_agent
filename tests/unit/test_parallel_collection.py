@@ -4,7 +4,7 @@ import asyncio
 import time
 from unittest.mock import patch, MagicMock, AsyncMock
 import pytest
-from research_system.collection_enhanced import (
+from research_system.collection import (
     collect_from_free_apis_async,
     _execute_provider_async,
     collect_from_free_apis
@@ -35,14 +35,14 @@ class TestParallelCollection:
             "wikipedia": {"search": slow_search, "to_cards": to_cards},
         }
         
-        with patch("research_system.collection_enhanced.PROVIDERS", mock_providers):
-            with patch("research_system.collection_enhanced.choose_providers") as mock_choose:
+        with patch("research_system.collection.enhanced.PROVIDERS", mock_providers):
+            with patch("research_system.collection.enhanced.choose_providers") as mock_choose:
                 mock_choose.return_value = MagicMock(
                     providers=["openalex", "crossref", "wikipedia"],
                     categories=["test"]
                 )
                 # Mock is_off_topic to always return False
-                with patch("research_system.collection_enhanced.is_off_topic", return_value=False):
+                with patch("research_system.collection.enhanced.is_off_topic", return_value=False):
                     start_time = time.time()
                     # Pass providers explicitly to avoid routing
                     cards = await collect_from_free_apis_async("test topic", providers=["openalex", "crossref", "wikipedia"])
@@ -96,14 +96,14 @@ class TestParallelCollection:
             "openalex": {"search": working_search, "to_cards": to_cards},
         }
         
-        with patch("research_system.collection_enhanced.PROVIDERS", mock_providers):
-            with patch("research_system.collection_enhanced.choose_providers") as mock_choose:
+        with patch("research_system.collection.enhanced.PROVIDERS", mock_providers):
+            with patch("research_system.collection.enhanced.choose_providers") as mock_choose:
                 mock_choose.return_value = MagicMock(
                     providers=["worldbank", "openalex"],
                     categories=["test"]
                 )
                 # Mock is_off_topic to always return False
-                with patch("research_system.collection_enhanced.is_off_topic", return_value=False):
+                with patch("research_system.collection.enhanced.is_off_topic", return_value=False):
                     cards = await collect_from_free_apis_async("test topic")
                     
                     # Should get 1 card from working provider, failing provider is handled
@@ -123,14 +123,14 @@ class TestParallelCollection:
             "wikipedia": {"search": mock_search, "to_cards": to_cards},
         }
         
-        with patch("research_system.collection_enhanced.PROVIDERS", mock_providers):
-            with patch("research_system.collection_enhanced.choose_providers") as mock_choose:
+        with patch("research_system.collection.enhanced.PROVIDERS", mock_providers):
+            with patch("research_system.collection.enhanced.choose_providers") as mock_choose:
                 mock_choose.return_value = MagicMock(
                     providers=["wikipedia"],
                     categories=["test"]
                 )
                 # Mock is_off_topic to always return False (not off-topic)
-                with patch("research_system.collection_enhanced.is_off_topic", return_value=False):
+                with patch("research_system.collection.enhanced.is_off_topic", return_value=False):
                     # This should work without being in an async context
                     cards = collect_from_free_apis("test topic")
                     
@@ -149,8 +149,8 @@ class TestParallelCollection:
         
         mock_impl = {"search": mock_search, "to_cards": to_cards}
         
-        with patch("research_system.collection_enhanced.SEARCH_REQUESTS") as mock_requests:
-            with patch("research_system.collection_enhanced.SEARCH_LATENCY") as mock_latency:
+        with patch("research_system.collection.enhanced.SEARCH_REQUESTS") as mock_requests:
+            with patch("research_system.collection.enhanced.SEARCH_LATENCY") as mock_latency:
                 cards = await _execute_provider_async("openalex", "test", mock_impl)
                 
                 # Check metrics were recorded
