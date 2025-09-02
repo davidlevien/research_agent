@@ -1636,7 +1636,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
             query_lower = self.s.topic.lower()
             is_trends_query = any(word in query_lower for word in ['trend', 'trends', 'latest', 'recent', 'outlook', 'forecast', 'current'])
             
-            if is_trends_query and intent in [Intent.TRAVEL, Intent.BUSINESS, Intent.MACRO_TRENDS]:
+            if is_trends_query and intent in [Intent.TRAVEL, Intent.MACRO_TRENDS]:
                 # Prioritize web search providers for trends queries
                 web_search_providers = ['search_tavily', 'search_brave', 'search_serper', 'tavily', 'brave', 'serper']
                 available_web_search = [p for p in web_search_providers if p in selected_providers]
@@ -2710,7 +2710,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                             logger.debug(f"Skipping failed provider in recovery: {provider}")
                     
                     # v8.26.1: Use different providers for recovery based on intent
-                    if intent in [Intent.TRAVEL, Intent.BUSINESS, Intent.MACRO_TRENDS]:
+                    if intent in [Intent.TRAVEL, Intent.MACRO_TRENDS]:
                         # For trends/travel, try web search if available
                         all_recovery_providers = ['search_tavily', 'search_brave', 'wikipedia', 'wikidata', 
                                                  'worldbank', 'fred', 'eurostat']
