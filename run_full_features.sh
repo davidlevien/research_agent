@@ -23,8 +23,18 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Load environment variables
+# Load environment variables and export them for child processes
+set -a  # Enable automatic export of all variables
 source .env
+set +a  # Disable automatic export
+
+# Export all API keys and critical environment variables to ensure they're available to child processes
+export OPENAI_API_KEY ANTHROPIC_API_KEY AZURE_OPENAI_API_KEY
+export TAVILY_API_KEY BRAVE_API_KEY SERPER_API_KEY SERPAPI_API_KEY
+export NPS_API_KEY FRED_API_KEY NEWSAPI_KEY SEC_API_KEY
+export CONTACT_EMAIL UNPAYWALL_EMAIL
+export RESEARCH_ENCRYPTION_KEY
+export LLM_PROVIDER OPENAI_MODEL ANTHROPIC_MODEL
 
 # Default topic if not provided
 TOPIC="${1:-AI economic impact and job market transformation 2024-2025}"
@@ -114,6 +124,10 @@ INTENT_USE_HYBRID=true \
 INTENT_USE_NLI=false \
 INTENT_MIN_SCORE=0.42 \
 SEARCH_PROVIDERS="${SEARCH_PROVIDERS:-tavily,brave,serper}" \
+TAVILY_API_KEY="${TAVILY_API_KEY}" \
+BRAVE_API_KEY="${BRAVE_API_KEY}" \
+SERPER_API_KEY="${SERPER_API_KEY}" \
+SERPAPI_API_KEY="${SERPAPI_API_KEY}" \
 CONCURRENCY=16 \
 HTTP_TIMEOUT_SECONDS=30 \
 WALL_TIMEOUT_SEC=1800 \

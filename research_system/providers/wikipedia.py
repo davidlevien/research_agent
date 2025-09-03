@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 def wiki_search(query: str, limit: int = 10) -> List[Dict[str, Any]]:
     """Search Wikipedia for relevant articles."""
     try:
-        # Wikipedia REST API 1.0: title search
-        url = "https://en.wikipedia.org/w/rest.php/v1/search/title"
+        # Wikipedia REST API 1.0: page search (searches content, not just titles)
+        url = "https://en.wikipedia.org/w/rest.php/v1/search/page"
         data = http_json("wikipedia", "GET", url, params={"q": query, "limit": limit})
         return data.get("pages", [])
     except Exception as e:

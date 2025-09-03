@@ -2735,7 +2735,7 @@ Full evidence corpus available in `evidence_cards.jsonl`. Top sources by credibi
                         additional_cards = collect_from_free_apis(
                             self.s.topic,
                             providers=recovery_providers[:5],  # Limit to avoid overwhelming
-                            settings=self.settings
+                            settings=None  # Don't pass settings to avoid type errors
                         )
                         
                         if additional_cards:
