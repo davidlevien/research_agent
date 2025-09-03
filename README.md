@@ -1,6 +1,8 @@
 # Research System v8.26.0 - All-Topic Production-Grade Intelligence
 
-A battle-tested, enterprise research system that delivers **scholarly-grade** intelligence for **any search query** across **all domains**. Built with v8.26.0's comprehensive **root cause fixes**, **generic intent classification**, **cached model loading**, **adaptive triangulation**, and **configurable fetch policies** ensuring successful evidence collection from finance to health, climate to technology.
+Status: **WORK-IN-PROGRESS**
+
+Goal: To have a battle-tested, enterprise research system that delivers **scholarly-grade** intelligence for **any search query** across **all domains**. Built with v8.26.0's comprehensive **root cause fixes**, **generic intent classification**, **cached model loading**, **adaptive triangulation**, and **configurable fetch policies** ensuring successful evidence collection from finance to health, climate to technology.
 
 ## 🚀 Quick Start
 
