@@ -231,6 +231,11 @@ def _dataflows() -> Dict[str, Dict[str, Any]]:
                                     result[str(key)] = {"name": str(name)}
             
             # Success - cache and reset failures
+            # v8.26.5: Ensure we always return a dict, never a list or other type
+            if not isinstance(result, dict):
+                logger.warning(f"OECD API returned unexpected type: {type(result)}, treating as empty")
+                result = {}
+            
             _circuit_state["catalog_cache"] = result
             _circuit_state["cache_time"] = current_time
             _circuit_state["consecutive_failures"] = 0
@@ -275,8 +280,9 @@ def search_oecd(query: str, limit: int = 25) -> List[Dict[str, Any]]:
     
     dfs = _dataflows()
     
-    # v8.26.2: Use fallback datasets if API fails
-    if not dfs or not isinstance(dfs, dict):
+    # v8.26.2: Use fallback datasets if API fails or returns wrong type
+    # v8.26.5: Explicitly check for dict type to avoid 'list' object has no attribute 'items' error
+    if not isinstance(dfs, dict):
         logger.warning("OECD API unavailable, using fallback dataset list")
         # Filter fallback datasets by query
         items = []
